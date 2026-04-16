@@ -81,9 +81,9 @@ cd backend
 ./mvnw spring-boot:run
 
 # 3. 啟動 Frontend
-cd frontend
-npm install
-npm run dev
+cd frontend    
+npm install   
+npm run dev  
 
 # 啟動流程
 # 1. 啟動資料庫（MySQL）
