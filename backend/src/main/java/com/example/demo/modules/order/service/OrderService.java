@@ -1,25 +1,27 @@
 package com.example.demo.modules.order.service;
 
+import com.example.demo.modules.order.model.Order;
+import com.example.demo.modules.order.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDateTime;
+
 @Service
 public class OrderService {
 
-    private final List<String> orders = new ArrayList<>();
+    private final OrderRepository repo;
 
-    public synchronized void createOrder(String name) {
-        System.out.println(LocalDateTime.now() + " [API] POST /orders/generate");
-        if (name == null || name.trim().isEmpty()) {
-            return;
-        }
-        orders.add(name.trim());
+    public OrderService(OrderRepository repo) {
+        this.repo = repo;
     }
 
-    public synchronized List<String> getOrders() {
-        System.out.println(LocalDateTime.now() + " [API] GET /orders");
-        return new ArrayList<>(orders);
+    public void createOrder(String name) {
+        if (name == null || name.trim().isEmpty()) return;
+
+        repo.save(new Order(name.trim()));
+    }
+
+    public List<Order> getOrders() {
+        return repo.findAll();
     }
 }
