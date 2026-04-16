@@ -1,9 +1,10 @@
-package com.example.demo.controller;
+package com.example.demo.modules.order.controller;
 
-import com.example.demo.dto.OrderDTO;
-import com.example.demo.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import com.example.demo.modules.order.dto.OrderDTO;
+import com.example.demo.modules.order.service.OrderService;
 
 import java.util.List;
 
