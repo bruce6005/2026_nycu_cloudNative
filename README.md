@@ -1,2 +1,75 @@
+＃ frontend 架構
+src/
+├── main.tsx                # React 入口點，負責掛載 App
+├── App.tsx                 # 全域路由與頁面切換控制
+├── App.css / index.css     # 全域樣式
+
+├── layouts/
+│   └── Layout.tsx          # 共用版型（Navbar / Sidebar / Page container）
+
+├── features/               # 依功能切分（核心架構）
+│   ├── order/              # 訂單功能模組
+│   │   ├── api/
+│   │   │   └── orderApi.ts     # 呼叫後端 API（fetch / axios）
+│   │   ├── components/
+│   │   │   ├── OrderForm.tsx   # 建立訂單表單 UI
+│   │   │   └── OrderList.tsx   # 訂單列表 UI
+│   │   └── page/
+│   │       └── OrderPage.tsx   # 頁面（整合 API + components）
+│   │
+│   └── approval/           # 審核功能模組（還沒做）
+
+├── assets/                 # 靜態資源（圖片 / icon）
+├── config/                 # 設定檔（API URL 等）
+└── config.js               # 全域設定
+
+＃ backend 架構
+src/main/java/com/example/demo/
+├── DemoApplication.java        # Spring Boot 啟動入口
+
+├── config/
+│   └── CorsConfig.java         # 跨域設定（允許前端呼叫 API）
+
+├── modules/                    # 依功能切分（對應 frontend features）
+│   ├── order/
+│   │   ├── controller/
+│   │   │   └── OrderController.java   # API 入口（處理 HTTP request）
+│   │   ├── service/
+│   │   │   └── OrderService.java      # 商業邏輯
+│   │   ├── repository/
+│   │   │   └── OrderRepository.java   # 資料庫操作（CRUD）
+│   │   ├── model/
+│   │   │   └── Order.java             # Entity（對應資料表）
+│   │   └── dto/
+│   │       └── OrderDTO.java          # 資料傳輸格式
+│   │
+│   └── approval/               # 審核模組（預留）|
+
+# 簡陋的db
+cus_orders
+├── id              # 訂單 ID（Primary Key）
+├── name            # 訂單名稱 / 使用者輸入
+預設使用 MySQL 作為資料庫
+要改db再去改application.properties的設定
+連線設定記得處理一下才能在本地跑
+
+# 資料流
+Frontend (前端UI OrderPage)
+Order API (按按鈕打api)
+Controller (後端controller收前端資料)
+Service (打後端api)
+Repository（jpa 處理query）
+Database (db 的 CRUD)
+
+# 啟動流程
+# 1. 啟動資料庫（MySQL）
+# 先確認 application.properties 連線設定正確
+
+# 2. 啟動 Backend
+cd backend
+./mvnw spring-boot:run
+
+# 3. 啟動 Frontend
 cd frontend
 npm install
+npm run dev
