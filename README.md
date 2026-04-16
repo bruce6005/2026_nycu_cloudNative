@@ -48,14 +48,14 @@ src/main/java/com/example/demo/
 │   └── approval/               # 審核模組（尚未實作）
 
 
-# DB（資料庫）
+# 簡陋DB
 Table: cus_orders
 ├── id      # 訂單 ID（Primary Key）
 ├── name    # 訂單名稱
 
 - 預設使用 MySQL 作為資料庫
 - 透過 JPA（Hibernate）自動建立資料表
-- 若需更換資料庫，請修改 application.properties 連線設定
+- 若需更換資料庫再修改 application.properties 連線設定
 </pre>
 
 # 資料流
@@ -71,11 +71,11 @@ Database（CRUD）
 ## 1. 啟動資料庫（MySQL）
 先確認 application.properties 連線設定正確    
 
-# 2. 啟動 Backend
+## 2. 啟動 Backend
 cd backend    
 ./mvnw spring-boot:run    
 
-# 3. 啟動 Frontend
+## 3. 啟動 Frontend
 cd frontend     
 npm install     
 npm run dev    
