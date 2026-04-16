@@ -73,8 +73,8 @@ Database（CRUD）
 
 
 # 啟動流程
-# 1. 啟動資料庫（MySQL）
-# 先確認 application.properties 連線設定正確
+## 1. 啟動資料庫（MySQL）
+先確認 application.properties 連線設定正確
 
 # 2. 啟動 Backend
 cd backend
