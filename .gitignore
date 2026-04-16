@@ -1,0 +1,13 @@
+# frontend
+node_modules/
+dist/
+
+# backend
+target/
+*.log
+
+# env
+.env
+
+# mac
+.DS_Store
