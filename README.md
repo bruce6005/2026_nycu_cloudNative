@@ -59,41 +59,23 @@ Table: cus_orders
 </pre>
 
 # 資料流
-Frontend（前端 UI OrderPage）
-    ↓
-Order API（前端呼叫後端）
-    ↓
-Controller（接收 request）
-    ↓
-Service（處理商業邏輯）
-    ↓
-Repository（透過 JPA 存取資料）
-    ↓
-Database（CRUD）
+Frontend（前端 UI OrderPage）   
+Order API（前端呼叫後端）    
+Controller（接收 request）   
+Service（處理商業邏輯）   
+Repository（透過 JPA 存取資料）   
+Database（CRUD）   
 
 
 # 啟動流程
 ## 1. 啟動資料庫（MySQL）
-先確認 application.properties 連線設定正確
+先確認 application.properties 連線設定正確    
 
 # 2. 啟動 Backend
-cd backend
-./mvnw spring-boot:run
+cd backend    
+./mvnw spring-boot:run    
 
 # 3. 啟動 Frontend
-cd frontend    
-npm install   
-npm run dev  
-
-# 啟動流程
-# 1. 啟動資料庫（MySQL）
-# 先確認 application.properties 連線設定正確
-
-# 2. 啟動 Backend
-cd backend
-./mvnw spring-boot:run
-
-# 3. 啟動 Frontend
-cd frontend
-npm install
-npm run dev
+cd frontend     
+npm install     
+npm run dev    
