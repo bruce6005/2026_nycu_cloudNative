@@ -15,13 +15,17 @@ src/
 │   │   ├── components/
 │   │   │   ├── OrderForm.tsx   # 建立訂單表單 UI
 │   │   │   └── OrderList.tsx   # 訂單列表 UI
-│   │   └── page/
-│   │       └── OrderPage.tsx   # 頁面（整合 API + components）
+│   │   ├── page/
+│   │   │    └── OrderPage.tsx   # 頁面（整合 API + components）
+│   │   └── style/
+│   │       └── style.tsx   # 這個feature的css
 │   │
 │   └── approval/           # 審核功能模組（尚未實作）
 │
 ├── assets/                 # 靜態資源（圖片 / icon）
 ├── config/                 # 設定檔（API URL 等）
+├── styles/                 # 設定檔（API URL 等）  
+│   └── global.css          # 共用的css 統一一下風格  
 └── config.js               # 全域設定
 
 
