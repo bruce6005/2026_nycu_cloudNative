@@ -1,0 +1,267 @@
+/* ===== Approval Layout ===== */
+
+.approval-layout {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  height: calc(100vh - 60px);
+  box-sizing: border-box;
+}
+
+/* 三欄等高 */
+.approval-left,
+.approval-middle,
+.approval-right {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 寬度 */
+.approval-left {
+  width: 25%;
+}
+
+.approval-middle {
+  width: 45%;
+}
+
+.approval-right {
+  width: 30%;
+}
+
+/* 讓內容撐滿 */
+.approval-left .card,
+.approval-middle .card,
+.approval-right .card {
+  flex: 1;
+}
+
+/* 左邊 list 可 scroll */
+.approval-left .card {
+  overflow-y: auto;
+}
+
+/* ===== Order Card ===== */
+
+.order-card {
+  padding: 12px;
+  border-radius: 8px;
+
+  border: 1px solid #9e9fa2;
+
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: 0.15s;
+  background: white;
+}
+
+.order-main-title {
+  font-size: 25px;
+  padding: 14px;
+  font-weight: 600;
+}
+.order-card:hover {
+  background: var(--hover);
+}
+
+/* 選中 */
+.order-card.selected {
+  border: 1px solid #333;
+  background: #f0f1f3;
+}
+
+/* 上排（名稱 + 點） */
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 主標題 */
+.order-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 次文字 */
+.order-sub {
+  font-size: 12px;
+  color: var(--subtext);
+  margin-top: 4px;
+}
+
+/* 紅點 */
+.priority-dot {
+  width: 8px;
+  height: 8px;
+  background: #e5484d;
+  border-radius: 50%;
+}
+
+/* ===== Detail Card ===== */
+
+.detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* header */
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* title */
+.detail-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #513232;
+  
+}
+
+/* ID */
+.detail-id {
+  font-size: 13px;
+  color: var(--subtext);
+}
+
+/* 區塊 */
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* label */
+.detail-label {
+  font-size: 12px;
+  color: var(--subtext);
+}
+
+/* value */
+.detail-value {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* description */
+.detail-desc {
+  font-size: 14px;
+  color: #513232;
+  line-height: 1.4;
+}
+
+/* badge */
+.priority-badge {
+  font-size: 20px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ===== Detail Card ===== */
+
+.detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Header */
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Title */
+.detail-title {
+  font-size: 28px;
+  font-weight: 600;
+  padding: 14px;
+}
+
+/* ID */
+.detail-id {
+  font-size: 13px;
+  color: var(--subtext);
+}
+
+    /* ===== Row Layout（重點） ===== */
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;  /* 👈 關鍵 */
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+/* 左 label */
+.detail-label {
+  width: 110px;           
+  font-size: 25px;
+  color: #513232;
+}
+
+/* 右 value */
+.detail-value {
+  font-size: 15px;       
+  font-weight: 500;
+}
+
+/* description */
+.detail-desc {
+  color: #444;
+  line-height: 1.4;
+}
+
+/* badge */
+.priority-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ===== approval action（重點） ===== */
+/* overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.3);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* modal */
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 320px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

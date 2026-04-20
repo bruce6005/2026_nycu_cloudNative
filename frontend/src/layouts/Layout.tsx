@@ -1,4 +1,14 @@
-function Layout({ children, setPage }: any) {
+import React from "react";
+
+type Page = "orders" | "approval";
+
+type Props = {
+  children: React.ReactNode;
+  currentPage: Page;
+  setPage: (page: Page) => void;
+};
+
+function Layout({ children, currentPage, setPage }: Props) {
   return (
     <>
       <div className="topbar">
@@ -7,11 +17,17 @@ function Layout({ children, setPage }: any) {
 
       <div className="container">
         <div className="sidebar">
-          <div className="menu-item" onClick={() => setPage("orders")}>
+          <div
+            className={`menu-item ${currentPage === "orders" ? "active" : ""}`}
+            onClick={() => setPage("orders")}
+          >
             Orders
           </div>
 
-          <div className="menu-item" onClick={() => setPage("approval")}>
+          <div
+            className={`menu-item ${currentPage === "approval" ? "active" : ""}`}
+            onClick={() => setPage("approval")}
+          >
             Approval
           </div>
         </div>

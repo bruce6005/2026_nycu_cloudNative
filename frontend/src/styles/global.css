@@ -1,0 +1,217 @@
+/* =====================================
+   Design Tokens: global variables
+===================================== */
+:root {
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --text: #1f2328;
+  --subtext: #6b7280;
+
+  --primary: #111827;
+  --primary-hover: #000000;
+
+  --danger: #e5484d;
+  --danger-hover: #c7373b;
+
+  --border: #e5e7eb;
+  --hover: #f0f1f3;
+
+  --radius: 8px;
+  --spacing: 8px;
+}
+
+
+/* =====================================
+   Base: typography and background
+===================================== */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1, h2, h3 {
+  margin: 0 0 12px 0;
+}
+
+
+/* =====================================
+   Layout: flex utilities
+===================================== */
+.flex {
+  display: flex;
+  gap: 16px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* =====================================
+   Card: container styling
+===================================== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+
+/* =====================================
+   List: selectable list items
+===================================== */
+.list-item {
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.list-item:hover {
+  background: var(--hover);
+}
+
+.list-item.active {
+  background: #e6e8eb;
+}
+
+
+/* =====================================
+   Button: action styles
+===================================== */
+.button {
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.15s;
+}
+
+.button.primary {
+  background: var(--primary);
+  color: white;
+}
+
+.button.primary:hover {
+  background: var(--primary-hover);
+}
+
+.button.danger {
+  background: var(--danger);
+  color: white;
+}
+
+.button.danger:hover {
+  background: var(--danger-hover);
+}
+
+.button.secondary {
+  background: #f3f4f6;
+  color: #333;
+}
+
+
+/* =====================================
+   Input: form elements
+===================================== */
+input,
+textarea,
+select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #aaa;
+}
+
+
+/* =====================================
+   Form: label and grouping
+===================================== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--subtext);
+}
+
+
+/* =====================================
+   Tag: status indicators
+===================================== */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.tag.pending {
+  background: #f3f4f6;
+}
+
+.tag.approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.tag.rejected {
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+
+
+/* =====================================
+   Table: data display
+===================================== */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+
+/* =====================================
+   Utilities: spacing and text helpers
+===================================== */
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+
+.text-muted {
+  color: var(--subtext);
+}
+
+.text-center {
+  text-align: center;
+}

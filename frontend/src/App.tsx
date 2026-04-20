@@ -1,16 +1,17 @@
 import { useState } from "react";
 import Layout from "./layouts/Layout";
 import OrderPage from "./features/order/page/OrderPage";
-// 之後可以加 ApprovalPage...
+import ApprovalPage from "./features/approval/page/ApprovalPage";
+
+type Page = "orders" | "approval";
 
 function App() {
-  const [page, setPage] = useState("orders");
+  const [page, setPage] = useState<Page>("orders");
 
   return (
-    <Layout setPage={setPage}>
+    <Layout currentPage={page} setPage={setPage}>
       {page === "orders" && <OrderPage />}
-      {/* 之後 */}
-      {/* {page === "approval" && <ApprovalPage />} */}
+      {page === "approval" && <ApprovalPage />}
     </Layout>
   );
 }
