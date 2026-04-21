@@ -4,55 +4,50 @@ import ApprovalDetail from "../components/ApprovalDetail";
 import ApprovalAction from "../components/ApprovalAction";
 import "../styles/style.css";
 
-type Order = {
-  id: number;
-  name: string;
-  priority: string;
-  description?: string;
-};
+// API
+import {
+  fetchPendingOrders,
+  handleApproval,
+} from "../api/ApprovalApi";
+
+// 引入 mapper
+import { mapToApprovalItem } from "../api/ApprovalMapper";
+
+// 型別
+import type { ApprovalResponse, ApprovalItem } from "../models/ApprovalData";
 
 function ApprovalPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [selected, setSelected] = useState<Order | null>(null);
+  const [orders, setOrders] = useState<ApprovalItem[]>([]);
+  const [selected, setSelected] = useState<ApprovalItem | null>(null);
+
+  const approverId = 1;
 
   useEffect(() => {
-    const mockData: Order[] = [
-      {
-        id: 1,
-        name: "Order A",
-        priority: "HIGH",
-        description: "Urgent wafer test",
-      },
-      {
-        id: 2,
-        name: "Order B",
-        priority: "LOW",
-        description: "Normal process",
-      },
-    ];
-
-    setOrders(mockData);
-    setSelected(mockData[0]); // 👉 預設選第一筆（UX更好）
+    loadData();
   }, []);
 
-  const handleApprove = async (id: number) => {
-    console.log("approve", id);
+  const loadData = async () => {
+    const data: ApprovalResponse[] = await fetchPendingOrders(approverId);
 
-    setOrders((prev) => prev.filter((o) => o.id !== id));
-    setSelected(null);
+    const uiData = mapToApprovalItem(data);
+
+    setOrders(uiData);
+    setSelected(uiData[0] ?? null);
+  };
+
+  const handleApprove = async (id: number) => {
+    await handleApproval(id, approverId, "APPROVE");
+    await loadData();
   };
 
   const handleReject = async (id: number, reason: string) => {
-    console.log("reject", id, reason);
-
-    setOrders((prev) => prev.filter((o) => o.id !== id));
-    setSelected(null);
+    await handleApproval(id, approverId, "REJECT", reason);
+    await loadData();
   };
 
   return (
     <div className="approval-layout">
-      
-      {/* 左 */}
+
       <div className="approval-left">
         <ApprovalList
           orders={orders}
@@ -61,12 +56,10 @@ function ApprovalPage() {
         />
       </div>
 
-      {/* 中 */}
       <div className="approval-middle">
         <ApprovalDetail order={selected} />
       </div>
 
-      {/* 右 */}
       <div className="approval-right">
         <ApprovalAction
           order={selected}

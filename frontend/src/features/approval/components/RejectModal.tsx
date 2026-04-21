@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import "../styles/style.css";
-
 type Props = {
   onClose: () => void;
   onSubmit: (reason: string) => Promise<void>;

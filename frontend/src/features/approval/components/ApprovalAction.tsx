@@ -2,15 +2,12 @@ import React, { useState } from "react";
 import "../styles/style.css";
 import "@/styles/global.css";
 import RejectModal from "./RejectModal";
-
-type Order = {
-  id: number;
-};
+import type { ApprovalItem } from "../models/ApprovalData";
 
 type Props = {
-  order: Order | null;
-  onApprove: (id: number) => Promise<void>;
-  onReject: (id: number, reason: string) => Promise<void>;
+  order: ApprovalItem | null;
+  onApprove: (id: number) => void;
+  onReject: (id: number, reason: string) => void;
 };
 
 function ApprovalAction({ order, onApprove, onReject }: Props) {
@@ -36,7 +33,6 @@ function ApprovalAction({ order, onApprove, onReject }: Props) {
     <div className="card column">
       <h3>Action</h3>
 
-      {/* Approve */}
       <button
         className="button primary"
         onClick={handleApprove}
@@ -45,7 +41,6 @@ function ApprovalAction({ order, onApprove, onReject }: Props) {
         Approve
       </button>
 
-      {/* Reject */}
       <button
         className="button danger mt-2"
         onClick={() => setShowModal(true)}

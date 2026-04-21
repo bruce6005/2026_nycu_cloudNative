@@ -1,6 +1,6 @@
 import React from "react";
 
-type Page = "orders" | "approval";
+type Page = "orders" | "approval" | "requests";
 
 type Props = {
   children: React.ReactNode;
@@ -29,6 +29,13 @@ function Layout({ children, currentPage, setPage }: Props) {
             onClick={() => setPage("approval")}
           >
             Approval
+          </div>
+
+          <div
+            className={`menu-item ${currentPage === "requests" ? "active" : ""}`}
+            onClick={() => setPage("requests")}
+          >
+            Requests
           </div>
         </div>
 

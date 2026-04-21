@@ -48,6 +48,8 @@ function OrderPage() {
 
   return (
     <div className="content">
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      
       <div className="card">
         <h2>Create Order</h2>
         <OrderForm input={input} setInput={setInput} createOrder={createOrder} />

@@ -1,16 +1,11 @@
 import React from "react";
 import "../styles/style.css";
-
-type Order = {
-  id: number;
-  name: string;
-  priority: string;
-};
+import type { ApprovalItem } from "../models/ApprovalData";
 
 type Props = {
-  orders: Order[];
-  onSelect: (order: Order) => void;
-  selected: Order | null;
+  orders: ApprovalItem[];
+  selected: ApprovalItem | null;
+  onSelect: (order: ApprovalItem) => void;
 };
 
 function ApprovalList({ orders, onSelect, selected }: Props) {
@@ -30,14 +25,14 @@ function ApprovalList({ orders, onSelect, selected }: Props) {
             }`}
           >
             <div className="order-card-header">
-              <span className="order-title">{o.name}</span>
-              {o.priority === "HIGH" && (
+              <span className="order-title">{o.title}</span>
+              {o.priorityLabel === "HIGH" && (
                 <span className="priority-dot" />
               )}
             </div>
 
             <div className="order-sub">
-              {o.priority === "HIGH" ? "High Priority" : "Normal"}
+              {o.priorityLabel === "HIGH" ? "High Priority" : "Normal"}
             </div>
           </div>
         ))

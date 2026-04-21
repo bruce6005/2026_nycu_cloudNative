@@ -1,15 +1,9 @@
 import React from "react";
 import "../styles/style.css";
-
-type Order = {
-  id: number;
-  name: string;
-  priority: string;
-  description?: string;
-};
+import type { ApprovalItem } from "../models/ApprovalData";
 
 type Props = {
-  order: Order | null;
+  order: ApprovalItem | null;
 };
 
 function ApprovalDetail({ order }: Props) {
@@ -25,22 +19,27 @@ function ApprovalDetail({ order }: Props) {
   return (
     <div className="card detail-card">
 
-      {/* 🔹 Header */}
+      {/* Header */}
       <div className="detail-header">
-        <div className="detail-title">{order.name}</div>
+        {/* name → title */}
+        <div className="detail-title">{order.title}</div>
 
-        {order.priority === "HIGH" && (
+        {order.priorityLabel === "HIGH" && (
           <span className="priority-badge">HIGH</span>
         )}
       </div>
 
       <div className="detail-id">ID #{order.id}</div>
 
-      {/* 🔹 Rows */}
+      {/* Rows */}
       <div className="detail-row">
         <div className="detail-label">Priority</div>
         <div className="detail-value">
-          {order.priority === "HIGH" ? "High Priority" : "Normal"}
+          {order.priorityLabel === "HIGH"
+            ? "High Priority"
+            : order.priorityLabel === "MEDIUM"
+            ? "Medium Priority"
+            : "Normal"}
         </div>
       </div>
 
