@@ -7,8 +7,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import lombok.Getter;
 import lombok.Setter;
+
 
 @Getter
 @Setter
@@ -22,7 +26,9 @@ public class Requests {
     private Long factoryUserId;
     private Long approverId;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "ENUM('DRAFT','SUBMITTED','APPROVED','REJECTED','PENDING')")
+    private RequestsStatus status;
     private String description;
 
     private LocalDateTime createTime;

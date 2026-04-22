@@ -6,7 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.demo.modules.requests.model.Requests;
 
+import com.example.demo.modules.requests.model.RequestsStatus;
 public interface RequestsRepository extends JpaRepository<Requests, Long> {
 
-    List<Requests> findByApproverIdAndStatus(Long approverId, String status);
+    List<Requests> findByApproverIdAndStatus(Long approverId, RequestsStatus status);
 }

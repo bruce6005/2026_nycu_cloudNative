@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.example.demo.modules.requests.model.RequestsStatus;
 import com.example.demo.modules.approval.dto.ApprovalActionRequest;
 import com.example.demo.modules.approval.dto.ApprovalResponse;
 import com.example.demo.modules.requests.model.Requests;
@@ -22,7 +23,7 @@ public class ApprovalService {
     // 查 pending（只查這個 approver 的）
     public List<ApprovalResponse> getPendingRequests(Long approverId) {
         return requestsRepository
-                .findByApproverIdAndStatus(approverId, "PENDING")
+                .findByApproverIdAndStatus(approverId, RequestsStatus.PENDING)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -44,11 +45,11 @@ public class ApprovalService {
 
         switch (request.getAction()) {
             case "APPROVE":
-                req.setStatus("APPROVED");
+                req.setStatus(RequestsStatus.APPROVED);
                 break;
 
             case "REJECT":
-                req.setStatus("REJECTED");
+                req.setStatus(RequestsStatus.REJECTED);
                 // 如果你 DB 有欄位可以存 reason
                 // req.setRejectReason(request.getReason());
                 break;
