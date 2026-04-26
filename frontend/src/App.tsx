@@ -2,15 +2,15 @@ import { useState } from "react";
 import Layout from "./layouts/Layout";
 import OrderPage from "./features/order/page/OrderPage";
 import ApprovalPage from "./features/approval/page/ApprovalPage";
+import RequestsPage from "./features/requests/page/RequestsPage";
 // import RequestsPage from "./features/requests/page/RequestsPage";
 
 type Page = "orders" | "approval" | "requests";
 
-/* 🔹 關鍵：page 對 component */
 const pageMap = {
   orders: OrderPage,
   approval: ApprovalPage,
-//   requests: RequestsPage,
+  requests: RequestsPage,
 };
 
 function App() {

@@ -5,17 +5,16 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.example.demo.modules.requests.model.RequestsStatus;
 import com.example.demo.modules.approval.dto.ApprovalActionRequest;
 import com.example.demo.modules.approval.dto.ApprovalResponse;
 import com.example.demo.modules.requests.model.Requests;
+import com.example.demo.modules.requests.model.RequestsStatus;
 import com.example.demo.modules.requests.repository.RequestsRepository;
 
 @Service
 public class ApprovalService {
 
     private final RequestsRepository requestsRepository;
-
     public ApprovalService(RequestsRepository requestsRepository) {
         this.requestsRepository = requestsRepository;
     }
@@ -39,7 +38,7 @@ public class ApprovalService {
             throw new RuntimeException("No permission");
         }
 
-        if (req.getStatus().equals("APPROVED") || req.getStatus().equals("REJECTED")) {
+        if (req.getStatus() == RequestsStatus.APPROVED || req.getStatus() == RequestsStatus.REJECTED) {
             throw new RuntimeException("Already processed");
         }
 
