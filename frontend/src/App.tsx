@@ -1,17 +1,26 @@
 import { useState } from "react";
 import Layout from "./layouts/Layout";
 import OrderPage from "./features/order/page/OrderPage";
+import ApprovalPage from "./features/approval/page/ApprovalPage";
 import RequestsPage from "./features/requests/page/RequestsPage";
+// import RequestsPage from "./features/requests/page/RequestsPage";
+
+type Page = "orders" | "approval" | "requests";
+
+const pageMap = {
+  orders: OrderPage,
+  approval: ApprovalPage,
+  requests: RequestsPage,
+};
 
 function App() {
-  const [page, setPage] = useState("orders");
+  const [page, setPage] = useState<Page>("orders");
+
+  const CurrentPage = pageMap[page];
 
   return (
-    <Layout setPage={setPage}>
-      {page === "orders" && <OrderPage />}
-      {page === "requests" && <RequestsPage />}
-      {/* 之後 */}
-      {/* {page === "approval" && <ApprovalPage />} */}
+    <Layout currentPage={page} setPage={setPage}>
+      <CurrentPage />
     </Layout>
   );
 }

@@ -1,14 +1,16 @@
 package com.example.demo.modules.requests.service;
 
-import com.example.demo.modules.requests.dto.RequestsDTO;
-import com.example.demo.modules.requests.model.Requests;
-import com.example.demo.modules.requests.repository.RequestsRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.demo.modules.requests.dto.RequestsDTO;
+import com.example.demo.modules.requests.model.Requests;
+import com.example.demo.modules.requests.model.RequestsStatus;
+import com.example.demo.modules.requests.repository.RequestsRepository;
 
 @Service
 public class RequestsService {
@@ -29,7 +31,7 @@ public class RequestsService {
         requests.setDescription(dto.getDescription());
 
         // 設定初始狀態與時間
-        requests.setStatus("draft");
+        requests.setStatus(RequestsStatus.PENDING);
         requests.setCreateTime(LocalDateTime.now());
 
         // 存入資料庫
@@ -64,7 +66,7 @@ public class RequestsService {
         RequestsDTO dto = new RequestsDTO();
         dto.setId(entity.getId());
         dto.setTitle(entity.getTitle());
-        dto.setStatus(entity.getStatus());
+        dto.setStatus(entity.getStatus().name());
         dto.setFactoryUserId(entity.getFactoryUserId());
         dto.setApproverId(entity.getApproverId());
         dto.setPriority(entity.getPriority());
