@@ -14,6 +14,9 @@ function Layout({ children, setPage }: any) {
           <div className="menu-item" onClick={() => setPage("approval")}>
             Approval
           </div>
+          <div className="menu-item" onClick={() => setPage("requests")}>
+            Requests
+          </div>
         </div>
 
         <div className="content">{children}</div>

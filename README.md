@@ -72,6 +72,14 @@ Database（CRUD）
 
 
 # 啟動流程
+
+## 0. 安裝docker mysql
+確定有docker
+利用docker-compose.yml 啟動 mysql
+```bash
+docker compose up -d
+```
+
 ## 1. 啟動資料庫（MySQL）
 先確認 application.properties 連線設定正確    
 
