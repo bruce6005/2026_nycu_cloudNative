@@ -1,6 +1,6 @@
 import React from "react";
 import "../styles/style.css";
-import type { ApprovalItem } from "../models/ApprovalData";
+import type { ApprovalItem } from "../model/ApprovalData";
 
 type Props = {
   orders: ApprovalItem[];

@@ -4,31 +4,32 @@ import ApprovalDetail from "../components/ApprovalDetail";
 import ApprovalAction from "../components/ApprovalAction";
 import "../styles/style.css";
 
-// API
 import {
   fetchPendingOrders,
   handleApproval,
 } from "../api/ApprovalApi";
 
-// 引入 mapper
 import { mapToApprovalItem } from "../api/ApprovalMapper";
 
-// 型別
-import type { ApprovalResponse, ApprovalItem } from "../models/ApprovalData";
+import type { ApprovalResponse, ApprovalItem } from "../model/ApprovalData";
+import type { AuthUser } from "../../auth/model/AuthUser";
 
-function ApprovalPage() {
+type Props = {
+  user: AuthUser;
+};
+
+function ApprovalPage({ user }: Props) {
   const [orders, setOrders] = useState<ApprovalItem[]>([]);
   const [selected, setSelected] = useState<ApprovalItem | null>(null);
 
-  const approverId = 1;
+  const approverId = user.id;
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [approverId]);
 
   const loadData = async () => {
     const data: ApprovalResponse[] = await fetchPendingOrders(approverId);
-
     const uiData = mapToApprovalItem(data);
 
     setOrders(uiData);
@@ -47,7 +48,6 @@ function ApprovalPage() {
 
   return (
     <div className="approval-layout">
-
       <div className="approval-left">
         <ApprovalList
           orders={orders}
@@ -67,7 +67,6 @@ function ApprovalPage() {
           onReject={handleReject}
         />
       </div>
-
     </div>
   );
 }
