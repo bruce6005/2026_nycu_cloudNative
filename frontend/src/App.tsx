@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Layout from "./layouts/Layout";
 import OrderPage from "./features/order/page/OrderPage";
-<<<<<<< HEAD
 import ApprovalPage from "./features/approval/page/ApprovalPage";
 import RequestsPage from "./features/requests/page/RequestsPage";
 // import RequestsPage from "./features/requests/page/RequestsPage";
@@ -20,7 +19,6 @@ function App() {
   const CurrentPage = pageMap[page];
 
   return (
-<<<<<<< HEAD
     <Layout currentPage={page} setPage={setPage}>
       <CurrentPage />
     </Layout>
