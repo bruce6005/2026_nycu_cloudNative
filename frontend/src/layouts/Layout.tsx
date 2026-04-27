@@ -1,42 +1,79 @@
 import React from "react";
 
-type Page = "orders" | "approval" | "requests";
+export type Page = "orders" | "approval" | "requests";
+
+export type NavItem = {
+  page: Page;
+  label: string;
+};
 
 type Props = {
   children: React.ReactNode;
   currentPage: Page;
-  setPage: (page: Page) => void;
+  navItems: NavItem[];
+  userName?: string;
+  onNavigate: (page: Page) => void;
+  onLogout: () => void;
 };
 
-function Layout({ children, currentPage, setPage }: Props) {
+function Layout({
+  children,
+  currentPage,
+  navItems,
+  userName,
+  onNavigate,
+  onLogout,
+}: Props) {
   return (
     <>
-      <div className="topbar">
+      <div
+        className="topbar"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <div className="logo">LAB SYSTEM</div>
+
+        <div
+          className="user-section"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "15px",
+          }}
+        >
+          {userName && <span>{userName}</span>}
+          <button
+            onClick={onLogout}
+            style={{
+              padding: "5px 10px",
+              cursor: "pointer",
+              background: "#4e0c05ff",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="container">
         <div className="sidebar">
-          <div
-            className={`menu-item ${currentPage === "orders" ? "active" : ""}`}
-            onClick={() => setPage("orders")}
-          >
-            Orders
-          </div>
-
-          <div
-            className={`menu-item ${currentPage === "approval" ? "active" : ""}`}
-            onClick={() => setPage("approval")}
-          >
-            Approval
-          </div>
-
-          <div
-            className={`menu-item ${currentPage === "requests" ? "active" : ""}`}
-            onClick={() => setPage("requests")}
-          >
-            Requests
-          </div>
+          {navItems.map((item) => (
+            <div
+              key={item.page}
+              className={`menu-item ${
+                currentPage === item.page ? "active" : ""
+              }`}
+              onClick={() => onNavigate(item.page)}
+            >
+              {item.label}
+            </div>
+          ))}
         </div>
 
         <div className="content">{children}</div>

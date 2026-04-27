@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { createRequest } from '../api/requestApi';
 
 interface RequestFormProps {
+    userId: number;
     onSuccess: () => void; // 成功後重整清單
 }
 
-export const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
+export const RequestForm: React.FC<RequestFormProps> = ({ userId,  onSuccess }) => {
     // 狀態記憶體
     const [title, setTitle] = useState('');
-    const [factoryUserId, setFactoryUserId] = useState<number | ''>(''); // 初始為空讓 placeholder 顯示
     const [priority, setPriority] = useState<number | ''>(''); // 初始為空讓 placeholder 顯示
     const [description, setDescription] = useState('');
 
@@ -17,14 +17,13 @@ export const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
         try {
             await createRequest({
                 title,
-                factoryUserId: Number(factoryUserId),
+                factoryUserId: userId,
                 priority: priority === '' ? 5 : Number(priority), // 若沒填則預設 5
                 description
             } as any);
             alert('建立成功！');
             // 清空表單內容
             setTitle('');
-            setFactoryUserId('');
             setPriority('');
             setDescription('');
             onSuccess(); // 讓外層頁面更新清單
@@ -47,13 +46,6 @@ export const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
 
             {/* 第二排：人員與優先度 */}
             <div className="form-row" style={{ marginBottom: '10px' }}>
-                <input
-                    type="number"
-                    placeholder="工廠人員 ID (必填)"
-                    value={factoryUserId}
-                    onChange={(e) => setFactoryUserId(e.target.value === '' ? '' : Number(e.target.value))}
-                    required
-                />
                 <input
                     type="number"
                     placeholder="優先度 (1最高 5最低)"

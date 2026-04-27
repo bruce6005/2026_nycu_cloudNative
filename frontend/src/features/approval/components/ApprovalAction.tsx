@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "../styles/style.css";
 import "@/styles/global.css";
 import RejectModal from "./RejectModal";
-import type { ApprovalItem } from "../models/ApprovalData";
+import type { ApprovalItem } from "../model/ApprovalData";
 
 type Props = {
   order: ApprovalItem | null;

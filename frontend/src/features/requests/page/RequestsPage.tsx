@@ -1,13 +1,18 @@
 import { useState, useEffect } from "react";
 import { RequestForm } from "../components/RequestForm";
 import { RequestList } from "../components/RequestList";
-import { RequestDetail } from "../components/RequestDetail"; // 1. 引入詳情組件
+import { RequestDetail } from "../components/RequestDetail";
 import { getRequests } from "../api/requestApi";
+import type { AuthUser } from "../../auth/model/AuthUser";
 
-function RequestsPage() {
+type Props = {
+  user: AuthUser;
+};
+
+function RequestsPage({ user }: Props) {
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState("");
-  const [selectedId, setSelectedId] = useState<number | null>(null); // 2. 新增選中狀態
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const loadRequests = async () => {
     try {
@@ -22,18 +27,17 @@ function RequestsPage() {
     loadRequests();
   }, []);
 
-  // 3. 如果有選中 ID，切換顯示詳情
   if (selectedId !== null) {
     return <RequestDetail id={selectedId} onBack={() => setSelectedId(null)} />;
   }
 
   return (
     <div className="content">
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
       <div className="card">
         <h2>建立委託單</h2>
-        <RequestForm onSuccess={loadRequests} />
+        <RequestForm userId={user.id} onSuccess={loadRequests} />
       </div>
 
       <div className="card">
