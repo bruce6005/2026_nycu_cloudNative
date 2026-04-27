@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React from "react";
 
 type Page = "orders" | "approval" | "requests";
@@ -9,10 +10,26 @@ type Props = {
 };
 
 function Layout({ children, currentPage, setPage }: Props) {
+=======
+import { googleLogout } from '@react-oauth/google';
+
+function Layout({ children, setPage, user, setUser }: any) {
+  const handleLogout = () => {
+    googleLogout();
+    setUser(null);
+  };
+
+>>>>>>> c6872dd18e15995423efcc701ba3845e8b2ebcc6
   return (
     <>
-      <div className="topbar">
+      <div className="topbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="logo">LAB SYSTEM</div>
+        <div className="user-section" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <span>{user.name}</span>
+          <button onClick={handleLogout} style={{ padding: '5px 10px', cursor: 'pointer', background: '#4e0c05ff', color: 'white', border: 'none', borderRadius: '5px' }}>
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="container">
