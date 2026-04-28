@@ -7,6 +7,10 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.modules.auth.model.User;
+import com.example.demo.modules.auth.model.UserRole;
+import com.example.demo.modules.auth.repository.UserRepository;
+
 import com.example.demo.modules.requests.dto.RequestsDTO;
 import com.example.demo.modules.requests.model.Requests;
 import com.example.demo.modules.requests.model.RequestsStatus;
@@ -18,26 +22,62 @@ public class RequestsService {
     @Autowired
     private RequestsRepository requestRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+
     /**
      * 建立新的委託單
      */
+    // public RequestsDTO createRequest(RequestsDTO dto) {
+    //     Requests requests = new Requests();
+
+    //     // 將 DTO 的資料搬運到 Entity
+    //     requests.setTitle(dto.getTitle());
+    //     requests.setFactoryUserId(dto.getFactoryUserId());
+    //     requests.setPriority(dto.getPriority());
+    //     requests.setDescription(dto.getDescription());
+
+    //     // 設定初始狀態與時間
+    //     requests.setStatus(RequestsStatus.PENDING);
+    //     requests.setCreateTime(LocalDateTime.now());
+
+    //     // 存入資料庫
+    //     Requests saved = requestRepository.save(requests);
+
+    //     // 將結果轉回 DTO 回傳給前端
+    //     return convertToDTO(saved);
+    // }
     public RequestsDTO createRequest(RequestsDTO dto) {
+        User factoryUser = userRepository.findById(dto.getFactoryUserId())
+                .orElseThrow(() -> new RuntimeException("Factory user not found"));
+
+        Long managerId = factoryUser.getManagerId();
+
+        if (managerId == null) {
+            throw new RuntimeException("Factory user has no manager assigned");
+        }
+
+        User manager = userRepository.findById(managerId)
+                .orElseThrow(() -> new RuntimeException("Manager not found"));
+
+        if (manager.getRole() != UserRole.MANAGER && manager.getRole() != UserRole.ADMIN) {
+            throw new RuntimeException("Assigned manager is not valid");
+        }
+
         Requests requests = new Requests();
 
-        // 將 DTO 的資料搬運到 Entity
         requests.setTitle(dto.getTitle());
-        requests.setFactoryUserId(dto.getFactoryUserId());
+        requests.setFactoryUserId(factoryUser.getId());
+        requests.setApproverId(manager.getId());
         requests.setPriority(dto.getPriority());
         requests.setDescription(dto.getDescription());
 
-        // 設定初始狀態與時間
         requests.setStatus(RequestsStatus.PENDING);
         requests.setCreateTime(LocalDateTime.now());
 
-        // 存入資料庫
         Requests saved = requestRepository.save(requests);
 
-        // 將結果轉回 DTO 回傳給前端
         return convertToDTO(saved);
     }
 

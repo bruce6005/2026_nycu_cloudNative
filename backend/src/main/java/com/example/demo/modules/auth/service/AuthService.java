@@ -1,15 +1,16 @@
 package com.example.demo.modules.auth.service;
 
-import com.example.demo.modules.user.model.User;
-import com.example.demo.modules.user.repository.UserRepository;
+import java.util.Collections;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.example.demo.modules.auth.model.User;
+import com.example.demo.modules.auth.repository.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import java.util.Collections;
 
 @Service
 public class AuthService {
