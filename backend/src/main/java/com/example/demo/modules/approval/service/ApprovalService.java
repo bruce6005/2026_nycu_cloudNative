@@ -69,6 +69,8 @@ public class ApprovalService {
         res.setId(req.getId());
         res.setFactoryUserId(req.getFactoryUserId());
         res.setApproverId(req.getApproverId());
+        res.setTitle(req.getTitle());
+        res.setPriority(req.getPriority());
         res.setStatus(req.getStatus());
         res.setDescription(req.getDescription());
         res.setCreateTime(req.getCreateTime());

@@ -8,7 +8,6 @@ export const getRequests = async () => {
 export const createRequest = async (data: {
   title: string;
   factoryUserId: number;
-  approverId: number;
   priority: number;
   description: string;
 }) => {

@@ -1,10 +1,11 @@
-package com.example.demo.modules.user.repository;
+package com.example.demo.modules.auth.repository;
 
-import com.example.demo.modules.user.model.User;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.example.demo.modules.auth.model.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
