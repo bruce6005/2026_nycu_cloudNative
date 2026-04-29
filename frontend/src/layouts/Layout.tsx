@@ -1,6 +1,6 @@
 import React from "react";
 
-export type Page = "orders" | "approval" | "requests";
+export type Page = "orders" | "approval" | "dispatch" | "requests";
 
 export type NavItem = {
   page: Page;
