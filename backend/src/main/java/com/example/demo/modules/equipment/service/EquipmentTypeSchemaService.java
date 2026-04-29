@@ -28,4 +28,8 @@ public class EquipmentTypeSchemaService {
     public EquipmentTypeSchema createSchema(EquipmentTypeSchema schema) {
         return repository.save(schema);
     }
+
+    public void deleteSchema(Long id) {
+        repository.deleteById(id);
+    }
 }

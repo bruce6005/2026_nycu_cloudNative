@@ -32,4 +32,10 @@ public class EquipmentTypeSchemaController {
     public ResponseEntity<EquipmentTypeSchema> createSchema(@RequestBody EquipmentTypeSchema schema) {
         return ResponseEntity.ok(service.createSchema(schema));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSchema(@PathVariable Long id) {
+        service.deleteSchema(id);
+        return ResponseEntity.noContent().build();
+    }
 }

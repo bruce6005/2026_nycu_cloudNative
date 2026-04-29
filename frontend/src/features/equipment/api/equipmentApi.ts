@@ -21,7 +21,16 @@ export async function fetchEquipmentSchemas(): Promise<EquipmentTypeSchema[]> {
     return res.data;
 }
 
+export async function createEquipmentSchema(data: Omit<EquipmentTypeSchema, "id">): Promise<EquipmentTypeSchema> {
+    const res = await axios.post(`${CONFIG.API_BASE}/api/equipment-schemas`, data);
+    return res.data;
+}
+
 export async function fetchEquipmentSchemaByType(type: string): Promise<EquipmentTypeSchema> {
     const res = await axios.get(`${CONFIG.API_BASE}/api/equipment-schemas/${type}`);
     return res.data;
+}
+
+export async function deleteEquipmentSchema(schemaId: number): Promise<void> {
+    await axios.delete(`${CONFIG.API_BASE}/api/equipment-schemas/${schemaId}`);
 }
