@@ -4,7 +4,7 @@ import { googleLogout } from "@react-oauth/google";
 import Layout from "./layouts/Layout";
 import OrderPage from "./features/order/page/OrderPage";
 import ApprovalPage from "./features/approval/page/ApprovalPage";
-import RequestsPage from "./features/requests/page/RequestsPage";
+import RequestPage from "./features/request/page/RequestPage";
 import DispatchPage from "./features/dispatch/page/DispatchPage";
 import LoginPage from "./features/auth/page/LoginPage";
 import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
@@ -15,7 +15,7 @@ const pageMap: Record<Page, React.ComponentType<any>> = {
   orders: OrderPage,
   approval: ApprovalPage,
   dispatch: DispatchPage,
-  requests: RequestsPage,
+  request: RequestPage,
 };
 
 function App() {

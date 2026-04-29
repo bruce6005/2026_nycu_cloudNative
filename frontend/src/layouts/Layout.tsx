@@ -1,11 +1,6 @@
 import React from "react";
 
-export type Page = "orders" | "approval" | "dispatch" | "requests";
-
-export type NavItem = {
-  page: Page;
-  label: string;
-};
+import type { Page, NavItem } from "../features/auth/utils/getNavItems";
 
 type Props = {
   children: React.ReactNode;

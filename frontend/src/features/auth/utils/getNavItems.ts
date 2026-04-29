@@ -1,6 +1,6 @@
 import type { AuthUser } from "../model/AuthUser";
 
-export type Page = "orders" | "approval" | "dispatch" | "requests";
+export type Page = "orders" | "approval" | "dispatch" | "request";
 
 export type NavItem = {
   page: Page;
