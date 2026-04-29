@@ -12,6 +12,10 @@ export async function createEquipment(data: EquipmentRequest): Promise<Equipment
     return res.data;
 }
 
+export async function deleteEquipment(equipmentId: number): Promise<void> {
+    await axios.delete(`${CONFIG.API_BASE}/api/equipments/${equipmentId}`);
+}
+
 export async function fetchEquipmentSchemas(): Promise<EquipmentTypeSchema[]> {
     const res = await axios.get(`${CONFIG.API_BASE}/api/equipment-schemas`);
     return res.data;
