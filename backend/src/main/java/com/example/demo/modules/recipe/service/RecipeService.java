@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.example.demo.modules.equipment.model.EquipmentTypeSchema;
 import com.example.demo.modules.equipment.repository.EquipmentTypeSchemaRepository;
 import com.example.demo.modules.recipe.dto.RecipeRequest;
 import com.example.demo.modules.recipe.model.Recipe;
@@ -26,7 +27,8 @@ public class RecipeService {
     }
 
     public List<Recipe> getRecipesByEquipmentType(String equipmentType) {
-        return recipeRepository.findByEquipmentType(equipmentType);
+        EquipmentTypeSchema schema = getSchemaByEquipmentType(equipmentType);
+        return recipeRepository.findByEquipmentTypeSchema_Id(schema.getId());
     }
 
     public Recipe getRecipeById(Long id) {
@@ -36,14 +38,13 @@ public class RecipeService {
 
     @Transactional
     public Recipe createRecipe(String equipmentType, RecipeRequest request) {
-        schemaRepository.findByEquipmentType(equipmentType)
-                .orElseThrow(() -> new RuntimeException("Equipment type not found"));
+        EquipmentTypeSchema schema = getSchemaByEquipmentType(equipmentType);
 
-        if (recipeRepository.existsByEquipmentTypeAndName(equipmentType, request.getName())) {
+        if (recipeRepository.existsByEquipmentTypeSchema_IdAndName(schema.getId(), request.getName())) {
             throw new RuntimeException("Recipe name already exists for this equipment type");
         }
 
-        List<Recipe> existingRecipes = recipeRepository.findByEquipmentType(equipmentType);
+        List<Recipe> existingRecipes = recipeRepository.findByEquipmentTypeSchema_Id(schema.getId());
         try {
             JsonNode newParams = objectMapper.readTree(request.getParameters());
             for (Recipe existing : existingRecipes) {
@@ -58,7 +59,7 @@ public class RecipeService {
         }
 
         Recipe recipe = new Recipe();
-        recipe.setEquipmentType(equipmentType);
+        recipe.setEquipmentTypeSchema(schema);
         recipe.setName(request.getName());
         recipe.setParameters(request.getParameters());
         recipe.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
@@ -71,7 +72,7 @@ public class RecipeService {
         Recipe recipe = getRecipeById(id);
         
         if (!recipe.getName().equals(request.getName()) && 
-            recipeRepository.existsByEquipmentTypeAndName(recipe.getEquipmentType(), request.getName())) {
+            recipeRepository.existsByEquipmentTypeSchema_IdAndName(recipe.getEquipmentTypeSchemaId(), request.getName())) {
             throw new RuntimeException("Recipe name already exists for this equipment type");
         }
         
@@ -87,5 +88,10 @@ public class RecipeService {
     @Transactional
     public void deleteRecipe(Long id) {
         recipeRepository.deleteById(id);
+    }
+
+    private EquipmentTypeSchema getSchemaByEquipmentType(String equipmentType) {
+        return schemaRepository.findByEquipmentType(equipmentType)
+                .orElseThrow(() -> new RuntimeException("Equipment type not found"));
     }
 }

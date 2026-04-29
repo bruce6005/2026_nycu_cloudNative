@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface RecipeRepository extends JpaRepository<Recipe, Long> {
-    List<Recipe> findByEquipmentType(String equipmentType);
-    boolean existsByEquipmentTypeAndName(String equipmentType, String name);
+    List<Recipe> findByEquipmentTypeSchema_Id(Long equipmentTypeSchemaId);
+    boolean existsByEquipmentTypeSchema_IdAndName(Long equipmentTypeSchemaId, String name);
 }
