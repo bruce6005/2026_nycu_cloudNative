@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+import com.example.demo.modules.equipment.model.Equipment;
+
 @Data
 @Entity
 @Table(name = "equipment_status_logs")

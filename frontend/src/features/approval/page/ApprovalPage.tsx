@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ApprovalList from "../components/ApprovalList";
 import ApprovalDetail from "../components/ApprovalDetail";
 import ApprovalAction from "../components/ApprovalAction";

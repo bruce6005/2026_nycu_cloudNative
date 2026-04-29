@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+import com.example.demo.modules.recipe.model.Recipe;
+
 @Data
 @Entity
 @Table(name = "wip_batch")

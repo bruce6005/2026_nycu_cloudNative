@@ -3,6 +3,7 @@ package com.example.demo.modules.tempdb.model;
 import java.time.LocalDateTime;
 
 import com.example.demo.modules.auth.model.User;
+import com.example.demo.modules.equipment.model.Equipment;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

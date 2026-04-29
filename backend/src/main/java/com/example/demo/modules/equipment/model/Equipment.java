@@ -1,4 +1,4 @@
-package com.example.demo.modules.tempdb.model;
+package com.example.demo.modules.equipment.model;
 
 import com.example.demo.modules.auth.model.User;
 
