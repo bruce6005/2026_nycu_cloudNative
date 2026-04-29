@@ -7,22 +7,21 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.modules.approval.dto.ApprovalActionRequest;
 import com.example.demo.modules.approval.dto.ApprovalResponse;
-import com.example.demo.modules.requests.model.Requests;
-import com.example.demo.modules.requests.model.RequestsStatus;
-import com.example.demo.modules.requests.repository.RequestsRepository;
+import com.example.demo.modules.tempdb.model.Request;
+import com.example.demo.modules.tempdb.repository.RequestRepository;
 
 @Service
 public class ApprovalService {
 
-    private final RequestsRepository requestsRepository;
-    public ApprovalService(RequestsRepository requestsRepository) {
+    private final RequestRepository requestsRepository;
+    public ApprovalService(RequestRepository requestsRepository) {
         this.requestsRepository = requestsRepository;
     }
 
     // 查 pending（只查這個 approver 的）
-    public List<ApprovalResponse> getPendingRequests(Long approverId) {
+    public List<ApprovalResponse> getPendingRequest(Long approverId) {
         return requestsRepository
-                .findByApproverIdAndStatus(approverId, RequestsStatus.PENDING)
+                .findByApprover_IdAndStatus(approverId, "PENDING")
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -31,26 +30,24 @@ public class ApprovalService {
     // approve / reject 主邏輯
     public void handle(Long id, ApprovalActionRequest request) {
 
-        Requests req = requestsRepository.findById(id)
+        Request req = requestsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 
-        if (!req.getApproverId().equals(request.getApproverId())) {
+        if (req.getApprover() == null || !req.getApprover().getId().equals(request.getApproverId())) {
             throw new RuntimeException("No permission");
         }
 
-        if (req.getStatus() == RequestsStatus.APPROVED || req.getStatus() == RequestsStatus.REJECTED) {
+        if ("APPROVED".equals(req.getStatus()) || "REJECTED".equals(req.getStatus())) {
             throw new RuntimeException("Already processed");
         }
 
         switch (request.getAction()) {
             case "APPROVE":
-                req.setStatus(RequestsStatus.APPROVED);
+                req.setStatus("APPROVED");
                 break;
 
             case "REJECT":
-                req.setStatus(RequestsStatus.REJECTED);
-                // 如果你 DB 有欄位可以存 reason
-                // req.setRejectReason(request.getReason());
+                req.setStatus("REJECTED");
                 break;
 
             default:
@@ -64,13 +61,20 @@ public class ApprovalService {
     }
 
     // entity → DTO
-    private ApprovalResponse toResponse(Requests req) {
+    private ApprovalResponse toResponse(Request req) {
         ApprovalResponse res = new ApprovalResponse();
         res.setId(req.getId());
-        res.setFactoryUserId(req.getFactoryUserId());
-        res.setApproverId(req.getApproverId());
+        res.setFactoryUserId(req.getFactoryUser() != null ? req.getFactoryUser().getId() : null);
+        res.setApproverId(req.getApprover() != null ? req.getApprover().getId() : null);
         res.setTitle(req.getTitle());
-        res.setPriority(req.getPriority());
+        
+        // 嘗試將優先度 String 轉回 Integer
+        try {
+            res.setPriority(Integer.parseInt(req.getPriority()));
+        } catch (Exception e) {
+            res.setPriority(5);
+        }
+
         res.setStatus(req.getStatus());
         res.setDescription(req.getDescription());
         res.setCreateTime(req.getCreateTime());

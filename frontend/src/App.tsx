@@ -4,7 +4,7 @@ import { googleLogout } from "@react-oauth/google";
 import Layout from "./layouts/Layout";
 import OrderPage from "./features/order/page/OrderPage";
 import ApprovalPage from "./features/approval/page/ApprovalPage";
-import RequestsPage from "./features/requests/page/RequestsPage";
+import RequestPage from "./features/request/page/RequestPage";
 import LoginPage from "./features/auth/page/LoginPage";
 import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
 import type { AuthUser } from "./features/auth/model/AuthUser";
@@ -13,12 +13,12 @@ import { getNavItems, type Page } from "./features/auth/utils/getNavItems";
 const pageMap: Record<Page, React.ComponentType<any>> = {
   orders: OrderPage,
   approval: ApprovalPage,
-  requests: RequestsPage,
+  request: RequestPage,
 };
 
 function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [page, setPage] = useState<Page>("requests");
+  const [page, setPage] = useState<Page>("request");
 
   const navItems = useMemo(() => {
     return user ? getNavItems(user) : [];
@@ -37,7 +37,7 @@ function App() {
 
   const safePage = navItems.some((item) => item.page === page)
     ? page
-    : navItems[0]?.page ?? "requests";
+    : navItems[0]?.page ?? "request";
 
   const CurrentPage = pageMap[safePage];
 

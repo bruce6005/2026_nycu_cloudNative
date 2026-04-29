@@ -1,6 +1,6 @@
-package com.example.demo.modules.requests.dto;
+package com.example.demo.modules.request.dto;
 
-public class RequestsDTO {
+public class RequestDTO {
     private Long id;
     private String title;
     private String status;
@@ -11,7 +11,7 @@ public class RequestsDTO {
     private String description;
 
     // 前端建立時需要的建構子
-    public RequestsDTO() {
+    public RequestDTO() {
     }
 
     // Getter and Setter

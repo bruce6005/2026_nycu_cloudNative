@@ -145,8 +145,9 @@ public class DataInitializer implements CommandLineRunner {
 
         for (RequestSeed seed : seeds) {
             execute(
-                    "INSERT INTO request (id, factory_user_id, approver_id, priority, status, create_time, end_time, draft_content, description) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, ?)",
+                    "INSERT INTO request (id, title, factory_user_id, approver_id, priority, status, create_time, end_time, draft_content, description) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?)",
                     seed.id,
+                    "Integrated Seed Request " + seed.id,
                     1L,
                     2L,
                     seed.priority,
