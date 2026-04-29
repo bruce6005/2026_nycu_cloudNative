@@ -1,6 +1,6 @@
-const API_BASE = "http://localhost:8080/api/requests";
+const API_BASE = "http://localhost:8080/api/request";
 
-export const getRequests = async () => {
+export const getRequest = async () => {
   const res = await fetch(API_BASE);
   return res.json();
 };

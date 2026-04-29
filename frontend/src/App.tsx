@@ -20,7 +20,7 @@ const pageMap: Record<Page, React.ComponentType<any>> = {
 
 function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [page, setPage] = useState<Page>("requests");
+  const [page, setPage] = useState<Page>("request");
 
   const navItems = useMemo(() => {
     return user ? getNavItems(user) : [];
@@ -39,7 +39,7 @@ function App() {
 
   const safePage = navItems.some((item) => item.page === page)
     ? page
-    : navItems[0]?.page ?? "requests";
+    : navItems[0]?.page ?? "request";
 
   const CurrentPage = pageMap[safePage];
 

@@ -10,7 +10,7 @@ export type NavItem = {
 export function getNavItems(user: AuthUser): NavItem[] {
   if (user.role === "ADMIN") {
     return [
-      { page: "requests", label: "Requests" },
+      { page: "request", label: "Request" },
       { page: "approval", label: "Approval" },
       { page: "dispatch", label: "Dispatch" },
       { page: "orders", label: "Orders" },
@@ -18,7 +18,7 @@ export function getNavItems(user: AuthUser): NavItem[] {
   }
 
   if (user.role === "REQUESTER") {
-    return [{ page: "requests", label: "Requests" }];
+    return [{ page: "request", label: "Request" }];
   }
 
   if (user.role === "MANAGER") {
