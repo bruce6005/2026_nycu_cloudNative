@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.modules.dispatch.dto.CreateWIPBatchRequest;
 import com.example.demo.modules.dispatch.dto.EquipmentWithRecipesDTO;
 import com.example.demo.modules.dispatch.dto.PendingSamplesGroupedByRequestDTO;
-import com.example.demo.modules.dispatch.dto.WIPBatchDTO;
+import com.example.demo.modules.wip.dto.WIPBatchDTO;
 import com.example.demo.modules.dispatch.service.DispatchService;
 
 @RestController
@@ -24,10 +24,6 @@ public class DispatchController {
         this.dispatchService = dispatchService;
     }
 
-    @GetMapping
-    public List<WIPBatchDTO> getWIPBatches() {
-        return dispatchService.getWIPBatches();
-    }
 
     @GetMapping("/pending")
     public List<PendingSamplesGroupedByRequestDTO> getPendingSamples() {
@@ -43,4 +39,5 @@ public class DispatchController {
     public WIPBatchDTO createWIPBatch(@RequestBody CreateWIPBatchRequest request) {
         return dispatchService.createWIPBatch(request);
     }
+
 }

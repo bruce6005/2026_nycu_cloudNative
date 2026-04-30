@@ -26,10 +26,3 @@ export type CreateWIPBatchRequest = {
   recipeId: number;
   sampleIds: number[];
 };
-
-export type WIPBatchDTO = {
-  id: number;
-  recipeId: number;
-  status: string;
-  createTime: string;
-};

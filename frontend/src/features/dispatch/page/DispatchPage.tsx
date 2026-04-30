@@ -8,8 +8,8 @@ import type {
   EquipmentWithRecipesDTO,
   PendingSamplesGroupedByRequestDTO,
   RecipeDTO,
-  WIPBatchDTO,
 } from "../model/DispatchData";
+import type { WIPBatchDTO } from "../../wip/model/WipData";
 import type { AuthUser } from "../../auth/model/AuthUser";
 import "../styles/style.css";
 

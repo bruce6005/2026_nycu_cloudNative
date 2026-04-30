@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +14,7 @@ import com.example.demo.modules.dispatch.dto.CreateWIPBatchRequest;
 import com.example.demo.modules.dispatch.dto.EquipmentWithRecipesDTO;
 import com.example.demo.modules.dispatch.dto.PendingSamplesGroupedByRequestDTO;
 import com.example.demo.modules.dispatch.dto.RecipeDTO;
-import com.example.demo.modules.dispatch.dto.WIPBatchDTO;
+import com.example.demo.modules.wip.dto.WIPBatchDTO;
 import com.example.demo.modules.dispatch.repository.EquipmentRepository;
 import com.example.demo.modules.dispatch.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.dispatch.repository.RecipeRepository;
@@ -49,12 +48,6 @@ public class DispatchService {
         this.wipbatchRepository = wipbatchRepository;
     }
 
-    @Transactional(readOnly = true)
-    public List<WIPBatchDTO> getWIPBatches() {
-        return wipbatchRepository.findAll(Sort.by(Sort.Direction.DESC, "createTime")).stream()
-                .map(this::toWIPBatchDTO)
-                .toList();
-    }
 
     @Transactional(readOnly = true)
     public List<PendingSamplesGroupedByRequestDTO> getPendingSamplesGroupedByRequest() {
@@ -121,7 +114,7 @@ public class DispatchService {
 
         WIPbatch batch = new WIPbatch();
         batch.setRecipe(recipe);
-        batch.setStatus("CREATED");
+        batch.setStatus("QUEUED");
         batch.setCreateTime(LocalDateTime.now());
 
         WIPbatch savedBatch = wipbatchRepository.save(batch);
@@ -134,6 +127,7 @@ public class DispatchService {
 
         return toWIPBatchDTO(savedBatch);
     }
+
 
     private EquipmentWithRecipesDTO toEquipmentWithRecipesDTO(Equipment equipment) {
         EquipmentWithRecipesDTO dto = new EquipmentWithRecipesDTO();
@@ -159,8 +153,18 @@ public class DispatchService {
         WIPBatchDTO dto = new WIPBatchDTO();
         dto.setId(batch.getId());
         dto.setRecipeId(batch.getRecipe().getId());
+        dto.setRecipeName(batch.getRecipe().getName());
+        dto.setEquipmentId(batch.getRecipe().getEquipment().getId());
+        dto.setEquipmentName(batch.getRecipe().getEquipment().getName());
         dto.setStatus(batch.getStatus());
         dto.setCreateTime(batch.getCreateTime());
+        dto.setStartTime(batch.getStartTime());
+        dto.setEndTime(batch.getEndTime());
+
+        // Fill sample barcodes
+        List<Sample> samples = sampleRepository.findByBatch_Id(batch.getId());
+        dto.setSampleBarcodes(samples.stream().map(Sample::getBarcode).toList());
+
         return dto;
     }
 

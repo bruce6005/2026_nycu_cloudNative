@@ -5,6 +5,7 @@ import Layout from "./layouts/Layout";
 import OrderPage from "./features/order/page/OrderPage";
 import ApprovalPage from "./features/approval/page/ApprovalPage";
 import RequestPage from "./features/request/page/RequestPage";
+import WorkInProgressPage from "./features/wip/page/WorkInProgressPage";
 import DispatchPage from "./features/dispatch/page/DispatchPage";
 import LoginPage from "./features/auth/page/LoginPage";
 import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
@@ -15,6 +16,7 @@ const pageMap: Record<Page, React.ComponentType<any>> = {
   orders: OrderPage,
   approval: ApprovalPage,
   dispatch: DispatchPage,
+  wip: WorkInProgressPage,
   request: RequestPage,
 };
 
