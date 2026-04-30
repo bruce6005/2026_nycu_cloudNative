@@ -5,8 +5,8 @@ import Layout from "./layouts/Layout";
 import OrderPage from "./features/order/page/OrderPage";
 import ApprovalPage from "./features/approval/page/ApprovalPage";
 import RequestPage from "./features/request/page/RequestPage";
-import WorkInProgressPage from "./features/wip/page/WorkInProgressPage";
-import DispatchPage from "./features/dispatch/page/DispatchPage";
+import WIPManagementPage from "./features/wip_management/page/WIPManagementPage";
+import WIPBuilderPage from "./features/wip_builder/page/WIPBuilderPage";
 import LoginPage from "./features/auth/page/LoginPage";
 import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
 import type { AuthUser } from "./features/auth/model/AuthUser";
@@ -15,8 +15,8 @@ import { getNavItems, type Page } from "./features/auth/utils/getNavItems";
 const pageMap: Record<Page, React.ComponentType<any>> = {
   orders: OrderPage,
   approval: ApprovalPage,
-  dispatch: DispatchPage,
-  wip: WorkInProgressPage,
+  wip_builder: WIPBuilderPage,
+  wip_management: WIPManagementPage,
   request: RequestPage,
 };
 
