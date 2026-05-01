@@ -8,12 +8,14 @@ import RequestsPage from "./features/requests/page/RequestsPage";
 import LoginPage from "./features/auth/page/LoginPage";
 import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
 import type { AuthUser } from "./features/auth/model/AuthUser";
-import { getNavItems, type Page } from "./features/auth/utils/getNavItems";
+import { getNavItems, type Page } from "./features/utils/getNavItems";
+import RequestsReceivePage from "./features/requestsReceive/page/RequestsReceivePage";
 
 const pageMap: Record<Page, React.ComponentType<any>> = {
   orders: OrderPage,
   approval: ApprovalPage,
   requests: RequestsPage,
+  requestsReceive: RequestsReceivePage,
 };
 
 function App() {
@@ -28,8 +30,7 @@ function App() {
     return <LoginPage setUser={setUser} />;
   }
 
-  const needsSetup =
-    !user.role || (user.role === "REQUESTER" && !user.managerId);
+  const needsSetup = !user.role || (user.role === "REQUESTER" && !user.managerId);
 
   if (needsSetup) {
     return <ProfileSetupPage user={user} setUser={setUser} />;

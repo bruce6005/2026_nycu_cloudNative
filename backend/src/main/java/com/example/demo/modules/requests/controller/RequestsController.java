@@ -4,7 +4,7 @@ import com.example.demo.modules.requests.dto.RequestsDTO;
 import com.example.demo.modules.requests.service.RequestsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 @RestController
@@ -39,5 +39,13 @@ public class RequestsController {
     @GetMapping("/{id}")
     public RequestsDTO getRequestById(@PathVariable Long id) {
         return requestsService.getRequestById(id);
+    }
+
+    // receive requests
+    @PatchMapping("/{id}/receive")
+    public ResponseEntity<RequestsDTO> receiveRequest(@PathVariable Long id) {
+        RequestsDTO updatedRequest = requestsService.receiveRequest(id);
+
+        return ResponseEntity.ok(updatedRequest);
     }
 }

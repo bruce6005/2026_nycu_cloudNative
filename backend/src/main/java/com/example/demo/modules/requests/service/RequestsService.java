@@ -15,6 +15,7 @@ import com.example.demo.modules.requests.dto.RequestsDTO;
 import com.example.demo.modules.requests.model.Requests;
 import com.example.demo.modules.requests.model.RequestsStatus;
 import com.example.demo.modules.requests.repository.RequestsRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RequestsService {
@@ -24,30 +25,6 @@ public class RequestsService {
 
     @Autowired
     private UserRepository userRepository;
-
-
-    /**
-     * 建立新的委託單
-     */
-    // public RequestsDTO createRequest(RequestsDTO dto) {
-    //     Requests requests = new Requests();
-
-    //     // 將 DTO 的資料搬運到 Entity
-    //     requests.setTitle(dto.getTitle());
-    //     requests.setFactoryUserId(dto.getFactoryUserId());
-    //     requests.setPriority(dto.getPriority());
-    //     requests.setDescription(dto.getDescription());
-
-    //     // 設定初始狀態與時間
-    //     requests.setStatus(RequestsStatus.PENDING);
-    //     requests.setCreateTime(LocalDateTime.now());
-
-    //     // 存入資料庫
-    //     Requests saved = requestRepository.save(requests);
-
-    //     // 將結果轉回 DTO 回傳給前端
-    //     return convertToDTO(saved);
-    // }
     public RequestsDTO createRequest(RequestsDTO dto) {
         User factoryUser = userRepository.findById(dto.getFactoryUserId())
                 .orElseThrow(() -> new RuntimeException("Factory user not found"));
@@ -99,6 +76,19 @@ public class RequestsService {
         return convertToDTO(requests);
     }
 
+    @Transactional
+    public Requests receiveRequest(Long requestId) {
+        Requests request = requestsRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Request not found"));
+
+        if (request.getStatus() != RequestsStatus.APPROVED) {
+            throw new IllegalStateException("Only approved requests can be received");
+        }
+
+        request.setStatus(RequestsStatus.RECEIVED);
+
+        return requestsRepository.save(request);
+    }
     /**
      * 輔助方法：將 Entity 轉為 DTO
      */
