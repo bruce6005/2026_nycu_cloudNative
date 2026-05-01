@@ -59,9 +59,6 @@ function RequestsReceivePage() {
     <div className="column" style={{ gap: "16px" }}>
       <div>
         <h2>Receive Requests</h2>
-        <p className="text-muted">
-          接收已核准的委託單，接收後狀態會更新為 received。
-        </p>
       </div>
 
       {error && (
