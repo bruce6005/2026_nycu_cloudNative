@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { googleLogout } from "@react-oauth/google";
 
 import Layout from "./layouts/Layout";
-import OrderPage from "./features/order/page/OrderPage";
 import ApprovalPage from "./features/approval/page/ApprovalPage";
 import RequestPage from "./features/request/page/RequestPage";
 import WIPManagementPage from "./features/wip_management/page/WIPManagementPage";
@@ -13,7 +12,6 @@ import type { AuthUser } from "./features/auth/model/AuthUser";
 import { getNavItems, type Page } from "./features/auth/utils/getNavItems";
 
 const pageMap: Record<Page, React.ComponentType<any>> = {
-  orders: OrderPage,
   approval: ApprovalPage,
   wip_builder: WIPBuilderPage,
   wip_management: WIPManagementPage,

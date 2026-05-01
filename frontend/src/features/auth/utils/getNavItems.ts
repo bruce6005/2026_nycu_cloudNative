@@ -1,6 +1,6 @@
 import type { AuthUser } from "../model/AuthUser";
 
-export type Page = "orders" | "approval" | "wip_builder" | "wip_management" | "request";
+export type Page = "approval" | "wip_builder" | "wip_management" | "request";
 
 export type NavItem = {
   page: Page;
@@ -14,7 +14,6 @@ export function getNavItems(user: AuthUser): NavItem[] {
       { page: "approval", label: "Approval" },
       { page: "wip_builder", label: "WIP Builder" },
       { page: "wip_management", label: "WIP Management" },
-      { page: "orders", label: "Orders" },
     ];
   }
 
@@ -30,7 +29,6 @@ export function getNavItems(user: AuthUser): NavItem[] {
     return [
       { page: "wip_builder", label: "WIP Builder" },
       { page: "wip_management", label: "WIP Management" },
-      { page: "orders", label: "Orders" },
     ];
   }
 
