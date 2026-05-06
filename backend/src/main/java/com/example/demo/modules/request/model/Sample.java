@@ -1,5 +1,6 @@
-package com.example.demo.modules.tempdb.model;
+package com.example.demo.modules.request.model;
 
+import com.example.demo.modules.wip_builder.model.WIPbatch;
 import jakarta.persistence.*;
 import lombok.Data;
 

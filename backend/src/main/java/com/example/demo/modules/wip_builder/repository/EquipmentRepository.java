@@ -2,7 +2,7 @@ package com.example.demo.modules.wip_builder.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.demo.modules.tempdb.model.Equipment;
+import com.example.demo.modules.wip_builder.model.Equipment;
 
 public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
 }

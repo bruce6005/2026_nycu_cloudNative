@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.modules.approval.dto.ApprovalActionRequest;
 import com.example.demo.modules.approval.dto.ApprovalResponse;
-import com.example.demo.modules.tempdb.model.Request;
-import com.example.demo.modules.tempdb.repository.RequestRepository;
+import com.example.demo.modules.request.model.Request;
+import com.example.demo.modules.request.repository.RequestRepository;
 
 @Service
 public class ApprovalService {

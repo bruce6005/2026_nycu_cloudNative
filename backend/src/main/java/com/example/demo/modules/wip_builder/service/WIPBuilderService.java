@@ -18,14 +18,14 @@ import com.example.demo.modules.wip_management.dto.WIPBatchDTO;
 import com.example.demo.modules.wip_builder.repository.EquipmentRepository;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.wip_builder.repository.RecipeRepository;
-import com.example.demo.modules.wip_builder.repository.SampleRepository;
+import com.example.demo.modules.request.repository.SampleRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
-import com.example.demo.modules.tempdb.model.Equipment;
-import com.example.demo.modules.tempdb.model.EquipmentStatusLogs;
-import com.example.demo.modules.tempdb.model.Recipe;
-import com.example.demo.modules.tempdb.model.Request;
-import com.example.demo.modules.tempdb.model.Sample;
-import com.example.demo.modules.tempdb.model.WIPbatch;
+import com.example.demo.modules.wip_builder.model.Equipment;
+import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
+import com.example.demo.modules.wip_builder.model.Recipe;
+import com.example.demo.modules.request.model.Request;
+import com.example.demo.modules.request.model.Sample;
+import com.example.demo.modules.wip_builder.model.WIPbatch;
 
 @Service
 public class WIPBuilderService {

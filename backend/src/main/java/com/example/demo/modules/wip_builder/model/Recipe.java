@@ -1,4 +1,4 @@
-package com.example.demo.modules.tempdb.model;
+package com.example.demo.modules.wip_builder.model;
 
 import jakarta.persistence.*;
 import lombok.Data;

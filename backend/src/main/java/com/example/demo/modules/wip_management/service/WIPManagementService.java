@@ -8,14 +8,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
-import com.example.demo.modules.wip_builder.repository.SampleRepository;
+import com.example.demo.modules.request.repository.SampleRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
-import com.example.demo.modules.tempdb.repository.RequestRepository;
-import com.example.demo.modules.tempdb.model.Equipment;
-import com.example.demo.modules.tempdb.model.EquipmentStatusLogs;
-import com.example.demo.modules.tempdb.model.Request;
-import com.example.demo.modules.tempdb.model.Sample;
-import com.example.demo.modules.tempdb.model.WIPbatch;
+import com.example.demo.modules.request.repository.RequestRepository;
+import com.example.demo.modules.wip_builder.model.Equipment;
+import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
+import com.example.demo.modules.request.model.Request;
+import com.example.demo.modules.request.model.Sample;
+import com.example.demo.modules.wip_builder.model.WIPbatch;
 import com.example.demo.modules.wip_management.dto.WIPBatchDTO;
 
 @Service

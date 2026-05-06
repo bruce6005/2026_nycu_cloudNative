@@ -1,5 +1,7 @@
-package com.example.demo.modules.tempdb.model;
+package com.example.demo.modules.wip_builder.model;
 
+import com.example.demo.modules.wip_builder.model.Equipment;
+import com.example.demo.modules.wip_builder.model.WIPbatch;
 import java.time.LocalDateTime;
 
 import com.example.demo.modules.auth.model.User;

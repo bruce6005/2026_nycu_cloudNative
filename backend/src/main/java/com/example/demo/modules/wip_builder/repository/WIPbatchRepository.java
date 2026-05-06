@@ -2,7 +2,7 @@ package com.example.demo.modules.wip_builder.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.demo.modules.tempdb.model.WIPbatch;
+import com.example.demo.modules.wip_builder.model.WIPbatch;
 
 public interface WIPbatchRepository extends JpaRepository<WIPbatch, Long> {
 }

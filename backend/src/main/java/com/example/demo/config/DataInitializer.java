@@ -14,9 +14,9 @@ import com.example.demo.modules.auth.repository.UserRepository;
 import com.example.demo.modules.wip_builder.repository.EquipmentRepository;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.wip_builder.repository.RecipeRepository;
-import com.example.demo.modules.wip_builder.repository.SampleRepository;
+import com.example.demo.modules.request.repository.SampleRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
-import com.example.demo.modules.tempdb.repository.RequestRepository;
+import com.example.demo.modules.request.repository.RequestRepository;
 
 @Component
 @Transactional

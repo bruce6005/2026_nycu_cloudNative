@@ -1,10 +1,10 @@
-package com.example.demo.modules.wip_builder.repository;
+package com.example.demo.modules.request.repository;
 
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.demo.modules.tempdb.model.Sample;
+import com.example.demo.modules.request.model.Sample;
 
 public interface SampleRepository extends JpaRepository<Sample, Long> {
     List<Sample> findByBatchIsNull();

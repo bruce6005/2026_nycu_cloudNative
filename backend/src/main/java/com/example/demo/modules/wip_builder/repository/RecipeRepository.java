@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.demo.modules.tempdb.model.Recipe;
+import com.example.demo.modules.wip_builder.model.Recipe;
 
 public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     List<Recipe> findByEquipmentId(Long equipmentId);

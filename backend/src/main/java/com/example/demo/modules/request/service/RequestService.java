@@ -12,8 +12,8 @@ import com.example.demo.modules.auth.model.UserRole;
 import com.example.demo.modules.auth.repository.UserRepository;
 
 import com.example.demo.modules.request.dto.RequestDTO;
-import com.example.demo.modules.tempdb.model.Request;
-import com.example.demo.modules.tempdb.repository.RequestRepository;
+import com.example.demo.modules.request.model.Request;
+import com.example.demo.modules.request.repository.RequestRepository;
 
 @Service
 public class RequestService {

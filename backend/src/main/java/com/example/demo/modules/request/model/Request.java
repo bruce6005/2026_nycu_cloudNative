@@ -1,4 +1,4 @@
-package com.example.demo.modules.tempdb.model;
+package com.example.demo.modules.request.model;
 
 import java.time.LocalDateTime;
 
