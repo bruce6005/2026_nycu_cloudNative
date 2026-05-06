@@ -1,0 +1,278 @@
+.dispatch-layout {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  height: calc(100vh - 60px);
+  box-sizing: border-box;
+}
+
+.dispatch-left,
+.dispatch-middle,
+.dispatch-right {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dispatch-left {
+  width: 28%;
+}
+
+.dispatch-middle {
+  width: 34%;
+}
+
+.dispatch-right {
+  width: 38%;
+}
+
+.dispatch-panel {
+  flex: 1;
+  overflow: hidden;
+}
+
+.dispatch-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.dispatch-subtitle {
+  margin-bottom: 16px;
+}
+
+.no-wrap {
+  white-space: nowrap;
+}
+
+.dispatch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.dispatch-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.dispatch-card:hover {
+  background: var(--hover);
+}
+
+.dispatch-card.selected {
+  border-color: #111827;
+  background: #f3f4f6;
+}
+
+.dispatch-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.dispatch-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.dispatch-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #111827;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dispatch-card-meta {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--subtext);
+}
+
+.dispatch-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.priority-urgent {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.priority-high {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.priority-normal {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.priority-low {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.status-approved {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.status-pending {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.status-draft {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.equipment-status {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-idle {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.status-busy {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.status-maintenance {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.status-error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.status-unknown {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.dispatch-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fafafa;
+  margin-bottom: 16px;
+}
+
+.dispatch-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.recipe-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.recipe-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.recipe-pill:hover {
+  background: var(--hover);
+}
+
+.recipe-pill.selected {
+  border-color: #111827;
+  background: #111827;
+  color: white;
+}
+
+.recipe-version {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.dispatch-footer {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.dispatch-error {
+  margin-top: 12px;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.dispatch-success {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 14px;
+}
+
+@media (max-width: 1180px) {
+  .dispatch-layout {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .dispatch-left,
+  .dispatch-middle,
+  .dispatch-right {
+    width: 100%;
+    min-height: 320px;
+  }
+}

@@ -11,3 +11,6 @@ target/
 
 # mac
 .DS_Store
+
+# vscode
+.vscode/

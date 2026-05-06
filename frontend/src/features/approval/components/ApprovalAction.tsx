@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "../styles/style.css";
 import "@/styles/global.css";
 import RejectModal from "./RejectModal";
