@@ -5,6 +5,7 @@ import Layout from "./layouts/Layout";
 import OrderPage from "./features/order/page/OrderPage";
 import ApprovalPage from "./features/approval/page/ApprovalPage";
 import RequestsPage from "./features/requests/page/RequestsPage";
+import AlarmPage from "./features/alarm/page/AlarmPage";
 import LoginPage from "./features/auth/page/LoginPage";
 import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
 import type { AuthUser } from "./features/auth/model/AuthUser";
@@ -14,6 +15,7 @@ const pageMap: Record<Page, React.ComponentType<any>> = {
   orders: OrderPage,
   approval: ApprovalPage,
   requests: RequestsPage,
+  alarm: AlarmPage,
 };
 
 function App() {

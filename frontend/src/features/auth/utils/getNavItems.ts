@@ -1,6 +1,6 @@
 import type { AuthUser } from "../model/AuthUser";
 
-export type Page = "orders" | "approval" | "requests";
+export type Page = "orders" | "approval" | "requests" | "alarm";
 
 export type NavItem = {
   page: Page;
@@ -13,6 +13,7 @@ export function getNavItems(user: AuthUser): NavItem[] {
       { page: "requests", label: "Requests" },
       { page: "approval", label: "Approval" },
       { page: "orders", label: "Orders" },
+      { page: "alarm", label: "Alarm" },
     ];
   }
 
@@ -26,6 +27,7 @@ export function getNavItems(user: AuthUser): NavItem[] {
 
   if (user.role === "LAB_STAFF") {
     return [{ page: "orders", label: "Orders" }];
+    return [{ page: "alarm", label: "alarm" }];
   }
 
   return [];
