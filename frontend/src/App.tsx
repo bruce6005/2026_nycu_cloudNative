@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import { googleLogout } from "@react-oauth/google";
 
 import Layout from "./layouts/Layout";
-import OrderPage from "./features/order/page/OrderPage";
 import ApprovalPage from "./features/approval/page/ApprovalPage";
-import RequestsPage from "./features/requests/page/RequestsPage";
+import RequestPage from "./features/request/page/RequestPage";
+import WIPManagementPage from "./features/wip_management/page/WIPManagementPage";
+import WIPBuilderPage from "./features/wip_builder/page/WIPBuilderPage";
 import LoginPage from "./features/auth/page/LoginPage";
 import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
 import EquipmentPage from "./features/equipment/page/EquipmentPage";
@@ -15,19 +16,20 @@ import { getNavItems, type Page } from "./features/utils/getNavItems";
 import RequestsReceivePage from "./features/requestsReceive/page/RequestsReceivePage";
 
 const pageMap: Record<Page, React.ComponentType<any>> = {
-  orders: OrderPage,
   approval: ApprovalPage,
-  requests: RequestsPage,
+  request: RequestPage,
   requestsReceive: RequestsReceivePage,
   equipment: EquipmentPage,
   equipmentTypes: EquipmentTypeManagementPage,
   recipe: RecipeManagementPage,
+  wip_builder: WIPBuilderPage,
+  wip_management: WIPManagementPage,
   management: () => <div className="p-4">Please select an item from the sidebar dropdown.</div>,
 };
 
 function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [page, setPage] = useState<Page>("requests");
+  const [page, setPage] = useState<Page>("request");
 
   const navItems = useMemo(() => {
     return user ? getNavItems(user) : [];
@@ -47,7 +49,7 @@ function App() {
     (item) => item.page === page || item.subItems?.some((sub) => sub.page === page)
   );
 
-  const safePage = isPageValid ? page : navItems[0]?.page ?? "requests";
+  const safePage = isPageValid ? page : navItems[0]?.page ?? "request";
 
   const CurrentPage = pageMap[safePage];
 
