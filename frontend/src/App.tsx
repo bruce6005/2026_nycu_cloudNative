@@ -7,6 +7,9 @@ import ApprovalPage from "./features/approval/page/ApprovalPage";
 import RequestsPage from "./features/requests/page/RequestsPage";
 import LoginPage from "./features/auth/page/LoginPage";
 import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
+import EquipmentPage from "./features/equipment/page/EquipmentPage";
+import EquipmentTypeManagementPage from "./features/equipment/page/EquipmentTypeManagementPage";
+import RecipeManagementPage from "./features/recipe/page/RecipeManagementPage";
 import type { AuthUser } from "./features/auth/model/AuthUser";
 import { getNavItems, type Page } from "./features/auth/utils/getNavItems";
 
@@ -14,6 +17,10 @@ const pageMap: Record<Page, React.ComponentType<any>> = {
   orders: OrderPage,
   approval: ApprovalPage,
   requests: RequestsPage,
+  equipment: EquipmentPage,
+  equipmentTypes: EquipmentTypeManagementPage,
+  recipe: RecipeManagementPage,
+  management: () => <div className="p-4">Please select an item from the sidebar dropdown.</div>,
 };
 
 function App() {
@@ -35,9 +42,11 @@ function App() {
     return <ProfileSetupPage user={user} setUser={setUser} />;
   }
 
-  const safePage = navItems.some((item) => item.page === page)
-    ? page
-    : navItems[0]?.page ?? "requests";
+  const isPageValid = navItems.some(
+    (item) => item.page === page || item.subItems?.some((sub) => sub.page === page)
+  );
+
+  const safePage = isPageValid ? page : navItems[0]?.page ?? "requests";
 
   const CurrentPage = pageMap[safePage];
 
