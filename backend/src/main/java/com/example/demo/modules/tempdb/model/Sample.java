@@ -1,7 +1,8 @@
-package com.example.demo.modules.tempdb.model;
 
+package com.example.demo.modules.tempdb.model;
 import jakarta.persistence.*;
 import lombok.Data;
+import com.example.demo.modules.requests.model.Requests;
 
 @Data
 @Entity
@@ -13,7 +14,7 @@ public class Sample {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id", nullable = false)
-    private Request request;
+    private Requests request;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "batch_id")

@@ -1,6 +1,6 @@
-import type { AuthUser } from "../model/AuthUser";
+import type { AuthUser } from "../auth/model/AuthUser";
 
-export type Page = "orders" | "approval" | "requests" | "equipment" | "equipmentTypes" | "recipe" | "management";
+export type Page = "orders" | "approval" | "requests" | "requestsReceive" | "equipment" | "equipmentTypes" | "recipe" | "management";
 
 export type NavItem = {
   page: Page;
@@ -14,8 +14,9 @@ export function getNavItems(user: AuthUser): NavItem[] {
       { page: "requests", label: "Requests" },
       { page: "approval", label: "Approval" },
       { page: "orders", label: "Orders" },
-      { 
-        page: "management", 
+      { page: "requestsReceive", label: "RequestsReceive" },
+      {
+        page: "management",
         label: "Management",
         subItems: [
           { page: "equipmentTypes", label: "Equipment Types" },
@@ -33,8 +34,8 @@ export function getNavItems(user: AuthUser): NavItem[] {
   if (user.role === "MANAGER") {
     return [
       { page: "approval", label: "Approval" },
-      { 
-        page: "management", 
+      {
+        page: "management",
         label: "Management",
         subItems: [
           { page: "equipmentTypes", label: "Equipment Types" },
@@ -46,7 +47,7 @@ export function getNavItems(user: AuthUser): NavItem[] {
   }
 
   if (user.role === "LAB_STAFF") {
-    return [{ page: "orders", label: "Orders" }];
+    return [{ page: "requestsReceive", label: "RequestsReceive" }];
   }
 
   return [];

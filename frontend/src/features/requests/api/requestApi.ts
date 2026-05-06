@@ -1,7 +1,7 @@
-const API_BASE = "http://localhost:8080/api/requests";
 
+import { CONFIG } from "../../../config/config";
 export const getRequests = async () => {
-  const res = await fetch(API_BASE);
+  const res = await fetch(CONFIG.API_BASE + "/requests");
   return res.json();
 };
 
@@ -11,7 +11,7 @@ export const createRequest = async (data: {
   priority: number;
   description: string;
 }) => {
-  const res = await fetch(API_BASE, {
+  const res = await fetch(CONFIG.API_BASE + "/requests", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -20,6 +20,6 @@ export const createRequest = async (data: {
 };
 
 export const getRequestById = async (id: number) => {
-  const res = await fetch(`${API_BASE}/${id}`);
+  const res = await fetch(`${CONFIG.API_BASE}/requests/${id}`);
   return res.json();
 };

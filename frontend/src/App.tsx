@@ -11,12 +11,14 @@ import EquipmentPage from "./features/equipment/page/EquipmentPage";
 import EquipmentTypeManagementPage from "./features/equipment/page/EquipmentTypeManagementPage";
 import RecipeManagementPage from "./features/recipe/page/RecipeManagementPage";
 import type { AuthUser } from "./features/auth/model/AuthUser";
-import { getNavItems, type Page } from "./features/auth/utils/getNavItems";
+import { getNavItems, type Page } from "./features/utils/getNavItems";
+import RequestsReceivePage from "./features/requestsReceive/page/RequestsReceivePage";
 
 const pageMap: Record<Page, React.ComponentType<any>> = {
   orders: OrderPage,
   approval: ApprovalPage,
   requests: RequestsPage,
+  requestsReceive: RequestsReceivePage,
   equipment: EquipmentPage,
   equipmentTypes: EquipmentTypeManagementPage,
   recipe: RecipeManagementPage,
@@ -35,8 +37,7 @@ function App() {
     return <LoginPage setUser={setUser} />;
   }
 
-  const needsSetup =
-    !user.role || (user.role === "REQUESTER" && !user.managerId);
+  const needsSetup = !user.role || (user.role === "REQUESTER" && !user.managerId);
 
   if (needsSetup) {
     return <ProfileSetupPage user={user} setUser={setUser} />;

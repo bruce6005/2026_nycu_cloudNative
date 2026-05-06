@@ -1,4 +1,6 @@
-import type { Page, NavItem } from "../features/auth/utils/getNavItems";
+import React from "react";
+import type { Page, NavItem } from "../features/utils/getNavItems";
+
 
 type Props = {
   children: React.ReactNode;
@@ -64,9 +66,8 @@ function Layout({
                   {item.subItems.map((sub) => (
                     <div
                       key={sub.page}
-                      className={`menu-item sub-menu-item ${
-                        currentPage === sub.page ? "active" : ""
-                      }`}
+                      className={`menu-item sub-menu-item ${currentPage === sub.page ? "active" : ""
+                        }`}
                       onClick={(e) => {
                         e.stopPropagation();
                         onNavigate(sub.page);
@@ -80,9 +81,8 @@ function Layout({
             ) : (
               <div
                 key={item.page}
-                className={`menu-item ${
-                  currentPage === item.page ? "active" : ""
-                }`}
+                className={`menu-item ${currentPage === item.page ? "active" : ""
+                  }`}
                 onClick={() => onNavigate(item.page)}
               >
                 {item.label}
