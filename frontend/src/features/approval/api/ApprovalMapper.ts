@@ -1,9 +1,7 @@
 import type { ApprovalResponse, ApprovalItem } from "../model/ApprovalData";
 
-const mapPriorityLabel = (priority: number): "HIGH" | "MEDIUM" | "LOW" => {
-  if (priority <= 2) return "HIGH";
-  if (priority <= 4) return "MEDIUM";
-  return "LOW";
+const mapPriorityLabel = (priority: string): "URGENT" | "NORMAL" => {
+  return priority === "URGENT" ? "URGENT" : "NORMAL";
 };
 
 export const mapToApprovalItem = (

@@ -23,8 +23,8 @@ function ApprovalDetail({ order }: Props) {
         {/* name → title */}
         <div className="detail-title">{order.title}</div>
 
-        {order.priorityLabel === "HIGH" && (
-          <span className="priority-badge">HIGH</span>
+        {order.priorityLabel === "URGENT" && (
+          <span className="priority-badge">URGENT</span>
         )}
       </div>
 
@@ -34,11 +34,7 @@ function ApprovalDetail({ order }: Props) {
       <div className="detail-row">
         <div className="detail-label">Priority</div>
         <div className="detail-value">
-          {order.priorityLabel === "HIGH"
-            ? "High Priority"
-            : order.priorityLabel === "MEDIUM"
-            ? "Medium Priority"
-            : "Normal"}
+          {order.priorityLabel === "URGENT" ? "Urgent Priority" : "Normal"}
         </div>
       </div>
 

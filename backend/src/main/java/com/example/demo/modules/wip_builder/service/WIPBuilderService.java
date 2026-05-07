@@ -50,8 +50,23 @@ public class WIPBuilderService {
 
     @Transactional(readOnly = true)
     public List<PendingSamplesGroupedByRequestDTO> getPendingSamplesGroupedByRequest() {
-        Map<Long, List<Sample>> groupedSamples = sampleRepository.findByBatchIsNull().stream()
-                .filter(sample -> isDispatchableRequest(sample.getRequest()))
+        // Map<Long, List<Sample>> groupedSamples =
+        // sampleRepository.findByBatchIsNull().stream()
+        // .filter(sample -> isDispatchableRequest(sample.getRequest()))
+        List<Sample> allSamples = sampleRepository.findByBatchIsNull();
+        System.out.println("[DEBUG] Total samples without batch: " + allSamples.size());
+
+        Map<Long, List<Sample>> groupedSamples = allSamples.stream()
+                .filter(sample -> {
+                    boolean dispatchable = isDispatchableRequest(sample.getRequest());
+                    if (dispatchable) {
+                        System.out.println(
+                                "[DEBUG] Sample " + sample.getBarcode() + " of Request " + sample.getRequest().getId()
+                                        + " is dispatchable (Status: " + sample.getRequest().getStatus() + ")");
+                    }
+                    return dispatchable;
+                })
+                //
                 .collect(Collectors.groupingBy(sample -> sample.getRequest().getId(), LinkedHashMap::new,
                         Collectors.toList()));
 
@@ -135,9 +150,10 @@ public class WIPBuilderService {
         dto.setName(equipment.getName());
         dto.setMaxCapacity(equipment.getMaxCapacity());
         dto.setCurrentStatus(resolveCurrentEquipmentStatus(equipment.getId()));
-        dto.setRecipes(recipeRepository.findByEquipmentTypeSchema_Id(equipment.getEquipmentTypeSchema().getId()).stream()
-                .map(this::toRecipeDTO)
-                .toList());
+        dto.setRecipes(
+                recipeRepository.findByEquipmentTypeSchema_Id(equipment.getEquipmentTypeSchema().getId()).stream()
+                        .map(this::toRecipeDTO)
+                        .toList());
         return dto;
     }
 
@@ -168,7 +184,10 @@ public class WIPBuilderService {
     }
 
     private String resolveRequestTitle(Request request) {
-        return String.valueOf(request.getId());
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            return request.getTitle();
+        }
+        return "Request #" + request.getId();
     }
 
     private String resolveCurrentEquipmentStatus(Long equipmentId) {

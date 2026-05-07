@@ -7,8 +7,9 @@ public class RequestDTO {
 
     private Long factoryUserId;
     private Long approverId;
-    private Integer priority;
+    private String priority;
     private String description;
+    private java.util.List<SampleDTO> samples;
 
     // 前端建立時需要的建構子
     public RequestDTO() {
@@ -55,12 +56,20 @@ public class RequestDTO {
         this.approverId = approverId;
     }
 
-    public Integer getPriority() {
+    public String getPriority() {
         return priority;
     }
 
-    public void setPriority(Integer priority) {
+    public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public java.util.List<SampleDTO> getSamples() {
+        return samples;
+    }
+
+    public void setSamples(java.util.List<SampleDTO> samples) {
+        this.samples = samples;
     }
 
     public String getDescription() {

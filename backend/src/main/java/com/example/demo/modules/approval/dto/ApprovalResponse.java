@@ -13,7 +13,7 @@ public class ApprovalResponse {
     private Long approverId;
     
     private String title;
-    private Integer priority;
+    private String priority;
     
     private String status;
     private String description;

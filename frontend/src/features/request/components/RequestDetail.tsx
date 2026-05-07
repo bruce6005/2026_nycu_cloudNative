@@ -63,8 +63,34 @@ export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack }) => {
 
                 <div className="form-group">
                     <label className="label">詳細描述</label>
-                    <div className="card" style={{ background: '#fcfcfc', minHeight: '100px' }}>
+                    <div className="card" style={{ background: '#fcfcfc', minHeight: '60px', marginBottom: '16px' }}>
                         {request.description || <span className="text-muted">(無詳細描述)</span>}
+                    </div>
+                </div>
+
+                <div className="form-group">
+                    <label className="label">樣本與配方清單</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {request.samples && request.samples.length > 0 ? (
+                            request.samples.map((s: any, idx: number) => (
+                                <div key={idx} style={{ 
+                                    padding: '12px', 
+                                    background: '#fff', 
+                                    border: '1px solid #ddd', 
+                                    borderRadius: '6px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <span style={{ fontWeight: 500 }}>{s.barcode}</span>
+                                    <span className="tag" style={{ background: '#e0f2fe', color: '#0369a1' }}>
+                                        {s.recipeName || '未指定配方'}
+                                    </span>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-muted">此單無樣本資料</div>
+                        )}
                     </div>
                 </div>
             </div>

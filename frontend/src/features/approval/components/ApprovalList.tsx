@@ -25,13 +25,13 @@ function ApprovalList({ orders, onSelect, selected }: Props) {
           >
             <div className="order-card-header">
               <span className="order-title">{o.title}</span>
-              {o.priorityLabel === "HIGH" && (
+              {o.priorityLabel === "URGENT" && (
                 <span className="priority-dot" />
               )}
             </div>
 
             <div className="order-sub">
-              {o.priorityLabel === "HIGH" ? "High Priority" : "Normal"}
+              {o.priorityLabel === "URGENT" ? "Urgent Priority" : "Normal"}
             </div>
           </div>
         ))

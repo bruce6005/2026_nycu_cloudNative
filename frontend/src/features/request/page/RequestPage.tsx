@@ -34,7 +34,15 @@ function RequestPage({ user }: Props) {
   }, []);
 
   if (selectedId !== null) {
-    return <RequestDetail id={selectedId} onBack={() => setSelectedId(null)} />;
+    return (
+      <RequestDetail
+        id={selectedId}
+        onBack={() => {
+          setSelectedId(null);
+          loadRequest(); // 返回列表時重新整理，確保狀態是最新的
+        }}
+      />
+    );
   }
 
   return (
