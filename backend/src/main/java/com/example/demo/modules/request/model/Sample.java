@@ -1,5 +1,6 @@
 package com.example.demo.modules.request.model;
 
+import com.example.demo.modules.recipe.model.Recipe;
 import com.example.demo.modules.wip_builder.model.WIPbatch;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -22,6 +23,10 @@ public class Sample {
 
     @Column(nullable = false, unique = true)
     private String barcode;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recipe_id")
+    private Recipe recipe;
 
     @Column(nullable = false)
     private String status;

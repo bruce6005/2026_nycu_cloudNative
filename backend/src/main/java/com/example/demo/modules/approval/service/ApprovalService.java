@@ -69,12 +69,7 @@ public class ApprovalService {
         res.setApproverId(req.getApprover() != null ? req.getApprover().getId() : null);
         res.setTitle(req.getTitle());
 
-        // 嘗試將優先度 String 轉回 Integer
-        try {
-            res.setPriority(Integer.parseInt(req.getPriority()));
-        } catch (Exception e) {
-            res.setPriority(5);
-        }
+        res.setPriority(req.getPriority());
 
         res.setStatus(req.getStatus());
         res.setDescription(req.getDescription());

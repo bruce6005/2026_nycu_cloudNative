@@ -5,7 +5,7 @@ interface RequestData {
     id: number;
     title: string;
     status: string;
-    priority: number;
+    priority: string;
     description: string;
 }
 
@@ -35,13 +35,18 @@ export const RequestList: React.FC<RequestListProps> = ({ requests, onSelect }) 
                                     {req.status}
                                 </span>
                             </div>
-                            <div className="text-muted mt-1" style={{ fontSize: '13px' }}>
-                                <span className="tag secondary" style={{ marginRight: '8px', background: '#eee' }}>
-                                    優先度: {req.priority}
+                            <div className="text-muted mt-1" style={{ fontSize: '13px', display: 'flex', alignItems: 'center' }}>
+                                <span className="tag" style={{ 
+                                    marginRight: '8px', 
+                                    background: req.priority === 'URGENT' ? '#fee2e2' : '#f3f4f6',
+                                    color: req.priority === 'URGENT' ? '#991b1b' : '#374151',
+                                    border: req.priority === 'URGENT' ? '1px solid #fecaca' : '1px solid #d1d5db'
+                                }}>
+                                    {req.priority}
                                 </span>
-                                {req.description && req.description.length > 50 
-                                    ? req.description.substring(0, 50) + '...' 
-                                    : req.description}
+                                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {req.description}
+                                </span>
                             </div>
                         </div>
                     ))}
