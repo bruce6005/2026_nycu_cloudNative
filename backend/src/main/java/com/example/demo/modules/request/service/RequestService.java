@@ -135,9 +135,11 @@ public class RequestService {
         List<SampleDTO> sampleDTOs = samples.stream().map(s -> {
             SampleDTO sDto = new SampleDTO();
             sDto.setBarcode(s.getBarcode());
+            sDto.setStatus(s.getStatus());
             if (s.getRecipe() != null) {
                 sDto.setRecipeId(s.getRecipe().getId());
                 sDto.setRecipeName(s.getRecipe().getName());
+                sDto.setRecipeParameters(s.getRecipe().getParameters());
             }
             return sDto;
         }).collect(Collectors.toList());

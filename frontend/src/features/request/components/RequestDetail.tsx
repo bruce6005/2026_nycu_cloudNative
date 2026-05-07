@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { getRequestById } from '../api/requestApi';
+import { getRequestById, type RequestDetailDTO } from '../api/requestApi';
+import '../styles/request.css';
 
 interface RequestDetailProps {
   id: number;
-  onBack: () => void; // 提供返回列表的功能
+    onBack?: () => void; // 提供返回列表的功能
+    inline?: boolean;
 }
 
-export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack }) => {
-  const [request, setRequest] = useState<any>(null);
+export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack, inline = false }) => {
+    const [request, setRequest] = useState<RequestDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,12 +30,14 @@ export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack }) => {
   if (!request) return <p>找不到資料</p>;
 
     return (
-        <div className="card" style={{ maxWidth: '600px', margin: '24px' }}>
-            <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div className={`request-detail ${inline ? 'request-detail-inline' : 'card'}`}>
+            <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px' }}>
                 <h2 style={{ margin: 0 }}>委託單詳情 - #{request.id}</h2>
-                <button className="button secondary" onClick={onBack}>
-                    ← 返回列表
-                </button>
+                {!inline && onBack && (
+                    <button className="button secondary" onClick={onBack}>
+                        ← 返回列表
+                    </button>
+                )}
             </div>
 
             <div className="column">
@@ -70,22 +74,29 @@ export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack }) => {
 
                 <div className="form-group">
                     <label className="label">樣本與配方清單</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div className="request-sample-list">
                         {request.samples && request.samples.length > 0 ? (
-                            request.samples.map((s: any, idx: number) => (
-                                <div key={idx} style={{ 
-                                    padding: '12px', 
-                                    background: '#fff', 
-                                    border: '1px solid #ddd', 
-                                    borderRadius: '6px',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center'
-                                }}>
-                                    <span style={{ fontWeight: 500 }}>{s.barcode}</span>
-                                    <span className="tag" style={{ background: '#e0f2fe', color: '#0369a1' }}>
-                                        {s.recipeName || '未指定配方'}
-                                    </span>
+                            request.samples.map((s, idx: number) => (
+                                <div key={idx} className="request-sample-card">
+                                    <div className="request-sample-main">
+                                        <span className="request-sample-barcode">{s.barcode}</span>
+                                        <span className="request-sample-recipe">下一步 Recipe：{s.recipeName || '未指定配方'}</span>
+                                        <span className="tag request-sample-status">
+                                            {s.status || 'UNKNOWN'}
+                                        </span>
+                                    </div>
+                                    <div className="request-sample-meta">
+                                        <div className="request-sample-meta-item">
+                                            <span className="label-inline">Recipe</span>
+                                            <span>{s.recipeName || '未指定配方'}</span>
+                                        </div>
+                                        <div className="request-sample-meta-item">
+                                            <span className="label-inline">Recipe 詳細</span>
+                                            <span className="request-sample-params">
+                                                {s.recipeParameters || '無參數資訊'}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             ))
                         ) : (

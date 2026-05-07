@@ -1,15 +1,15 @@
 import type {
   EquipmentWithRecipesDTO,
   PendingSamplesGroupedByRequestDTO,
-  RecipeDTO,
-  WIPBatchDTO,
 } from "../model/WIPBuilderData";
+import type { WIPBatchDTO } from "../../wip_management/model/WipManagementData";
 
 type Props = {
-  selectedRequest: PendingSamplesGroupedByRequestDTO | null;
+  stagedRequests: PendingSamplesGroupedByRequestDTO[];
   selectedEquipment: EquipmentWithRecipesDTO | null;
-  selectedRecipe: RecipeDTO | null;
-  onSelectRecipe: (recipe: RecipeDTO) => void;
+  stagedRecipeName: string | null;
+  requiredCapacity: number;
+  onRemoveRequest: (requestId: number) => void;
   onCreate: () => void;
   loading: boolean;
   error?: string;
@@ -17,69 +17,81 @@ type Props = {
 };
 
 function CreateBatchPanel({
-  selectedRequest,
+  stagedRequests,
   selectedEquipment,
-  selectedRecipe,
-  onSelectRecipe,
+  stagedRecipeName,
+  requiredCapacity,
+  onRemoveRequest,
   onCreate,
   loading,
   error,
   success,
 }: Props) {
-  const canCreate = Boolean(selectedRequest && selectedEquipment && selectedRecipe && !loading);
+  const canCreate = Boolean(stagedRequests.length > 0 && selectedEquipment && stagedRecipeName && !loading);
 
   return (
     <div className="card column dispatch-panel">
       <div className="dispatch-title">Create WIP Batch</div>
       <div className="text-muted dispatch-subtitle">
-        Confirm request, equipment, and recipe before sending to the floor
+        Add requests from the left panel, then confirm the batch settings
       </div>
 
       <div className="dispatch-summary">
         <div className="dispatch-summary-row mb-1 no-wrap">
-          <span className="detail-label">Request id</span>
-          <span className="detail-value">
-            {selectedRequest ? selectedRequest.requestTitle : "Select a request"}
-          </span>
-        </div>
-        <div className="dispatch-summary-row mb-1 no-wrap
-        ">
           <span className="detail-label">Equipment</span>
           <span className="detail-value">
             {selectedEquipment ? selectedEquipment.name : "Select an equipment"}
           </span>
         </div>
-        <div className="dispatch-summary-row">
-          <span className="detail-label">Recipe</span>
+        <div className="dispatch-summary-row mb-1 no-wrap">
+          <span className="detail-label">Equipment Type</span>
           <span className="detail-value">
-            {selectedRecipe ? `${selectedRecipe.name} v${selectedRecipe.version}` : "Select a recipe"}
+            {selectedEquipment ? selectedEquipment.equipmentType : "-"}
           </span>
         </div>
-        <div className="dispatch-summary-row  mb-1 no-wrap">
-          <span className="detail-label">Required Capacity</span>
-          <span className="detail-value">
-            {selectedRequest?.unassignedSampleIds.length ?? 0}
+        <div className="dispatch-summary-row mb-1 no-wrap">
+          <span className="detail-label">Capacity</span>
+          <span className="detail-value capacity-large">
+            {requiredCapacity}/{selectedEquipment?.maxCapacity ?? 0}
           </span>
+        </div>
+        <div className="dispatch-summary-row flex-column">
+          <span className="detail-label no-wrap">Available Recipes</span>
+          <div className="recipes-container">
+            {selectedEquipment && selectedEquipment.recipes.length > 0
+              ? selectedEquipment.recipes.map((r, idx) => (
+                  <span key={r.id} className={`recipe-tag recipe-tag-${idx % 5}`}>
+                    {r.name}
+                  </span>
+                ))
+              : "-"}
+          </div>
         </div>
       </div>
 
-      <div>
-        <div className="detail-label mb-1 no-wrap">Available recipes</div>
-        <div className="recipe-grid">
-          {selectedEquipment?.recipes.length ? (
-            selectedEquipment.recipes.map((recipe) => (
-              <button
-                key={recipe.id}
-                type="button"
-                className={`recipe-pill ${selectedRecipe?.id === recipe.id ? "selected" : ""}`}
-                onClick={() => onSelectRecipe(recipe)}
-              >
-                {recipe.name}
-                <span className="recipe-version">v{recipe.version}</span>
-              </button>
-            ))
+      <div className="batch-request-list-wrap">
+        <div className="detail-label mb-1 no-wrap">Requests in this batch</div>
+        <div className="batch-request-list">
+          {stagedRequests.length === 0 ? (
+            <div className="text-muted">No requests added yet</div>
           ) : (
-            <div className="text-muted">No recipes for the selected equipment</div>
+            stagedRequests.map((request) => (
+              <div key={request.requestId} className="batch-request-item">
+                <div>
+                  <div className="batch-request-title">{request.requestTitle}</div>
+                  <div className="dispatch-card-meta">
+                    Demand: {request.pendingSampleCount} | Recipe: {request.nextRecipeName || "-"}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="button secondary batch-remove-btn"
+                  onClick={() => onRemoveRequest(request.requestId)}
+                >
+                  X
+                </button>
+              </div>
+            ))
           )}
         </div>
       </div>

@@ -74,6 +74,10 @@ public class WIPBuilderService {
         for (Map.Entry<Long, List<Sample>> entry : groupedSamples.entrySet()) {
             List<Sample> samples = entry.getValue();
             Request request = samples.get(0).getRequest();
+            Sample sampleWithRecipe = samples.stream()
+                    .filter(sample -> sample.getRecipe() != null)
+                    .findFirst()
+                    .orElse(null);
 
             PendingSamplesGroupedByRequestDTO dto = new PendingSamplesGroupedByRequestDTO();
             dto.setRequestId(request.getId());
@@ -82,6 +86,10 @@ public class WIPBuilderService {
             dto.setPriority(request.getPriority());
             dto.setPendingSampleCount(samples.size());
             dto.setUnassignedSampleIds(samples.stream().map(Sample::getId).toList());
+            if (sampleWithRecipe != null) {
+                dto.setNextRecipeId(sampleWithRecipe.getRecipe().getId());
+                dto.setNextRecipeName(sampleWithRecipe.getRecipe().getName());
+            }
             result.add(dto);
         }
 
@@ -125,6 +133,11 @@ public class WIPBuilderService {
             if (sample.getBatch() != null) {
                 throw new RuntimeException("Sample " + sample.getId() + " is already assigned to a batch");
             }
+
+            if (sample.getRecipe() == null || !sample.getRecipe().getId().equals(recipe.getId())) {
+                throw new RuntimeException(
+                        "All selected samples must belong to recipe " + recipe.getName() + " (id=" + recipe.getId() + ")");
+            }
         }
 
         WIPbatch batch = new WIPbatch();
@@ -148,6 +161,7 @@ public class WIPBuilderService {
         EquipmentWithRecipesDTO dto = new EquipmentWithRecipesDTO();
         dto.setId(equipment.getId());
         dto.setName(equipment.getName());
+        dto.setEquipmentType(equipment.getEquipmentTypeSchema().getEquipmentType());
         dto.setMaxCapacity(equipment.getMaxCapacity());
         dto.setCurrentStatus(resolveCurrentEquipmentStatus(equipment.getId()));
         dto.setRecipes(

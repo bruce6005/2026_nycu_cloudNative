@@ -1,6 +1,8 @@
 package com.example.demo.config;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -61,6 +63,7 @@ public class DataInitializer implements CommandLineRunner {
         seedEquipments();
         seedRecipes();
         seedRequestsAndSamples();
+        seedWIPBatches();
         seedEquipmentStatusLogs();
     }
 
@@ -91,8 +94,9 @@ public class DataInitializer implements CommandLineRunner {
                 {1L, "THERMAL", "{\"type\": \"object\", \"properties\": {\"temperature\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 1200}, \"time_minutes\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 600}}, \"required\": [\"temperature\", \"time_minutes\"]}"},
                 {2L, "COATING", "{\"type\": \"object\", \"properties\": {\"spin_speed_rpm\": {\"type\": \"integer\", \"minimum\": 100, \"maximum\": 5000}, \"thickness_nm\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 1000}}, \"required\": [\"spin_speed_rpm\"]}"},
                 {3L, "ETCHING", "{\"type\": \"object\", \"properties\": {\"gas_flow_sccm\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 500}, \"rf_power_w\": {\"type\": \"integer\", \"minimum\": 10, \"maximum\": 2000}}, \"required\": [\"gas_flow_sccm\", \"rf_power_w\"]}"},
-                {4L, "INSPECT", "{\"type\": \"object\", \"properties\": {\"magnification\": {\"type\": \"string\", \"enum\": [\"10x\", \"20x\", \"50x\"]}, \"threshold\": {\"type\": \"number\", \"minimum\": 0, \"maximum\": 1}}, \"required\": [\"magnification\", \"threshold\"]}"}
-        };
+                {4L, "INSPECT", "{\"type\": \"object\", \"properties\": {\"magnification\": {\"type\": \"string\", \"enum\": [\"10x\", \"20x\", \"50x\"]}, \"threshold\": {\"type\": \"number\", \"minimum\": 0, \"maximum\": 1}}, \"required\": [\"magnification\", \"threshold\"]}"},
+                {5L, "UV_CURE", "{\"type\": \"object\", \"properties\": {\"temperature\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 100}, \"time_minutes\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 60}}, \"required\": [\"temperature\", \"time_minutes\"]}"},
+        };      
 
         for (Object[] row : schemaRows) {
             execute(
@@ -104,11 +108,16 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedEquipments() {
         Object[][] equipmentRows = new Object[][] {
-                {1L, 2L, "High-Temp Oven (高溫烤箱)", 1L, 10},
-                {2L, 2L, "Spin Coater (光阻塗佈機)", 2L, 1},
-                {3L, 2L, "Plasma Etcher (電漿蝕刻機)", 3L, 4},
-                {4L, 2L, "SEM Microscope (電子顯微鏡)", 4L, 1},
-                {5L, 2L, "UV Curing (UV固化機)", 1L, 5},
+                {1L, 2L, "High-Temp Oven 1 (高溫烤箱)", 1L, 10},
+                {2L, 2L, "Spin Coater 1 (光阻塗佈機)", 2L, 1},
+                {3L, 2L, "Plasma Etcher 1 (電漿蝕刻機)", 3L, 4},
+                {4L, 2L, "SEM Microscope 1 (電子顯微鏡)", 4L, 5},
+                {5L, 2L, "UV Curing 1 (UV固化機)", 5L, 5},
+                {6L, 2L, "High-Temp Oven 2 (高溫烤箱)", 1L, 8},
+                {7L, 2L, "Spin Coater 2 (光阻塗佈機)", 2L, 1},
+                {8L, 2L, "Plasma Etcher 2 (電漿蝕刻機)", 3L, 4},
+                {9L, 2L, "SEM Microscope 2 (電子顯微鏡)", 4L, 10},
+                {10L, 2L, "UV Curing 2 (UV固化機)", 5L, 5},
         };
 
         for (Object[] row : equipmentRows) {
@@ -138,9 +147,15 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedRequestsAndSamples() {
-        UserRole ignored = UserRole.REQUESTER;
         LocalDateTime baseTime = LocalDateTime.of(2026, 4, 1, 9, 0);
         int barcodeIndex = 1;
+        List<Long> recipeIds = recipeRepository.findAll().stream()
+                .map(recipe -> recipe.getId())
+                .toList();
+
+        if (recipeIds.isEmpty()) {
+            throw new IllegalStateException("No recipes available for sample seeding");
+        }
 
         RequestSeed[] seeds = new RequestSeed[] {
             new RequestSeed(1L, "URGENT", 4),
@@ -166,6 +181,8 @@ public class DataInitializer implements CommandLineRunner {
         };
 
         for (RequestSeed seed : seeds) {
+            Long recipeId = recipeIds.get(ThreadLocalRandom.current().nextInt(recipeIds.size()));
+
             execute(
                     "INSERT INTO request (id, title, factory_user_id, approver_id, priority, status, create_time, end_time, draft_content, description) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?)",
                     seed.id,
@@ -180,10 +197,11 @@ public class DataInitializer implements CommandLineRunner {
 
             for (int sampleNo = 1; sampleNo <= seed.sampleCount; sampleNo++) {
                 execute(
-                    "INSERT INTO sample (id, request_id, batch_id, barcode, status) VALUES (?, ?, NULL, ?, ?)",
+                    "INSERT INTO sample (id, request_id, batch_id, barcode, recipe_id, status) VALUES (?, ?, NULL, ?, ?, ?)",
                         (long) barcodeIndex,
                         seed.id,
                         String.format("WAFER-%03d", barcodeIndex),
+                        recipeId,
                         "PENDING"
                 );
                 barcodeIndex++;
@@ -205,6 +223,100 @@ public class DataInitializer implements CommandLineRunner {
                     "INSERT INTO equipment_status_logs (id, equipment_id, status, start_time, end_time) VALUES (?, ?, ?, ?, NULL)",
                     row[0], row[1], row[2], row[3]
             );
+        }
+    }
+
+    private void seedWIPBatches() {
+        LocalDateTime baseTime = LocalDateTime.of(2026, 4, 1, 10, 0);
+        List<Long> sampleIds = sampleRepository.findAll().stream()
+                .map(sample -> sample.getId())
+                .toList();
+
+        if (sampleIds.isEmpty()) {
+            System.out.println("No samples available for WIP batch seeding");
+            return;
+        }
+
+        // Batch 1: QUEUED - waiting to start
+        execute(
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, NULL, NULL)",
+                1L, 1L, 1L, "QUEUED", baseTime
+        );
+        // Assign first 4 samples to batch 1
+        updateSampleBatch(1L, 4L, 1L);
+
+        // Batch 2: RUNNING - currently processing
+        LocalDateTime runStartTime = baseTime.plusHours(1);
+        execute(
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, NULL)",
+                2L, 2L, 2L, "RUNNING", baseTime.plusMinutes(15), runStartTime
+        );
+        // Assign samples 5-9 to batch 2, mark as PROCESSING
+        for (long i = 5; i <= 9; i++) {
+            if (i <= sampleIds.size()) {
+                execute(
+                        "UPDATE sample SET batch_id = ?, status = ? WHERE id = ?",
+                        2L, "PROCESSING", i
+                );
+            }
+        }
+
+        // Batch 3: FINISHED - completed successfully
+        LocalDateTime finishTime = baseTime.minusHours(2);
+        execute(
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                3L, 3L, 3L, "FINISHED", finishTime.minusHours(1), finishTime.minusMinutes(30), finishTime
+        );
+        // Assign samples 10-12 to batch 3, mark as COMPLETED
+        for (long i = 10; i <= 12; i++) {
+            if (i <= sampleIds.size()) {
+                execute(
+                        "UPDATE sample SET batch_id = ?, status = ? WHERE id = ?",
+                        3L, "COMPLETED", i
+                );
+            }
+        }
+
+        // Batch 4: FINISHED - another completed batch with different recipe
+        LocalDateTime finishTime2 = baseTime.minusHours(3);
+        execute(
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                4L, 4L, 4L, "FINISHED", finishTime2.minusHours(1), finishTime2.minusMinutes(45), finishTime2
+        );
+        // Assign samples 13-15 to batch 4
+        for (long i = 13; i <= 15; i++) {
+            if (i <= sampleIds.size()) {
+                execute(
+                        "UPDATE sample SET batch_id = ?, status = ? WHERE id = ?",
+                        4L, "COMPLETED", i
+                );
+            }
+        }
+
+        // Batch 5: QUEUED - another waiting batch
+        execute(
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, NULL, NULL)",
+                5L, 5L, 5L, "QUEUED", baseTime.plusHours(2)
+        );
+        // Assign samples 16-18 to batch 5
+        for (long i = 16; i <= 18; i++) {
+            if (i <= sampleIds.size()) {
+                execute(
+                        "UPDATE sample SET batch_id = ? WHERE id = ?",
+                        5L, i
+                );
+            }
+        }
+    }
+
+    private void updateSampleBatch(Long startId, Long endId, Long batchId) {
+        for (long i = startId; i <= endId; i++) {
+            if (i <= sampleRepository.findAll().size()) {
+                execute(
+                        "UPDATE sample SET batch_id = ? WHERE id = ?",
+                        batchId, i
+                );
+            }
         }
     }
 

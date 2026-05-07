@@ -1,5 +1,29 @@
 import { CONFIG } from "../../../config/config";
 
+export type RequestSampleDTO = {
+  barcode: string;
+  status: string;
+  recipeId?: number | null;
+  recipeName?: string | null;
+  recipeParameters?: string | null;
+};
+
+export type RequestDetailDTO = {
+  id: number;
+  title: string;
+  status: string;
+  factoryUserId: number;
+  approverId: number;
+  priority: string;
+  description: string;
+  samples: RequestSampleDTO[];
+};
+
+export type RequestListItemDTO = Pick<
+  RequestDetailDTO,
+  "id" | "title" | "status" | "priority" | "description"
+>;
+
 export const getRequest = async () => {
   const res = await fetch(CONFIG.API_BASE + "/api/request");
   if (!res.ok) throw new Error("Fetch failed");

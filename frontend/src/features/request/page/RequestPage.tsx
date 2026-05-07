@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { RequestForm } from "../components/RequestForm";
 import { RequestList } from "../components/RequestList";
-import { RequestDetail } from "../components/RequestDetail";
 import { getRequest } from "../api/requestApi";
 import type { AuthUser } from "../../auth/model/AuthUser";
 
@@ -12,7 +11,6 @@ type Props = {
 function RequestPage({ user }: Props) {
   const [requests, setRequests] = useState<any[]>([]); // 修正：給予明確型別並改回複數變數名（代表複數資料）
   const [error, setError] = useState("");
-  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const loadRequest = async () => {
     try {
@@ -33,18 +31,6 @@ function RequestPage({ user }: Props) {
     loadRequest();
   }, []);
 
-  if (selectedId !== null) {
-    return (
-      <RequestDetail
-        id={selectedId}
-        onBack={() => {
-          setSelectedId(null);
-          loadRequest(); // 返回列表時重新整理，確保狀態是最新的
-        }}
-      />
-    );
-  }
-
   return (
     <div className="flex" style={{ padding: '24px', alignItems: 'flex-start' }}>
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -58,7 +44,7 @@ function RequestPage({ user }: Props) {
       {/* 右側：主清單區 */}
       <div className="column" style={{ flex: 1 }}>
         <h2>委託單清單</h2>
-        <RequestList requests={requests} onSelect={(id) => setSelectedId(id)} />
+        <RequestList requests={requests} />
       </div>
     </div>
   );

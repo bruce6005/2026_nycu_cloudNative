@@ -5,6 +5,8 @@ export type PendingSamplesGroupedByRequestDTO = {
   priority: string;
   pendingSampleCount: number;
   unassignedSampleIds: number[];
+  nextRecipeId?: number | null;
+  nextRecipeName?: string | null;
 };
 
 export type RecipeDTO = {
@@ -16,6 +18,7 @@ export type RecipeDTO = {
 export type EquipmentWithRecipesDTO = {
   id: number;
   name: string;
+  equipmentType: string;
   maxCapacity: number;
   currentStatus?: string | null;
   recipes: RecipeDTO[];

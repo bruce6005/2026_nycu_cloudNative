@@ -1,20 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { RequestDetail } from './RequestDetail';
+import type { RequestListItemDTO } from '../api/requestApi';
 
 // 定義每一筆委託單的資料格式
-interface RequestData {
-    id: number;
-    title: string;
-    status: string;
-    priority: string;
-    description: string;
-}
-
 interface RequestListProps {
-    requests: RequestData[]; // 從外部傳入的委託單清單
-    onSelect: (id: number) => void; // 新增：點擊後的動作
+    requests: RequestListItemDTO[]; // 從外部傳入的委託單清單
 }
 
-export const RequestList: React.FC<RequestListProps> = ({ requests, onSelect }) => {
+export const RequestList: React.FC<RequestListProps> = ({ requests }) => {
+    const [expandedId, setExpandedId] = useState<number | null>(null);
+
+    const toggleExpanded = (id: number) => {
+        setExpandedId((current) => (current === id ? null : id));
+    };
+
     return (
         <div className="card">
             <h3 className="mb-1">委託單列表</h3>
@@ -25,15 +24,23 @@ export const RequestList: React.FC<RequestListProps> = ({ requests, onSelect }) 
                     {requests.map((req) => (
                         <div 
                             key={req.id} 
-                            className="list-item column" 
+                            className={`list-item column request-card ${expandedId === req.id ? 'expanded' : ''}`} 
                             style={{ borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '8px' }}
-                            onClick={() => onSelect(req.id)}
                         >
                             <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                                 <strong style={{ fontSize: '15px' }}>#{req.id} - {req.title}</strong>
-                                <span className={`tag ${req.status.toLowerCase()}`}>
-                                    {req.status}
-                                </span>
+                                <div className="flex" style={{ gap: '8px', alignItems: 'center' }}>
+                                    <span className={`tag ${req.status.toLowerCase()}`}>
+                                        {req.status}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="button secondary request-expand-button"
+                                        onClick={() => toggleExpanded(req.id)}
+                                    >
+                                        {expandedId === req.id ? '收合' : '展開'}
+                                    </button>
+                                </div>
                             </div>
                             <div className="text-muted mt-1" style={{ fontSize: '13px', display: 'flex', alignItems: 'center' }}>
                                 <span className="tag" style={{ 
@@ -48,6 +55,12 @@ export const RequestList: React.FC<RequestListProps> = ({ requests, onSelect }) 
                                     {req.description}
                                 </span>
                             </div>
+
+                            {expandedId === req.id && (
+                                <div className="request-expanded-detail">
+                                    <RequestDetail id={req.id} inline />
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
