@@ -2,8 +2,8 @@ import type {
   EquipmentWithRecipesDTO,
   PendingSamplesGroupedByRequestDTO,
   RecipeDTO,
-  WIPBatchDTO,
 } from "../model/WIPBuilderData";
+import type { WIPBatchDTO } from "../../wip_management/model/WipManagementData";
 
 type Props = {
   selectedRequest: PendingSamplesGroupedByRequestDTO | null;

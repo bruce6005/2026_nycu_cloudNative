@@ -71,23 +71,125 @@ Repository（透過 JPA 存取資料）
 Database（CRUD）   
 
 
-# 啟動流程
+# 啟動流程（本地開發）
 
-## 0. 安裝docker mysql
-確定有docker
-利用docker-compose.yml 啟動 mysql
+## 0. 前置需求
+
+- Docker / Docker Compose
+- Java 17
+- Node.js / npm
+
+## 1. 啟動資料庫（MySQL）
+
+確認 Docker 已啟動後，在專案根目錄執行：
+
 ```bash
 docker compose up -d
 ```
 
-## 1. 啟動資料庫（MySQL）
-先確認 application.properties 連線設定正確    
+目前 `docker-compose.yml` 會建立：
 
-## 2. 啟動 Backend
-cd backend    
-./mvnw spring-boot:run    
+- database: `lab_system`
+- username: `root`
+- password: `1234`
+- port: `3306`
 
-## 3. 啟動 Frontend
-cd frontend     
-npm install     
-npm run dev    
+## 2. 設定 Frontend 環境變數
+
+前端使用 Vite，環境變數必須以 `VITE_` 開頭。
+
+先複製範本：
+
+```bash
+cd frontend
+cp .env.example .env
+```
+
+本地開發可使用：
+
+```env
+VITE_GOOGLE_CLIENT_ID=你的_google_client_id
+VITE_API_BASE=http://localhost:8080
+```
+
+注意：`frontend/.env` 只放本機設定與敏感資料，不要 commit。
+
+## 3. 設定 Backend 環境變數
+
+後端的預設值已經能連到本地 Docker MySQL，所以只要使用預設資料庫設定，可以直接啟動。
+
+目前預設值等同於：
+
+```env
+SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/lab_system
+SPRING_DATASOURCE_USERNAME=root
+SPRING_DATASOURCE_PASSWORD=1234
+SPRING_JPA_HIBERNATE_DDL_AUTO=create
+GOOGLE_CLIENT_ID=
+APP_CORS_ALLOWED_ORIGINS=http://localhost:*
+```
+
+如果要明確指定，請在啟動 backend 前用 shell export：
+
+```bash
+cd backend
+export SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/lab_system
+export SPRING_DATASOURCE_USERNAME=root
+export SPRING_DATASOURCE_PASSWORD=1234
+export SPRING_JPA_HIBERNATE_DDL_AUTO=create
+export GOOGLE_CLIENT_ID=你的_google_client_id
+export APP_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+```
+
+也可以在 IntelliJ / VS Code 的 Run Configuration 裡設定同樣的環境變數。
+
+`backend/.env.example` 是範本檔；Spring Boot 不會自動讀取 `.env`，所以實際執行時仍要透過 shell export、IDE Run Configuration，或部署平台的 Environment Variables 設定。
+
+## 4. 啟動 Backend
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+Backend 預設會跑在：
+
+```text
+http://localhost:8080
+```
+
+## 5. 啟動 Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend 預設會跑在 Vite 顯示的網址，通常是：
+
+```text
+http://localhost:5173
+```
+
+## 6. 部署環境設定提醒
+
+部署到 Cloud Run 或其他平台時，不要使用本地 `.env` 檔案。請改在平台的 Environment Variables 設定：
+
+Backend：
+
+```env
+SPRING_DATASOURCE_URL=正式資料庫連線字串
+SPRING_DATASOURCE_USERNAME=正式資料庫使用者
+SPRING_DATASOURCE_PASSWORD=正式資料庫密碼
+SPRING_JPA_HIBERNATE_DDL_AUTO=update
+GOOGLE_CLIENT_ID=正式 Google OAuth Client ID
+APP_CORS_ALLOWED_ORIGINS=https://你的前端網址
+```
+
+Frontend build 時：
+
+```env
+VITE_GOOGLE_CLIENT_ID=正式 Google OAuth Client ID
+VITE_API_BASE=https://你的後端網址
+```
