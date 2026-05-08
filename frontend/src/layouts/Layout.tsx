@@ -1,11 +1,6 @@
 import React from "react";
+import type { Page, NavItem } from "../features/utils/getNavItems";
 
-export type Page = "orders" | "approval" | "requests" | "alarm";
-
-export type NavItem = {
-  page: Page;
-  label: string;
-};
 
 type Props = {
   children: React.ReactNode;
@@ -63,17 +58,37 @@ function Layout({
 
       <div className="container">
         <div className="sidebar">
-          {navItems.map((item) => (
-            <div
-              key={item.page}
-              className={`menu-item ${
-                currentPage === item.page ? "active" : ""
-              }`}
-              onClick={() => onNavigate(item.page)}
-            >
-              {item.label}
-            </div>
-          ))}
+          {navItems.map((item) =>
+            item.subItems ? (
+              <div key={item.page} className="nav-group menu-item">
+                {item.label} ▾
+                <div className="sub-menu">
+                  {item.subItems.map((sub) => (
+                    <div
+                      key={sub.page}
+                      className={`menu-item sub-menu-item ${currentPage === sub.page ? "active" : ""
+                        }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNavigate(sub.page);
+                      }}
+                    >
+                      {sub.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div
+                key={item.page}
+                className={`menu-item ${currentPage === item.page ? "active" : ""
+                  }`}
+                onClick={() => onNavigate(item.page)}
+              >
+                {item.label}
+              </div>
+            )
+          )}
         </div>
 
         <div className="content">{children}</div>

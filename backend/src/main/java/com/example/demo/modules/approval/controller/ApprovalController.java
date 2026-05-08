@@ -19,7 +19,7 @@ public class ApprovalController {
     // 查待審核
     @GetMapping("/pending")
     public List<ApprovalResponse> getPending(@RequestParam Long approverId) {
-        return approvalService.getPendingRequests(approverId);
+        return approvalService.getPendingRequest(approverId);
     }
 
     // approve / reject 共用
