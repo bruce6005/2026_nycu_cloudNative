@@ -17,5 +17,6 @@ export const mapToApprovalItem = (
     description: item.description,
     status: item.status,
     createTime: item.createTime,
+    samples: item.samples,
   }));
 };

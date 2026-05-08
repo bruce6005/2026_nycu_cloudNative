@@ -129,6 +129,7 @@ public class RequestService {
         dto.setApproverId(entity.getApprover() != null ? entity.getApprover().getId() : null);
         dto.setPriority(entity.getPriority());
         dto.setDescription(entity.getDescription());
+        dto.setRejectReason(entity.getRejectReason());
 
         // 讀取 samples
         List<Sample> samples = sampleRepository.findByRequest_Id(entity.getId());

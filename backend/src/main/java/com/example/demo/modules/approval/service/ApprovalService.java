@@ -14,9 +14,12 @@ import com.example.demo.modules.request.repository.RequestRepository;
 public class ApprovalService {
 
     private final RequestRepository requestRepository;
+    private final com.example.demo.modules.request.repository.SampleRepository sampleRepository;
 
-    public ApprovalService(RequestRepository requestRepository) {
+    public ApprovalService(RequestRepository requestRepository, 
+                         com.example.demo.modules.request.repository.SampleRepository sampleRepository) {
         this.requestRepository = requestRepository;
+        this.sampleRepository = sampleRepository;
     }
 
     // 查 pending（只查這個 approver 的）
@@ -49,6 +52,7 @@ public class ApprovalService {
 
             case "REJECT":
                 req.setStatus("REJECTED");
+                req.setRejectReason(request.getReason());
                 break;
 
             default:
@@ -74,6 +78,21 @@ public class ApprovalService {
         res.setStatus(req.getStatus());
         res.setDescription(req.getDescription());
         res.setCreateTime(req.getCreateTime());
+
+        // 讀取 samples 並轉換為 DTO
+        List<com.example.demo.modules.request.dto.SampleDTO> sampleDTOs = sampleRepository.findByRequest_Id(req.getId()).stream()
+            .map(s -> {
+                com.example.demo.modules.request.dto.SampleDTO sDto = new com.example.demo.modules.request.dto.SampleDTO();
+                sDto.setBarcode(s.getBarcode());
+                if (s.getRecipe() != null) {
+                    sDto.setRecipeId(s.getRecipe().getId());
+                    sDto.setRecipeName(s.getRecipe().getName());
+                }
+                return sDto;
+            }).collect(java.util.stream.Collectors.toList());
+        
+        res.setSamples(sampleDTOs);
+
         return res;
     }
 }

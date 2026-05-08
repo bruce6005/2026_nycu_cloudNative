@@ -65,6 +65,24 @@ export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack, inline
                     </div>
                 </div>
 
+                {/* 顯示退回原因 */}
+                {request.status === 'REJECTED' && request.rejectReason && (
+                    <div className="form-group" style={{ marginBottom: '16px' }}>
+                        <label className="label" style={{ color: '#e5484d' }}>⚠️ 審核退回原因</label>
+                        <div style={{ 
+                            padding: '12px', 
+                            background: '#fff5f5', 
+                            border: '1px solid #fecaca', 
+                            borderRadius: '8px',
+                            color: '#991b1b',
+                            fontWeight: 500,
+                            fontSize: '14px'
+                        }}>
+                            {request.rejectReason}
+                        </div>
+                    </div>
+                )}
+
                 <div className="form-group">
                     <label className="label">詳細描述</label>
                     <div className="card" style={{ background: '#fcfcfc', minHeight: '60px', marginBottom: '16px' }}>

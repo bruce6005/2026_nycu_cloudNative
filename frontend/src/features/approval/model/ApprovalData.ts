@@ -9,6 +9,10 @@ export type ApprovalResponse = {
   createTime: string;
   endTime?: string;
   draftContent?: any;
+  samples?: {
+    barcode: string;
+    recipeName?: string;
+  }[];
 };
 
 export type ApprovalItem = {
@@ -21,4 +25,8 @@ export type ApprovalItem = {
   description: string;
   status: string;
   createTime: string;
+  samples?: {
+    barcode: string;
+    recipeName?: string;
+  }[];
 };

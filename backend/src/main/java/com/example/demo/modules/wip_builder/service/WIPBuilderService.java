@@ -18,6 +18,7 @@ import com.example.demo.modules.wip_management.dto.WIPBatchDTO;
 import com.example.demo.modules.equipment.repository.EquipmentRepository;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.recipe.repository.RecipeRepository;
+import com.example.demo.modules.request.repository.RequestRepository;
 import com.example.demo.modules.request.repository.SampleRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
 import com.example.demo.modules.equipment.model.Equipment;
@@ -35,17 +36,20 @@ public class WIPBuilderService {
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final RecipeRepository recipeRepository;
     private final WIPbatchRepository wipbatchRepository;
+    private final RequestRepository requestRepository;
 
     public WIPBuilderService(SampleRepository sampleRepository,
             EquipmentRepository equipmentRepository,
             EquipmentStatusLogsRepository equipmentStatusLogsRepository,
             RecipeRepository recipeRepository,
-            WIPbatchRepository wipbatchRepository) {
+            WIPbatchRepository wipbatchRepository,
+            RequestRepository requestRepository) {
         this.sampleRepository = sampleRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.recipeRepository = recipeRepository;
         this.wipbatchRepository = wipbatchRepository;
+        this.requestRepository = requestRepository;
     }
 
     @Transactional(readOnly = true)
@@ -154,6 +158,12 @@ public class WIPBuilderService {
         }
         sampleRepository.saveAll(samples);
 
+        // Check and update request status to DISPATCHED if all samples are assigned
+        samples.stream()
+                .map(Sample::getRequest)
+                .distinct()
+                .forEach(this::checkAndUpdateRequestStatus);
+
         return toWIPBatchDTO(savedBatch);
     }
 
@@ -210,6 +220,19 @@ public class WIPBuilderService {
                 .or(() -> equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipmentId))
                 .map(EquipmentStatusLogs::getStatus)
                 .orElse(null);
+    }
+
+    private void checkAndUpdateRequestStatus(Request request) {
+        List<Sample> allSamples = sampleRepository.findByRequest_Id(request.getId());
+
+        boolean allAssignedOrMore = allSamples.stream()
+                .allMatch(s -> "ASSIGNED".equals(s.getStatus()) || "RUNNING".equals(s.getStatus())
+                        || "COMPLETED".equals(s.getStatus()));
+
+        if (allAssignedOrMore && !"DONE".equals(request.getStatus()) && !"PROCESSING".equals(request.getStatus())) {
+            request.setStatus("DISPATCHED");
+            requestRepository.save(request);
+        }
     }
 
     private boolean isDispatchableRequest(Request request) {

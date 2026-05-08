@@ -9,6 +9,7 @@ public class RequestDTO {
     private Long approverId;
     private String priority;
     private String description;
+    private String rejectReason;
     private java.util.List<SampleDTO> samples;
 
     // 前端建立時需要的建構子
@@ -78,5 +79,13 @@ public class RequestDTO {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 }

@@ -16,6 +16,7 @@ export type RequestDetailDTO = {
   approverId: number;
   priority: string;
   description: string;
+  rejectReason?: string;
   samples: RequestSampleDTO[];
 };
 
@@ -39,8 +40,9 @@ export type RequestDTO = {
   title: string;
   factoryUserId: number;
   priority: "NORMAL" | "URGENT";
-  description: string;
-  samples: SampleDTO[];
+  description?: string;
+  rejectReason?: string;
+  samples?: SampleDTO[];
 };
 
 export const createRequest = async (data: RequestDTO) => {

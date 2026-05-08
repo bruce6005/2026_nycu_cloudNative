@@ -18,4 +18,5 @@ public class ApprovalResponse {
     private String status;
     private String description;
     private LocalDateTime createTime;
+    private java.util.List<com.example.demo.modules.request.dto.SampleDTO> samples;
 }

@@ -59,17 +59,18 @@ public class WIPManagementService {
         // Update equipment status to BUSY
         updateEquipmentStatus(batch.getEquipment(), "BUSY");
 
-        // Mark affected requests as PROCESSING
+        // Update samples status to RUNNING
         List<Sample> samples = sampleRepository.findByBatch_Id(id);
+        for (Sample sample : samples) {
+            sample.setStatus("RUNNING");
+        }
+        sampleRepository.saveAll(samples);
+
+        // Check each affected request
         samples.stream()
                 .map(Sample::getRequest)
                 .distinct()
-                .forEach(request -> {
-                    if (!"PROCESSING".equals(request.getStatus())) {
-                        request.setStatus("PROCESSING");
-                        requestRepository.save(request);
-                    }
-                });
+                .forEach(this::checkAndUpdateRequestStatus);
 
         return toWIPBatchDTO(savedBatch);
     }
@@ -122,13 +123,30 @@ public class WIPManagementService {
         equipmentStatusLogsRepository.save(newLog);
     }
 
-    private void checkAndUpdateRequestStatus(Request request) {
-        // If all samples for this request are COMPLETED, mark request as DONE
-        boolean allDone = sampleRepository.findByRequest_Id(request.getId()).stream()
+    public void checkAndUpdateRequestStatus(Request request) {
+        List<Sample> allSamples = sampleRepository.findByRequest_Id(request.getId());
+        
+        boolean anyRunning = allSamples.stream()
+                .anyMatch(s -> "RUNNING".equals(s.getStatus()));
+        
+        boolean allCompleted = allSamples.stream()
                 .allMatch(s -> "COMPLETED".equals(s.getStatus()));
+        
+        boolean allAssignedOrMore = allSamples.stream()
+                .allMatch(s -> "ASSIGNED".equals(s.getStatus()) || "RUNNING".equals(s.getStatus()) || "COMPLETED".equals(s.getStatus()));
 
-        if (allDone) {
-            request.setStatus("DONE");
+        String newStatus = request.getStatus();
+
+        if (allCompleted) {
+            newStatus = "DONE";
+        } else if (anyRunning) {
+            newStatus = "PROCESSING";
+        } else if (allAssignedOrMore) {
+            newStatus = "DISPATCHED";
+        }
+
+        if (!newStatus.equals(request.getStatus())) {
+            request.setStatus(newStatus);
             requestRepository.save(request);
         }
     }
