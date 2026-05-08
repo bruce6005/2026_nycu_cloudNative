@@ -1,6 +1,6 @@
 import type { AuthUser } from "../auth/model/AuthUser";
 
-export type Page = "approval" | "request" | "requestsReceive" | "equipment" | "equipmentTypes" | "recipe" | "management" | "wip_builder" | "wip_management";
+export type Page = "approval" | "request" | "requestsReceive" | "equipment" | "equipmentTypes" | "recipe" | "history" | "management" | "wip_builder" | "wip_management";
 
 export type NavItem = {
   page: Page;
@@ -16,6 +16,7 @@ export function getNavItems(user: AuthUser): NavItem[] {
       { page: "requestsReceive", label: "RequestsReceive" },
       { page: "wip_builder", label: "WIP Builder" },
       { page: "wip_management", label: "WIP Management" },
+      { page: "history", label: "History" },
       {
         page: "management",
         label: "Management",
@@ -35,6 +36,7 @@ export function getNavItems(user: AuthUser): NavItem[] {
   if (user.role === "MANAGER") {
     return [
       { page: "approval", label: "Approval" },
+      { page: "history", label: "History" },
       {
         page: "management",
         label: "Management",
@@ -52,6 +54,7 @@ export function getNavItems(user: AuthUser): NavItem[] {
       { page: "requestsReceive", label: "RequestsReceive" },
       { page: "wip_builder", label: "WIP Builder" },
       { page: "wip_management", label: "WIP Management" },
+      { page: "history", label: "History" },
     ];
   }
 

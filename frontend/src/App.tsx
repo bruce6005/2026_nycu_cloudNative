@@ -11,6 +11,7 @@ import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
 import EquipmentPage from "./features/equipment/page/EquipmentPage";
 import EquipmentTypeManagementPage from "./features/equipment/page/EquipmentTypeManagementPage";
 import RecipeManagementPage from "./features/recipe/page/RecipeManagementPage";
+import HistoryPage from "./features/history/page/HistoryPage";
 import type { AuthUser } from "./features/auth/model/AuthUser";
 import { getNavItems, type Page } from "./features/utils/getNavItems";
 import RequestsReceivePage from "./features/requestsReceive/page/RequestsReceivePage";
@@ -22,6 +23,7 @@ const pageMap: Record<Page, React.ComponentType<any>> = {
   equipment: EquipmentPage,
   equipmentTypes: EquipmentTypeManagementPage,
   recipe: RecipeManagementPage,
+  history: HistoryPage,
   wip_builder: WIPBuilderPage,
   wip_management: WIPManagementPage,
   management: () => <div className="p-4">Please select an item from the sidebar dropdown.</div>,
