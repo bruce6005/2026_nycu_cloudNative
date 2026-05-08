@@ -193,3 +193,50 @@ Frontend build 時：
 VITE_GOOGLE_CLIENT_ID=正式 Google OAuth Client ID
 VITE_API_BASE=https://你的後端網址
 ```
+
+## 7. 容器化建置（部署實驗）
+
+Backend image：
+
+```bash
+docker build -t lab-system-backend ./backend
+```
+
+本地用容器跑 backend 時，可以連本機 Docker MySQL。Mac / Windows Docker Desktop 可使用 `host.docker.internal`：
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/lab_system \
+  -e SPRING_DATASOURCE_USERNAME=root \
+  -e SPRING_DATASOURCE_PASSWORD=1234 \
+  -e SPRING_JPA_HIBERNATE_DDL_AUTO=create \
+  -e GOOGLE_CLIENT_ID=你的_google_client_id \
+  -e APP_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8081 \
+  lab-system-backend
+```
+
+Frontend image：
+
+```bash
+docker build \
+  --build-arg VITE_API_BASE=http://localhost:8080 \
+  --build-arg VITE_GOOGLE_CLIENT_ID=你的_google_client_id \
+  -t lab-system-frontend ./frontend
+```
+
+本地用容器跑 frontend：
+
+```bash
+docker run --rm -p 8081:8080 lab-system-frontend
+```
+
+Frontend container 會由 nginx 服務靜態檔案，本地網址為：
+
+```text
+http://localhost:8081
+```
+
+Cloud Run 上兩個服務都會使用 container image 部署：
+
+- backend image：runtime 由 Cloud Run 設定 DB / Google OAuth / CORS 環境變數
+- frontend image：build image 時注入 `VITE_API_BASE` 與 `VITE_GOOGLE_CLIENT_ID`
