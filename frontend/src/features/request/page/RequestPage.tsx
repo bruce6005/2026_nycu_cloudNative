@@ -43,7 +43,16 @@ function RequestPage({ user }: Props) {
 
       {/* 右側：主清單區 */}
       <div className="column" style={{ flex: 1 }}>
-        <h2>委託單清單</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ margin: 0 }}>委託單清單</h2>
+          <button 
+            className="button secondary" 
+            onClick={loadRequest}
+            style={{ padding: '6px 16px', borderRadius: '8px' }}
+          >
+            🔄 重新整理
+          </button>
+        </div>
         <RequestList requests={requests} />
       </div>
     </div>
