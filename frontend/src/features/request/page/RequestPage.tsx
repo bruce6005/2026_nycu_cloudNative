@@ -3,6 +3,7 @@ import { RequestForm } from "../components/RequestForm";
 import { RequestList } from "../components/RequestList";
 import { getRequest } from "../api/requestApi";
 import type { AuthUser } from "../../auth/model/AuthUser";
+import { useSse } from "../../utils/useSse";
 
 type Props = {
   user: AuthUser;
@@ -30,6 +31,9 @@ function RequestPage({ user }: Props) {
   useEffect(() => {
     loadRequest();
   }, []);
+
+  // 接收到後端的 REQUEST_UPDATED 信號時，自動重新載入資料
+  useSse("REQUEST_UPDATED", loadRequest);
 
   return (
     <div className="flex" style={{ padding: '24px', alignItems: 'flex-start' }}>

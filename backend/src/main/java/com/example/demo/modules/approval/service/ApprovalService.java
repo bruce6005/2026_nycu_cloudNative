@@ -15,11 +15,14 @@ public class ApprovalService {
 
     private final RequestRepository requestRepository;
     private final com.example.demo.modules.request.repository.SampleRepository sampleRepository;
+    private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
     public ApprovalService(RequestRepository requestRepository, 
-                         com.example.demo.modules.request.repository.SampleRepository sampleRepository) {
+                         com.example.demo.modules.request.repository.SampleRepository sampleRepository,
+                         com.example.demo.modules.notification.service.NotificationService notificationService) {
         this.requestRepository = requestRepository;
         this.sampleRepository = sampleRepository;
+        this.notificationService = notificationService;
     }
 
     // 查 pending（只查這個 approver 的）
@@ -62,6 +65,9 @@ public class ApprovalService {
         req.setEndTime(LocalDateTime.now());
 
         requestRepository.save(req);
+
+        // 發送更新信號
+        notificationService.broadcast("REQUEST_UPDATED", "Request " + id + " state changed to " + req.getStatus());
 
     }
 

@@ -9,6 +9,7 @@ import type {
   PendingSamplesGroupedByRequestDTO,
 } from "../model/WIPBuilderData";
 import type { WIPBatchDTO } from "../../wip_management/model/WipManagementData";
+import { useSse } from "../../utils/useSse";
 import "../styles/style.css";
 
 type Props = {};
@@ -103,6 +104,9 @@ function WIPBuilderPage({}: Props) {
   useEffect(() => {
     loadData();
   }, []);
+
+  // 當任何單據狀態變動時，重新整理待派工清單
+  useSse("REQUEST_UPDATED", loadData);
 
   const handleToggleRequest = (item: PendingSamplesGroupedByRequestDTO) => {
     if (stagedRequestIds.includes(item.requestId)) {

@@ -25,15 +25,18 @@ public class WIPManagementService {
     private final WIPbatchRepository wipbatchRepository;
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final RequestRepository requestRepository;
+    private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
     public WIPManagementService(SampleRepository sampleRepository,
                       WIPbatchRepository wipbatchRepository,
                       EquipmentStatusLogsRepository equipmentStatusLogsRepository,
-                      RequestRepository requestRepository) {
+                      RequestRepository requestRepository,
+                      com.example.demo.modules.notification.service.NotificationService notificationService) {
         this.sampleRepository = sampleRepository;
         this.wipbatchRepository = wipbatchRepository;
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.requestRepository = requestRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -72,6 +75,7 @@ public class WIPManagementService {
                 .distinct()
                 .forEach(this::checkAndUpdateRequestStatus);
 
+        notificationService.broadcast("REQUEST_UPDATED", "Batch started: " + id);
         return toWIPBatchDTO(savedBatch);
     }
 
@@ -104,6 +108,7 @@ public class WIPManagementService {
                 .distinct()
                 .forEach(this::checkAndUpdateRequestStatus);
 
+        notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + id);
         return toWIPBatchDTO(savedBatch);
     }
 

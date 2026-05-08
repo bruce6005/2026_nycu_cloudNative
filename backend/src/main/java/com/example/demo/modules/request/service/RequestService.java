@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.modules.auth.model.User;
@@ -23,17 +22,23 @@ import com.example.demo.modules.recipe.model.Recipe;
 @Service
 public class RequestService {
 
-    @Autowired
-    private RequestRepository requestRepository;
+    private final RequestRepository requestRepository;
+    private final UserRepository userRepository;
+    private final SampleRepository sampleRepository;
+    private final RecipeRepository recipeRepository;
+    private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private SampleRepository sampleRepository;
-
-    @Autowired
-    private RecipeRepository recipeRepository;
+    public RequestService(RequestRepository requestRepository, 
+                         UserRepository userRepository,
+                         SampleRepository sampleRepository,
+                         RecipeRepository recipeRepository,
+                         com.example.demo.modules.notification.service.NotificationService notificationService) {
+        this.requestRepository = requestRepository;
+        this.userRepository = userRepository;
+        this.sampleRepository = sampleRepository;
+        this.recipeRepository = recipeRepository;
+        this.notificationService = notificationService;
+    }
 
     /**
      * 建立新的委託單
@@ -72,6 +77,9 @@ public class RequestService {
 
         Request saved = requestRepository.save(request);
         System.out.println("[DEBUG] Saved Request ID: " + saved.getId());
+
+        // 發送更新信號，通知經理有新單
+        notificationService.broadcast("REQUEST_UPDATED", "New request created: " + saved.getId());
 
         // 如果有傳入 samples，則建立它們
         if (dto.getSamples() != null && !dto.getSamples().isEmpty()) {

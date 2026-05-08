@@ -37,19 +37,22 @@ public class WIPBuilderService {
     private final RecipeRepository recipeRepository;
     private final WIPbatchRepository wipbatchRepository;
     private final RequestRepository requestRepository;
+    private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
     public WIPBuilderService(SampleRepository sampleRepository,
             EquipmentRepository equipmentRepository,
             EquipmentStatusLogsRepository equipmentStatusLogsRepository,
             RecipeRepository recipeRepository,
             WIPbatchRepository wipbatchRepository,
-            RequestRepository requestRepository) {
+            RequestRepository requestRepository,
+            com.example.demo.modules.notification.service.NotificationService notificationService) {
         this.sampleRepository = sampleRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.recipeRepository = recipeRepository;
         this.wipbatchRepository = wipbatchRepository;
         this.requestRepository = requestRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -163,6 +166,9 @@ public class WIPBuilderService {
                 .map(Sample::getRequest)
                 .distinct()
                 .forEach(this::checkAndUpdateRequestStatus);
+
+        // 通知前端資料已更新
+        notificationService.broadcast("REQUEST_UPDATED", "Batch created for samples");
 
         return toWIPBatchDTO(savedBatch);
     }

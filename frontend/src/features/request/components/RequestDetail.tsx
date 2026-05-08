@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getRequestById, type RequestDetailDTO } from '../api/requestApi';
+import { useSse } from '../../utils/useSse';
 import '../styles/request.css';
 
 interface RequestDetailProps {
@@ -12,19 +13,23 @@ export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack, inline
     const [request, setRequest] = useState<RequestDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchDetail = async () => {
+    try {
+      const data = await getRequestById(id);
+      setRequest(data);
+    } catch (error) {
+      console.error("載入詳情失敗", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDetail = async () => {
-      try {
-        const data = await getRequestById(id);
-        setRequest(data);
-      } catch (error) {
-        alert("載入詳情失敗");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDetail();
   }, [id]);
+
+  // 當收到更新信號時，詳情頁面也同步重新抓取
+  useSse("REQUEST_UPDATED", fetchDetail);
 
   if (loading) return <p>載入中...</p>;
   if (!request) return <p>找不到資料</p>;
