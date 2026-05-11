@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class DataInitializer implements CommandLineRunner {
     private final SampleRepository sampleRepository;
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final WIPbatchRepository wipbatchRepository;
+    private final boolean resetDataOnStartup;
 
     public DataInitializer(UserRepository userRepository,
                            EquipmentRepository equipmentRepository,
@@ -42,7 +44,8 @@ public class DataInitializer implements CommandLineRunner {
                            RequestRepository requestRepository,
                            SampleRepository sampleRepository,
                            EquipmentStatusLogsRepository equipmentStatusLogsRepository,
-                           WIPbatchRepository wipbatchRepository) {
+                           WIPbatchRepository wipbatchRepository,
+                           @Value("${app.reset-data-on-startup:true}") boolean resetDataOnStartup) {
         this.userRepository = userRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentTypeSchemaRepository = equipmentTypeSchemaRepository;
@@ -51,10 +54,15 @@ public class DataInitializer implements CommandLineRunner {
         this.sampleRepository = sampleRepository;
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.wipbatchRepository = wipbatchRepository;
+        this.resetDataOnStartup = resetDataOnStartup;
     }
 
     @Override
     public void run(String... args) {
+        if (!resetDataOnStartup) {
+            return;
+        }
+
         clearSeedTables();
         seedUsers();
         seedEquipmentTypeSchemas();

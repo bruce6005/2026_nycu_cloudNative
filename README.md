@@ -127,6 +127,7 @@ SPRING_DATASOURCE_PASSWORD=1234
 SPRING_JPA_HIBERNATE_DDL_AUTO=create
 GOOGLE_CLIENT_ID=
 APP_CORS_ALLOWED_ORIGINS=http://localhost:*
+APP_RESET_DATA_ON_STARTUP=true
 ```
 
 如果要明確指定，請在啟動 backend 前用 shell export：
@@ -139,6 +140,7 @@ export SPRING_DATASOURCE_PASSWORD=1234
 export SPRING_JPA_HIBERNATE_DDL_AUTO=create
 export GOOGLE_CLIENT_ID=你的_google_client_id
 export APP_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+export APP_RESET_DATA_ON_STARTUP=true
 ```
 
 也可以在 IntelliJ / VS Code 的 Run Configuration 裡設定同樣的環境變數。
@@ -185,6 +187,7 @@ SPRING_DATASOURCE_PASSWORD=正式資料庫密碼
 SPRING_JPA_HIBERNATE_DDL_AUTO=update
 GOOGLE_CLIENT_ID=正式 Google OAuth Client ID
 APP_CORS_ALLOWED_ORIGINS=https://你的前端網址
+APP_RESET_DATA_ON_STARTUP=false
 ```
 
 Frontend build 時：
@@ -212,6 +215,7 @@ docker run --rm -p 8080:8080 \
   -e SPRING_JPA_HIBERNATE_DDL_AUTO=create \
   -e GOOGLE_CLIENT_ID=你的_google_client_id \
   -e APP_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8081 \
+  -e APP_RESET_DATA_ON_STARTUP=true \
   lab-system-backend
 ```
 
