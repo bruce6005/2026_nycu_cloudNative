@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.modules.wip_builder.dto.CreateWIPBatchRequest;
 import com.example.demo.modules.wip_builder.dto.EquipmentWithRecipesDTO;
-import com.example.demo.modules.wip_builder.dto.PendingSamplesGroupedByRequestDTO;
+import com.example.demo.modules.wip_builder.dto.PendingSampleDTO;
 import com.example.demo.modules.wip_management.dto.WIPBatchDTO;
 import com.example.demo.modules.wip_builder.service.WIPBuilderService;
 
@@ -26,8 +26,8 @@ public class WIPBuilderController {
 
 
     @GetMapping("/pending")
-    public List<PendingSamplesGroupedByRequestDTO> getPendingSamples() {
-        return wipBuilderService.getPendingSamplesGroupedByRequest();
+    public List<PendingSampleDTO> getPendingSamples() {
+        return wipBuilderService.getPendingSamples();
     }
 
     @GetMapping("/equipments")

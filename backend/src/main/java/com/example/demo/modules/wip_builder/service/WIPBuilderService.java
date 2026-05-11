@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.modules.wip_builder.dto.CreateWIPBatchRequest;
 import com.example.demo.modules.wip_builder.dto.EquipmentWithRecipesDTO;
 import com.example.demo.modules.wip_builder.dto.PendingSamplesGroupedByRequestDTO;
+import com.example.demo.modules.wip_builder.dto.PendingSampleDTO;
 import com.example.demo.modules.wip_builder.dto.RecipeDTO;
 import com.example.demo.modules.wip_management.dto.WIPBatchDTO;
 import com.example.demo.modules.equipment.repository.EquipmentRepository;
@@ -28,6 +29,10 @@ import com.example.demo.modules.request.model.Request;
 import com.example.demo.modules.request.model.Sample;
 import com.example.demo.modules.wip_builder.model.WIPbatch;
 
+import com.example.demo.modules.auth.model.User;
+import com.example.demo.modules.auth.repository.UserRepository;
+import com.example.demo.modules.wip_builder.model.TestRecords;
+import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
 @Service
 public class WIPBuilderService {
 
@@ -37,6 +42,8 @@ public class WIPBuilderService {
     private final RecipeRepository recipeRepository;
     private final WIPbatchRepository wipbatchRepository;
     private final RequestRepository requestRepository;
+    private final TestRecordsRepository testRecordsRepository;
+    private final UserRepository userRepository;
     private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
     public WIPBuilderService(SampleRepository sampleRepository,
@@ -45,6 +52,8 @@ public class WIPBuilderService {
             RecipeRepository recipeRepository,
             WIPbatchRepository wipbatchRepository,
             RequestRepository requestRepository,
+            TestRecordsRepository testRecordsRepository,
+            UserRepository userRepository,
             com.example.demo.modules.notification.service.NotificationService notificationService) {
         this.sampleRepository = sampleRepository;
         this.equipmentRepository = equipmentRepository;
@@ -52,6 +61,8 @@ public class WIPBuilderService {
         this.recipeRepository = recipeRepository;
         this.wipbatchRepository = wipbatchRepository;
         this.requestRepository = requestRepository;
+        this.testRecordsRepository = testRecordsRepository;
+        this.userRepository = userRepository;
         this.notificationService = notificationService;
     }
 
@@ -110,6 +121,32 @@ public class WIPBuilderService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<PendingSampleDTO> getPendingSamples() {
+        List<Sample> samples = sampleRepository.findByBatchIsNull();
+
+        return samples.stream()
+                .filter(sample -> isDispatchableRequest(sample.getRequest()))
+                .filter(sample -> sample.getRecipe() != null)
+                .map(sample -> {
+                    Request request = sample.getRequest();
+                    Recipe recipe = sample.getRecipe();
+
+                    return new PendingSampleDTO(
+                            sample.getId(),
+                            sample.getBarcode(),
+                            sample.getStatus(),
+                            request.getId(),
+                            resolveRequestTitle(request),
+                            request.getDescription(),
+                            request.getPriority(),
+                            recipe.getId(),
+                            recipe.getName()
+                    );
+                })
+                .toList();
+    }
+
     @Transactional
     public WIPBatchDTO createWIPBatch(CreateWIPBatchRequest request) {
         if (request.getSampleIds() == null || request.getSampleIds().isEmpty()) {
@@ -155,23 +192,40 @@ public class WIPBuilderService {
 
         WIPbatch savedBatch = wipbatchRepository.save(batch);
 
-        for (Sample sample : samples) {
-            sample.setBatch(savedBatch);
-            sample.setStatus("ASSIGNED");
-        }
-        sampleRepository.saveAll(samples);
+        // write test record 
+        User operator = userRepository.findById(request.getOperatorId())
+        .orElseThrow(() -> new RuntimeException("Operator not found"));
 
-        // Check and update request status to DISPATCHED if all samples are assigned
-        samples.stream()
-                .map(Sample::getRequest)
-                .distinct()
-                .forEach(this::checkAndUpdateRequestStatus);
+        TestRecords testRecord = new TestRecords();
+        testRecord.setBatch(savedBatch);
+        testRecord.setEquipment(equipment);
+        testRecord.setOperator(operator);
+        testRecord.setResultStatus("QUEUED");
+        testRecord.setStartTime(LocalDateTime.now());
+        testRecord.setEndTime(null);
+        testRecord.setResultData(
+                "{\"action\":\"CREATE_WIP_BATCH\",\"sampleIds\":\"" + request.getSampleIds() + "\"}"
+        );
 
-        // 通知前端資料已更新
-        notificationService.broadcast("REQUEST_UPDATED", "Batch created for samples");
+        testRecordsRepository.save(testRecord);
 
-        return toWIPBatchDTO(savedBatch);
-    }
+                for (Sample sample : samples) {
+                    sample.setBatch(savedBatch);
+                    sample.setStatus("ASSIGNED");
+                }
+                sampleRepository.saveAll(samples);
+
+                // Check and update request status to DISPATCHED if all samples are assigned
+                samples.stream()
+                        .map(Sample::getRequest)
+                        .distinct()
+                        .forEach(this::checkAndUpdateRequestStatus);
+
+                // 通知前端資料已更新
+                notificationService.broadcast("REQUEST_UPDATED", "Batch created for samples");
+
+                return toWIPBatchDTO(savedBatch);
+            }
 
     private EquipmentWithRecipesDTO toEquipmentWithRecipesDTO(Equipment equipment) {
         EquipmentWithRecipesDTO dto = new EquipmentWithRecipesDTO();

@@ -1,12 +1,15 @@
-export type PendingSamplesGroupedByRequestDTO = {
+export type PendingSampleDTO = {
+  sampleId: number;
+  barcode: string;
+  sampleStatus: string;
+
   requestId: number;
   requestTitle: string;
   requestDescription: string | null;
   priority: string;
-  pendingSampleCount: number;
-  unassignedSampleIds: number[];
-  nextRecipeId?: number | null;
-  nextRecipeName?: string | null;
+
+  recipeId: number | null;
+  recipeName: string | null;
 };
 
 export type RecipeDTO = {
@@ -28,4 +31,5 @@ export type CreateWIPBatchRequest = {
   equipmentId: number;
   recipeId: number;
   sampleIds: number[];
+  operatorId: number;
 };

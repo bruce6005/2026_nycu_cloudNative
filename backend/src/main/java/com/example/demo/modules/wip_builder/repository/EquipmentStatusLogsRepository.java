@@ -1,7 +1,7 @@
 package com.example.demo.modules.wip_builder.repository;
 
 import java.util.Optional;
-
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
@@ -9,5 +9,6 @@ import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
 public interface EquipmentStatusLogsRepository extends JpaRepository<EquipmentStatusLogs, Long> {
     Optional<EquipmentStatusLogs> findFirstByEquipmentIdOrderByStartTimeDesc(Long equipmentId);
 
+    List<EquipmentStatusLogs> findByEquipmentId(Long equipmentId);
     Optional<EquipmentStatusLogs> findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(Long equipmentId);
 }

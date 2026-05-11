@@ -20,6 +20,7 @@ import com.example.demo.modules.recipe.repository.RecipeRepository;
 import com.example.demo.modules.request.repository.SampleRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
 import com.example.demo.modules.request.repository.RequestRepository;
+import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
 
 @Component
 @Transactional
@@ -36,6 +37,7 @@ public class DataInitializer implements CommandLineRunner {
     private final SampleRepository sampleRepository;
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final WIPbatchRepository wipbatchRepository;
+    private final TestRecordsRepository testRecordsRepository;
 
     public DataInitializer(UserRepository userRepository,
                            EquipmentRepository equipmentRepository,
@@ -44,7 +46,8 @@ public class DataInitializer implements CommandLineRunner {
                            RequestRepository requestRepository,
                            SampleRepository sampleRepository,
                            EquipmentStatusLogsRepository equipmentStatusLogsRepository,
-                           WIPbatchRepository wipbatchRepository) {
+                           WIPbatchRepository wipbatchRepository,
+                           TestRecordsRepository testRecordsRepository) {
         this.userRepository = userRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentTypeSchemaRepository = equipmentTypeSchemaRepository;
@@ -53,6 +56,7 @@ public class DataInitializer implements CommandLineRunner {
         this.sampleRepository = sampleRepository;
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.wipbatchRepository = wipbatchRepository;
+        this.testRecordsRepository = testRecordsRepository;
     }
 
     @Override
@@ -68,13 +72,22 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void clearSeedTables() {
+        testRecordsRepository.deleteAllInBatch();
+
         sampleRepository.deleteAllInBatch();
+
         wipbatchRepository.deleteAllInBatch();
+
         equipmentStatusLogsRepository.deleteAllInBatch();
+
         recipeRepository.deleteAllInBatch();
+
         requestRepository.deleteAllInBatch();
+
         equipmentRepository.deleteAllInBatch();
+
         equipmentTypeSchemaRepository.deleteAllInBatch();
+
         userRepository.deleteAllInBatch();
     }
 
@@ -107,23 +120,23 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedEquipments() {
-        Object[][] equipmentRows = new Object[][] {
-                {1L, 2L, "High-Temp Oven 1 (高溫烤箱)", 1L, 10},
-                {2L, 2L, "Spin Coater 1 (光阻塗佈機)", 2L, 1},
-                {3L, 2L, "Plasma Etcher 1 (電漿蝕刻機)", 3L, 4},
-                {4L, 2L, "SEM Microscope 1 (電子顯微鏡)", 4L, 5},
-                {5L, 2L, "UV Curing 1 (UV固化機)", 5L, 5},
-                {6L, 2L, "High-Temp Oven 2 (高溫烤箱)", 1L, 8},
-                {7L, 2L, "Spin Coater 2 (光阻塗佈機)", 2L, 1},
-                {8L, 2L, "Plasma Etcher 2 (電漿蝕刻機)", 3L, 4},
-                {9L, 2L, "SEM Microscope 2 (電子顯微鏡)", 4L, 10},
-                {10L, 2L, "UV Curing 2 (UV固化機)", 5L, 5},
+    Object[][] equipmentRows = new Object[][] {
+            {1L, 2L, "High-Temp Oven 1 (高溫烤箱)", "THERMAL", 1L, 10},
+            {2L, 2L, "Spin Coater 1 (光阻塗佈機)", "COATING", 2L, 1},
+            {3L, 2L, "Plasma Etcher 1 (電漿蝕刻機)", "ETCHING", 3L, 4},
+            {4L, 2L, "SEM Microscope 1 (電子顯微鏡)", "INSPECT", 4L, 5},
+            {5L, 2L, "UV Curing 1 (UV固化機)", "UV_CURE", 5L, 5},
+            {6L, 2L, "High-Temp Oven 2 (高溫烤箱)", "THERMAL", 1L, 8},
+            {7L, 2L, "Spin Coater 2 (光阻塗佈機)", "COATING", 2L, 1},
+            {8L, 2L, "Plasma Etcher 2 (電漿蝕刻機)", "ETCHING", 3L, 4},
+            {9L, 2L, "SEM Microscope 2 (電子顯微鏡)", "INSPECT", 4L, 10},
+            {10L, 2L, "UV Curing 2 (UV固化機)", "UV_CURE", 5L, 5},
         };
 
         for (Object[] row : equipmentRows) {
             execute(
-                    "INSERT INTO equipment (id, handler_id, name, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?)",
-                    row[0], row[1], row[2], row[3], row[4]
+                    "INSERT INTO equipment (id, handler_id, name, type, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?, ?)",
+                    row[0], row[1], row[2], row[3], row[4], row[5]
             );
         }
     }

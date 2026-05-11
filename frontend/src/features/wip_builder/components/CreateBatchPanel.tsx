@@ -1,15 +1,15 @@
 import type {
   EquipmentWithRecipesDTO,
-  PendingSamplesGroupedByRequestDTO,
+  PendingSampleDTO,
 } from "../model/WIPBuilderData";
 import type { WIPBatchDTO } from "../../wip_management/model/WipManagementData";
 
 type Props = {
-  stagedRequests: PendingSamplesGroupedByRequestDTO[];
+  stagedSamples: PendingSampleDTO[];
   selectedEquipment: EquipmentWithRecipesDTO | null;
   stagedRecipeName: string | null;
   requiredCapacity: number;
-  onRemoveRequest: (requestId: number) => void;
+  onRemoveSample: (sampleId: number) => void;
   onCreate: () => void;
   loading: boolean;
   error?: string;
@@ -17,23 +17,28 @@ type Props = {
 };
 
 function CreateBatchPanel({
-  stagedRequests,
+  stagedSamples,
   selectedEquipment,
   stagedRecipeName,
   requiredCapacity,
-  onRemoveRequest,
+  onRemoveSample,
   onCreate,
   loading,
   error,
   success,
 }: Props) {
-  const canCreate = Boolean(stagedRequests.length > 0 && selectedEquipment && stagedRecipeName && !loading);
+  const canCreate = Boolean(
+    stagedSamples.length > 0 &&
+      selectedEquipment &&
+      stagedRecipeName &&
+      !loading
+  );
 
   return (
-    <div className="card column dispatch-panel">
+    <div className="card column dispatch-panel create-batch-panel">
       <div className="dispatch-title">Create WIP Batch</div>
       <div className="text-muted dispatch-subtitle">
-        Add requests from the left panel, then confirm the batch settings
+        Add samples from the left panel, then confirm the batch settings
       </div>
 
       <div className="dispatch-summary">
@@ -43,25 +48,36 @@ function CreateBatchPanel({
             {selectedEquipment ? selectedEquipment.name : "Select an equipment"}
           </span>
         </div>
+
         <div className="dispatch-summary-row mb-1 no-wrap">
           <span className="detail-label">Equipment Type</span>
           <span className="detail-value">
             {selectedEquipment ? selectedEquipment.equipmentType : "-"}
           </span>
         </div>
+
         <div className="dispatch-summary-row mb-1 no-wrap">
           <span className="detail-label">Capacity</span>
           <span className="detail-value capacity-large">
             {requiredCapacity}/{selectedEquipment?.maxCapacity ?? 0}
           </span>
         </div>
+
+        <div className="dispatch-summary-row mb-1 no-wrap">
+          <span className="detail-label">Batch Recipe</span>
+          <span className="detail-value">{stagedRecipeName ?? "-"}</span>
+        </div>
+
         <div className="dispatch-summary-row flex-column">
           <span className="detail-label no-wrap">Available Recipes</span>
           <div className="recipes-container">
             {selectedEquipment && selectedEquipment.recipes.length > 0
-              ? selectedEquipment.recipes.map((r, idx) => (
-                  <span key={r.id} className={`recipe-tag recipe-tag-${idx % 5}`}>
-                    {r.name}
+              ? selectedEquipment.recipes.map((recipe, idx) => (
+                  <span
+                    key={recipe.id}
+                    className={`recipe-tag recipe-tag-${idx % 5}`}
+                  >
+                    {recipe.name}
                   </span>
                 ))
               : "-"}
@@ -70,23 +86,31 @@ function CreateBatchPanel({
       </div>
 
       <div className="batch-request-list-wrap">
-        <div className="detail-label mb-1 no-wrap">Requests in this batch</div>
+        <div className="detail-label mb-1 no-wrap">Samples in this batch</div>
+
         <div className="batch-request-list">
-          {stagedRequests.length === 0 ? (
-            <div className="text-muted">No requests added yet</div>
+          {stagedSamples.length === 0 ? (
+            <div className="text-muted">No samples added yet</div>
           ) : (
-            stagedRequests.map((request) => (
-              <div key={request.requestId} className="batch-request-item">
+            stagedSamples.map((sample) => (
+              <div key={sample.sampleId} className="batch-request-item">
                 <div>
-                  <div className="batch-request-title">{request.requestTitle}</div>
+                  <div className="batch-request-title">{sample.barcode}</div>
+
                   <div className="dispatch-card-meta">
-                    Demand: {request.pendingSampleCount} | Recipe: {request.nextRecipeName || "-"}
+                    Sample ID: {sample.sampleId} | Status: {sample.sampleStatus}
+                  </div>
+
+                  <div className="dispatch-card-meta">
+                    Request: {sample.requestTitle} | Recipe:{" "}
+                    {sample.recipeName || "-"}
                   </div>
                 </div>
+
                 <button
                   type="button"
                   className="button secondary batch-remove-btn"
-                  onClick={() => onRemoveRequest(request.requestId)}
+                  onClick={() => onRemoveSample(sample.sampleId)}
                 >
                   X
                 </button>
@@ -97,7 +121,12 @@ function CreateBatchPanel({
       </div>
 
       <div className="dispatch-footer">
-        <button type="button" className="button primary" onClick={onCreate} disabled={!canCreate}>
+        <button
+          type="button"
+          className="button primary"
+          onClick={onCreate}
+          disabled={!canCreate}
+        >
           {loading ? "Creating..." : "Create Batch"}
         </button>
       </div>

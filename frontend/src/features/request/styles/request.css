@@ -110,3 +110,29 @@
     grid-template-columns: 1fr;
   }
 }
+
+.request-list-panel {
+  height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.request-list-panel > h3 {
+  flex-shrink: 0;
+}
+
+.request-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  gap: 8px;
+}
+
+.request-card {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+}

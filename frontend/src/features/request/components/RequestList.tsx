@@ -15,12 +15,12 @@ export const RequestList: React.FC<RequestListProps> = ({ requests }) => {
     };
 
     return (
-        <div className="card">
+        <div className="card request-list-panel">
             <h3 className="mb-1">委託單列表</h3>
             {requests.length === 0 ? (
                 <p className="text-muted">目前沒有任何委託單</p>
             ) : (
-                <div className="column">
+                <div className="column request-list-scroll">
                     {requests.map((req) => (
                         <div 
                             key={req.id} 

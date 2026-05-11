@@ -1,19 +1,19 @@
-import type { PendingSamplesGroupedByRequestDTO } from "../model/WIPBuilderData";
+import type { PendingSampleDTO } from "../model/WIPBuilderData";
 
 type Props = {
-  items: PendingSamplesGroupedByRequestDTO[];
-  stagedRequestIds: number[];
+  items: PendingSampleDTO[];
+  stagedSampleIds: number[];
   currentBatchRecipeId: number | null;
   filterRecipeId: number | null;
   filterRecipeName: string | null;
-  onToggle: (item: PendingSamplesGroupedByRequestDTO) => void;
+  onToggle: (item: PendingSampleDTO) => void;
   onFilterByRecipe: (recipeId: number, recipeName: string) => void;
   onClearFilter: () => void;
 };
 
 function PendingRequestList({
   items,
-  stagedRequestIds,
+  stagedSampleIds = [],
   currentBatchRecipeId,
   filterRecipeId,
   filterRecipeName,
@@ -32,7 +32,7 @@ function PendingRequestList({
 
   return (
     <div className="card column dispatch-panel">
-      <div className="dispatch-title">Pending Requests</div>
+      <div className="dispatch-title">Pending Samples</div>
 
       {filterRecipeId !== null && (
         <div className="filter-indicator">
@@ -47,64 +47,74 @@ function PendingRequestList({
             onClick={onClearFilter}
             title="Clear filter"
           >
-            ✕
+            X
           </button>
         </div>
       )}
 
       <div className="dispatch-list">
         {items.length === 0 ? (
-          <div className="text-muted">No pending requests</div>
+          <div className="text-muted">No pending samples</div>
         ) : (
-          items.map((item) => (
-            <div
-              key={item.requestId}
-              className={`dispatch-card ${stagedRequestIds.includes(item.requestId) ? "selected" : ""}`}
-              onClick={() => {
-                if (item.nextRecipeId != null) {
-                  onFilterByRecipe(item.nextRecipeId, item.nextRecipeName || "");
-                }
-              }}
-              style={{ cursor: item.nextRecipeId != null ? "pointer" : "default" }}
-              title={item.nextRecipeId != null ? "Click to filter by this recipe" : undefined}
-            >
-              <div className="dispatch-card-header">
-                <span className="dispatch-card-title">{item.requestTitle}</span>
+          items.map((item) => {
+            const isSelected = stagedSampleIds.includes(item.sampleId);
+            const canAdd =
+              isSelected ||
+              currentBatchRecipeId === null ||
+              item.recipeId === currentBatchRecipeId;
 
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span className="dispatch-count">{item.pendingSampleCount}</span>
-                  <button
-                    type="button"
-                    className="button secondary request-action-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggle(item);
-                    }}
-                    disabled={
-                      !stagedRequestIds.includes(item.requestId) &&
-                      currentBatchRecipeId !== null &&
-                      item.nextRecipeId !== currentBatchRecipeId
-                    }
-                  >
-                    {stagedRequestIds.includes(item.requestId) ? "移除" : "加入"}
-                  </button>
+            return (
+              <div
+                key={item.sampleId}
+                className={`dispatch-card ${isSelected ? "selected" : ""}`}
+                onClick={() => {
+                  if (item.recipeId != null) {
+                    onFilterByRecipe(item.recipeId, item.recipeName || "");
+                  }
+                }}
+                style={{ cursor: item.recipeId != null ? "pointer" : "default" }}
+                title={item.recipeId != null ? "Click to filter by this recipe" : undefined}
+              >
+                <div className="dispatch-card-header">
+                  <span className="dispatch-card-title">{item.barcode}</span>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className="dispatch-count">#{item.sampleId}</span>
+                    <button
+                      type="button"
+                      className="button secondary request-action-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggle(item);
+                      }}
+                      disabled={!canAdd}
+                    >
+                      {isSelected ? "移除" : "加入"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="dispatch-card-meta">
+                  Request ID: {item.requestId} | {item.requestTitle}
+                </div>
+
+                <div className="dispatch-card-meta">
+                  Sample Status: {item.sampleStatus}
+                </div>
+
+                <div className="dispatch-badges">
+                  <span className={`badge ${getPriorityClass(item.priority)}`}>
+                    {item.priority}
+                  </span>
+                </div>
+
+                <div style={{ fontWeight: 600, color: "#111827", marginTop: 6 }}>
+                  <strong>Recipe: </strong>
+                  <span style={{ fontWeight: 600 }}>{item.recipeName || "-"}</span>
                 </div>
               </div>
-
-              <div className="dispatch-card-meta">Request ID: {item.requestId}</div>
-
-              <div className="dispatch-badges">
-                <span className={`badge ${getPriorityClass(item.priority)}`}>
-                  {item.priority}
-                </span>
-              </div>
-
-              <div style={{ fontWeight: 600, color: "#111827", marginTop: 6 }}>
-                <strong>Recipe: </strong>
-                <span style={{ fontWeight: 600 }}>{item.nextRecipeName || "-"}</span>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

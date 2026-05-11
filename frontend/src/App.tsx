@@ -11,9 +11,11 @@ import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
 import EquipmentPage from "./features/equipment/page/EquipmentPage";
 import EquipmentTypeManagementPage from "./features/equipment/page/EquipmentTypeManagementPage";
 import RecipeManagementPage from "./features/recipe/page/RecipeManagementPage";
+import RequestsReceivePage from "./features/requestsReceive/page/RequestsReceivePage";
+import ManagerDashboardPage from "./features/managerLog/page/ManagerDashboardPage";
+
 import type { AuthUser } from "./features/auth/model/AuthUser";
 import { getNavItems, type Page } from "./features/utils/getNavItems";
-import RequestsReceivePage from "./features/requestsReceive/page/RequestsReceivePage";
 
 const pageMap: Record<Page, React.ComponentType<any>> = {
   approval: ApprovalPage,
@@ -24,7 +26,10 @@ const pageMap: Record<Page, React.ComponentType<any>> = {
   recipe: RecipeManagementPage,
   wip_builder: WIPBuilderPage,
   wip_management: WIPManagementPage,
-  management: () => <div className="p-4">Please select an item from the sidebar dropdown.</div>,
+  manager_dashboard: ManagerDashboardPage,
+  management: () => (
+    <div className="p-4">Please select an item from the sidebar dropdown.</div>
+  ),
 };
 
 function App() {

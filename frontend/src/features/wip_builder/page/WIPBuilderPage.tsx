@@ -6,50 +6,53 @@ import EquipmentList from "../components/EquipmentList";
 import CreateBatchPanel from "../components/CreateBatchPanel";
 import type {
   EquipmentWithRecipesDTO,
-  PendingSamplesGroupedByRequestDTO,
+  PendingSampleDTO,
 } from "../model/WIPBuilderData";
 import type { WIPBatchDTO } from "../../wip_management/model/WipManagementData";
 import { useSse } from "../../utils/useSse";
 import "../styles/style.css";
-
-type Props = {};
-
-function WIPBuilderPage({}: Props) {
-  const [pendingGroups, setPendingGroups] = useState<PendingSamplesGroupedByRequestDTO[]>([]);
+import type { AuthUser } from "../../auth/model/AuthUser";
+type Props = {
+  user: AuthUser;
+};
+function WIPBuilderPage({ user }: Props) {
+  const [pendingSamples, setPendingSamples] = useState<PendingSampleDTO[]>([]);
+  const [stagedSamples, setStagedSamples] = useState<PendingSampleDTO[]>([]);
   const [equipments, setEquipments] = useState<EquipmentWithRecipesDTO[]>([]);
-  const [stagedRequestIds, setStagedRequestIds] = useState<number[]>([]);
+
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [createdBatch, setCreatedBatch] = useState<WIPBatchDTO | null>(null);
+
   const [filterRecipeId, setFilterRecipeId] = useState<number | null>(null);
   const [filterRecipeName, setFilterRecipeName] = useState<string | null>(null);
+
   const [filterEquipmentId, setFilterEquipmentId] = useState<number | null>(null);
   const [filterEquipmentName, setFilterEquipmentName] = useState<string | null>(null);
 
-  const stagedRequests = useMemo(
-    () => pendingGroups.filter((item) => stagedRequestIds.includes(item.requestId)),
-    [pendingGroups, stagedRequestIds]
+  const stagedSampleIds = useMemo(
+    () => stagedSamples.map((sample) => sample.sampleId),
+    [stagedSamples]
   );
 
-  const stagedRecipeId = useMemo(() => {
-    if (stagedRequests.length === 0) {
+  const currentBatchRecipeId = useMemo(() => {
+    if (stagedSamples.length === 0) {
       return null;
     }
-    return stagedRequests[0].nextRecipeId ?? null;
-  }, [stagedRequests]);
+
+    return stagedSamples[0].recipeId ?? null;
+  }, [stagedSamples]);
 
   const stagedRecipeName = useMemo(() => {
-    if (stagedRequests.length === 0) {
+    if (stagedSamples.length === 0) {
       return null;
     }
-    return stagedRequests[0].nextRecipeName ?? null;
-  }, [stagedRequests]);
 
-  const requiredCapacity = useMemo(
-    () => stagedRequests.reduce((sum, request) => sum + request.pendingSampleCount, 0),
-    [stagedRequests]
-  );
+    return stagedSamples[0].recipeName ?? null;
+  }, [stagedSamples]);
+
+  const requiredCapacity = useMemo(() => stagedSamples.length, [stagedSamples]);
 
   const selectedEquipment = useMemo(
     () => equipments.find((item) => item.id === selectedEquipmentId) ?? null,
@@ -57,44 +60,60 @@ function WIPBuilderPage({}: Props) {
   );
 
   const filteredEquipments = useMemo(() => {
-    if (filterRecipeId === null) return equipments;
-    return equipments.filter((eq) => eq.recipes.some((r) => r.id === filterRecipeId));
+    if (filterRecipeId === null) {
+      return equipments;
+    }
+
+    return equipments.filter((equipment) =>
+      equipment.recipes.some((recipe) => recipe.id === filterRecipeId)
+    );
   }, [equipments, filterRecipeId]);
 
-  const filteredPendingGroups = useMemo(() => {
-    return pendingGroups.filter((item) => {
-      if (filterRecipeId !== null && item.nextRecipeId !== filterRecipeId) return false;
-      if (filterEquipmentId !== null) {
-        const eq = equipments.find((e) => e.id === filterEquipmentId);
-        if (!eq) return false;
-        // only show requests whose recipe is supported by the filtered equipment
-        if (!eq.recipes.some((r) => r.id === item.nextRecipeId)) return false;
+  const filteredPendingSamples = useMemo(() => {
+    return pendingSamples.filter((sample) => {
+      if (filterRecipeId !== null && sample.recipeId !== filterRecipeId) {
+        return false;
       }
+
+      if (filterEquipmentId !== null) {
+        const equipment = equipments.find((item) => item.id === filterEquipmentId);
+
+        if (!equipment) {
+          return false;
+        }
+
+        if (!equipment.recipes.some((recipe) => recipe.id === sample.recipeId)) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [pendingGroups, filterRecipeId, filterEquipmentId, equipments]);
+  }, [pendingSamples, filterRecipeId, filterEquipmentId, equipments]);
 
   const loadData = async () => {
     try {
       setError("");
+
       const [pending, equipmentList] = await Promise.all([
         fetchPendingSamples(),
         fetchEquipments(),
       ]);
 
-      setPendingGroups(pending);
+      setPendingSamples(pending);
       setEquipments(equipmentList);
 
-      setStagedRequestIds((current) =>
-        current.filter((id) => pending.some((item) => item.requestId === id))
+      setStagedSamples((current) =>
+        current.filter((sample) =>
+          pending.some((item) => item.sampleId === sample.sampleId)
+        )
       );
 
       if (
         equipmentList.length > 0 &&
         !equipmentList.some((item) => item.id === selectedEquipmentId)
       ) {
-        const firstEquipment = equipmentList[0];
-        setSelectedEquipmentId(firstEquipment.id);
+        setSelectedEquipmentId(equipmentList[0].id);
       }
     } catch {
       setError("Cannot load dispatch data from backend");
@@ -105,37 +124,47 @@ function WIPBuilderPage({}: Props) {
     loadData();
   }, []);
 
-  // 當任何單據狀態變動時，重新整理待派工清單
   useSse("REQUEST_UPDATED", loadData);
 
-  const handleToggleRequest = (item: PendingSamplesGroupedByRequestDTO) => {
-    if (stagedRequestIds.includes(item.requestId)) {
-      setStagedRequestIds((current) => current.filter((id) => id !== item.requestId));
+  const handleToggleSample = (sample: PendingSampleDTO) => {
+    const exists = stagedSamples.some((item) => item.sampleId === sample.sampleId);
+
+    if (exists) {
+      setStagedSamples((current) =>
+        current.filter((item) => item.sampleId !== sample.sampleId)
+      );
       setCreatedBatch(null);
+      setError("");
       return;
     }
 
-    if (stagedRecipeId !== null && item.nextRecipeId !== stagedRecipeId) {
-      setError("同一個 WIP batch 只能加入相同 Recipe 的委託單");
+    if (currentBatchRecipeId !== null && sample.recipeId !== currentBatchRecipeId) {
+      setError("同一個 WIP batch 只能加入相同 Recipe 的 Sample");
       return;
     }
 
-    if (selectedEquipment && item.nextRecipeId) {
-      const supported = selectedEquipment.recipes.some((recipe) => recipe.id === item.nextRecipeId);
+    if (selectedEquipment && sample.recipeId !== null) {
+      const supported = selectedEquipment.recipes.some(
+        (recipe) => recipe.id === sample.recipeId
+      );
+
       if (!supported) {
-        setError("這台機器不支援該委託單的 Recipe");
+        setError("這台機器不支援該 Sample 的 Recipe");
         return;
       }
     }
 
     setError("");
-    setStagedRequestIds((current) => [...current, item.requestId]);
+    setStagedSamples((current) => [...current, sample]);
     setCreatedBatch(null);
   };
 
-  const handleRemoveRequest = (requestId: number) => {
-    setStagedRequestIds((current) => current.filter((id) => id !== requestId));
+  const handleRemoveSample = (sampleId: number) => {
+    setStagedSamples((current) =>
+      current.filter((sample) => sample.sampleId !== sampleId)
+    );
     setCreatedBatch(null);
+    setError("");
   };
 
   const handleFilterByRecipe = (recipeId: number, recipeName: string) => {
@@ -161,10 +190,13 @@ function WIPBuilderPage({}: Props) {
   const handleSelectEquipment = (item: EquipmentWithRecipesDTO) => {
     setSelectedEquipmentId(item.id);
 
-    if (stagedRecipeId !== null) {
-      const supported = item.recipes.some((recipe) => recipe.id === stagedRecipeId);
+    if (currentBatchRecipeId !== null) {
+      const supported = item.recipes.some(
+        (recipe) => recipe.id === currentBatchRecipeId
+      );
+
       if (!supported) {
-        setError("目前已加入的委託單 Recipe 不支援此機器，請先移除或改選機器");
+        setError("目前已加入的 Sample Recipe 不支援此機器，請先移除或改選機器");
       } else {
         setError("");
       }
@@ -174,13 +206,13 @@ function WIPBuilderPage({}: Props) {
   };
 
   const handleCreate = async () => {
-    if (!selectedEquipment || stagedRequests.length === 0 || stagedRecipeId === null) {
+    if (!selectedEquipment || stagedSamples.length === 0 || currentBatchRecipeId === null) {
       setCreatedBatch(null);
-      setError("請先加入至少一筆委託單並選擇設備");
+      setError("請先加入至少一筆 Sample 並選擇設備");
       return;
     }
 
-    if (!selectedEquipment.recipes.some((recipe) => recipe.id === stagedRecipeId)) {
+    if (!selectedEquipment.recipes.some((recipe) => recipe.id === currentBatchRecipeId)) {
       setCreatedBatch(null);
       setError("目前設備不支援此批次的 Recipe");
       return;
@@ -188,7 +220,7 @@ function WIPBuilderPage({}: Props) {
 
     if (requiredCapacity > selectedEquipment.maxCapacity) {
       setCreatedBatch(null);
-      setError("需求容量超過設備容量，請移除部分委託單");
+      setError("需求容量超過設備容量，請移除部分 Sample");
       return;
     }
 
@@ -197,15 +229,15 @@ function WIPBuilderPage({}: Props) {
       setError("");
       setCreatedBatch(null);
 
-      const sampleIds = stagedRequests.flatMap((request) => request.unassignedSampleIds);
       const batch = await createWIPBatch({
         equipmentId: selectedEquipment.id,
-        recipeId: stagedRecipeId,
-        sampleIds,
+        recipeId: currentBatchRecipeId,
+        sampleIds: stagedSamples.map((sample) => sample.sampleId),
+        operatorId: user.id,
       });
 
       setCreatedBatch(batch);
-      setStagedRequestIds([]);
+      setStagedSamples([]);
       await loadData();
     } catch (err) {
       setCreatedBatch(null);
@@ -223,12 +255,12 @@ function WIPBuilderPage({}: Props) {
         </div>
 
         <PendingRequestList
-          items={filteredPendingGroups}
-          stagedRequestIds={stagedRequestIds}
-          currentBatchRecipeId={stagedRecipeId}
+          items={filteredPendingSamples}
+          stagedSampleIds={stagedSampleIds}
+          currentBatchRecipeId={currentBatchRecipeId}
           filterRecipeId={filterRecipeId}
           filterRecipeName={filterRecipeName}
-          onToggle={handleToggleRequest}
+          onToggle={handleToggleSample}
           onFilterByRecipe={handleFilterByRecipe}
           onClearFilter={handleClearFilter}
         />
@@ -240,7 +272,6 @@ function WIPBuilderPage({}: Props) {
           selectedEquipmentId={selectedEquipmentId}
           onSelect={(item) => {
             handleSelectEquipment(item);
-            // clicking equipment also filters left list
             handleFilterByEquipment(item.id, item.name);
           }}
           filterEquipmentId={filterEquipmentId}
@@ -251,11 +282,11 @@ function WIPBuilderPage({}: Props) {
 
       <div className="dispatch-right">
         <CreateBatchPanel
-          stagedRequests={stagedRequests}
+          stagedSamples={stagedSamples}
           selectedEquipment={selectedEquipment}
           stagedRecipeName={stagedRecipeName}
           requiredCapacity={requiredCapacity}
-          onRemoveRequest={handleRemoveRequest}
+          onRemoveSample={handleRemoveSample}
           onCreate={handleCreate}
           loading={loading}
           error={error}
