@@ -3,7 +3,6 @@ import type { AuthUser } from "../auth/model/AuthUser";
 export type Page =
   | "approval"
   | "request"
-  | "requestsReceive"
   | "equipment"
   | "equipmentTypes"
   | "recipe"
@@ -23,7 +22,6 @@ export function getNavItems(user: AuthUser): NavItem[] {
     return [
       { page: "request", label: "Request" },
       { page: "approval", label: "Approval" },
-      { page: "requestsReceive", label: "RequestsReceive" },
       { page: "wip_builder", label: "WIP Builder" },
       { page: "wip_management", label: "WIP Management" },
       { page: "manager_dashboard", label: "Manager Dashboard" },
@@ -61,7 +59,6 @@ export function getNavItems(user: AuthUser): NavItem[] {
 
   if (user.role === "LAB_STAFF") {
     return [
-      { page: "requestsReceive", label: "RequestsReceive" },
       { page: "wip_builder", label: "WIP Builder" },
       { page: "wip_management", label: "WIP Management" },
     ];

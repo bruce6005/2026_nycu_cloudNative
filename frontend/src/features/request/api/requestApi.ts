@@ -60,6 +60,16 @@ export const createRequest = async (data: RequestDTO) => {
   return res.json();
 };
 
+export async function archiveRequest(id: number): Promise<void> {
+  const res = await fetch(`${CONFIG.API_BASE}/api/request/${id}/archive`, {
+    method: "PATCH",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Archive request failed (${res.status})`);
+  }
+}
+
 export const getRequestById = async (id: number) => {
   const res = await fetch(`${CONFIG.API_BASE}/api/request/${id}`);
   if (!res.ok) throw new Error("Fetch failed");

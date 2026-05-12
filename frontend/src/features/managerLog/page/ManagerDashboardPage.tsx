@@ -27,49 +27,58 @@ function ManagerDashboardPage() {
     }
   };
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
+   // polling 
+    useEffect(() => {
+        loadDashboard();
+
+        const timer = window.setInterval(() => {
+            loadDashboard();
+        }, 1000);
+
+        return () => window.clearInterval(timer);
+    }, []);
 
   useSse("REQUEST_UPDATED", loadDashboard);
 
   return (
     <div className="manager-dashboard-page">
-      <div className="dashboard-header">
+        <div className="dashboard-header">
         <div>
-          <h2>Manager Dashboard</h2>
-          <div className="text-muted">
+            <h2>Manager Dashboard</h2>
+            <div className="text-muted">
             Request overview, equipment usage, and lab operation logs
-          </div>
+            </div>
         </div>
 
         <button
-          type="button"
-          className="button secondary"
-          onClick={loadDashboard}
-          disabled={loading}
+            type="button"
+            className="button secondary"
+            onClick={loadDashboard}
+            disabled={loading}
         >
-          {loading ? "Loading..." : "Refresh"}
+            {loading ? "Loading..." : "Refresh"}
         </button>
-      </div>
-
-      {error && <div className="card dashboard-error">{error}</div>}
-
-      <div className="dashboard-top-grid">
-        <div className="dashboard-grid-left">
-          <RequestStatsPanel stats={dashboard?.requestStats ?? null} />
         </div>
 
-        <div className="dashboard-grid-right">
-          <EquipmentUsagePanel items={dashboard?.equipmentUsage ?? []} />
-        </div>
-      </div>
+        {error && <div className="card dashboard-error">{error}</div>}
 
-      <div className="dashboard-bottom">
-        <TestRecordLogPanel logs={dashboard?.logs ?? []} />
-      </div>
+        <div className="dashboard-content">
+        <div className="dashboard-top-grid">
+            <div className="dashboard-grid-left">
+            <RequestStatsPanel stats={dashboard?.requestStats ?? null} />
+            </div>
+
+            <div className="dashboard-grid-right">
+            <EquipmentUsagePanel items={dashboard?.equipmentUsage ?? []} />
+            </div>
+        </div>
+
+        <div className="dashboard-bottom">
+            <TestRecordLogPanel logs={dashboard?.logs ?? []} />
+        </div>
+        </div>
     </div>
-  );
+    );
 }
 
 export default ManagerDashboardPage;
