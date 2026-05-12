@@ -27,6 +27,33 @@ body {
   cursor: pointer;
 }
 
+.tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  display: inline-block;
+  background-color: #efefef; /* 原本的灰色 */
+  color: #333;
+}
+
+/* 只針對後續動作設定顏色 */
+.tag.dispatched {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.tag.processing {
+  background-color: #ffedd5;
+  color: #9a3412;
+}
+
+.tag.done {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
 .container {
   display: flex;
   height: calc(100vh - 60px);
@@ -58,7 +85,7 @@ body {
   padding: 20px;
   border-radius: 6px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .form-row {

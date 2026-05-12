@@ -12,4 +12,6 @@ public class PendingSamplesGroupedByRequestDTO {
     private String priority;
     private int pendingSampleCount;
     private List<Long> unassignedSampleIds;
+    private Long nextRecipeId;
+    private String nextRecipeName;
 }

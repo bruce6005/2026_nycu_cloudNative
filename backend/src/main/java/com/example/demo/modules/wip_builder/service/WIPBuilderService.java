@@ -13,11 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.modules.wip_builder.dto.CreateWIPBatchRequest;
 import com.example.demo.modules.wip_builder.dto.EquipmentWithRecipesDTO;
 import com.example.demo.modules.wip_builder.dto.PendingSamplesGroupedByRequestDTO;
+import com.example.demo.modules.wip_builder.dto.PendingSampleDTO;
 import com.example.demo.modules.wip_builder.dto.RecipeDTO;
 import com.example.demo.modules.wip_management.dto.WIPBatchDTO;
 import com.example.demo.modules.equipment.repository.EquipmentRepository;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.recipe.repository.RecipeRepository;
+import com.example.demo.modules.request.repository.RequestRepository;
 import com.example.demo.modules.request.repository.SampleRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
 import com.example.demo.modules.equipment.model.Equipment;
@@ -27,6 +29,10 @@ import com.example.demo.modules.request.model.Request;
 import com.example.demo.modules.request.model.Sample;
 import com.example.demo.modules.wip_builder.model.WIPbatch;
 
+import com.example.demo.modules.auth.model.User;
+import com.example.demo.modules.auth.repository.UserRepository;
+import com.example.demo.modules.wip_builder.model.TestRecords;
+import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
 @Service
 public class WIPBuilderService {
 
@@ -35,23 +41,50 @@ public class WIPBuilderService {
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final RecipeRepository recipeRepository;
     private final WIPbatchRepository wipbatchRepository;
+    private final RequestRepository requestRepository;
+    private final TestRecordsRepository testRecordsRepository;
+    private final UserRepository userRepository;
+    private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
     public WIPBuilderService(SampleRepository sampleRepository,
             EquipmentRepository equipmentRepository,
             EquipmentStatusLogsRepository equipmentStatusLogsRepository,
             RecipeRepository recipeRepository,
-            WIPbatchRepository wipbatchRepository) {
+            WIPbatchRepository wipbatchRepository,
+            RequestRepository requestRepository,
+            TestRecordsRepository testRecordsRepository,
+            UserRepository userRepository,
+            com.example.demo.modules.notification.service.NotificationService notificationService) {
         this.sampleRepository = sampleRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.recipeRepository = recipeRepository;
         this.wipbatchRepository = wipbatchRepository;
+        this.requestRepository = requestRepository;
+        this.testRecordsRepository = testRecordsRepository;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
     public List<PendingSamplesGroupedByRequestDTO> getPendingSamplesGroupedByRequest() {
-        Map<Long, List<Sample>> groupedSamples = sampleRepository.findByBatchIsNull().stream()
-                .filter(sample -> isDispatchableRequest(sample.getRequest()))
+        // Map<Long, List<Sample>> groupedSamples =
+        // sampleRepository.findByBatchIsNull().stream()
+        // .filter(sample -> isDispatchableRequest(sample.getRequest()))
+        List<Sample> allSamples = sampleRepository.findByBatchIsNull();
+        System.out.println("[DEBUG] Total samples without batch: " + allSamples.size());
+
+        Map<Long, List<Sample>> groupedSamples = allSamples.stream()
+                .filter(sample -> {
+                    boolean dispatchable = isDispatchableRequest(sample.getRequest());
+                    if (dispatchable) {
+                        System.out.println(
+                                "[DEBUG] Sample " + sample.getBarcode() + " of Request " + sample.getRequest().getId()
+                                        + " is dispatchable (Status: " + sample.getRequest().getStatus() + ")");
+                    }
+                    return dispatchable;
+                })
+                //
                 .collect(Collectors.groupingBy(sample -> sample.getRequest().getId(), LinkedHashMap::new,
                         Collectors.toList()));
 
@@ -59,6 +92,10 @@ public class WIPBuilderService {
         for (Map.Entry<Long, List<Sample>> entry : groupedSamples.entrySet()) {
             List<Sample> samples = entry.getValue();
             Request request = samples.get(0).getRequest();
+            Sample sampleWithRecipe = samples.stream()
+                    .filter(sample -> sample.getRecipe() != null)
+                    .findFirst()
+                    .orElse(null);
 
             PendingSamplesGroupedByRequestDTO dto = new PendingSamplesGroupedByRequestDTO();
             dto.setRequestId(request.getId());
@@ -67,6 +104,10 @@ public class WIPBuilderService {
             dto.setPriority(request.getPriority());
             dto.setPendingSampleCount(samples.size());
             dto.setUnassignedSampleIds(samples.stream().map(Sample::getId).toList());
+            if (sampleWithRecipe != null) {
+                dto.setNextRecipeId(sampleWithRecipe.getRecipe().getId());
+                dto.setNextRecipeName(sampleWithRecipe.getRecipe().getName());
+            }
             result.add(dto);
         }
 
@@ -77,6 +118,32 @@ public class WIPBuilderService {
     public List<EquipmentWithRecipesDTO> getEquipmentsWithRecipes() {
         return equipmentRepository.findAll().stream()
                 .map(this::toEquipmentWithRecipesDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PendingSampleDTO> getPendingSamples() {
+        List<Sample> samples = sampleRepository.findByBatchIsNull();
+
+        return samples.stream()
+                .filter(sample -> isDispatchableRequest(sample.getRequest()))
+                .filter(sample -> sample.getRecipe() != null)
+                .map(sample -> {
+                    Request request = sample.getRequest();
+                    Recipe recipe = sample.getRecipe();
+
+                    return new PendingSampleDTO(
+                            sample.getId(),
+                            sample.getBarcode(),
+                            sample.getStatus(),
+                            request.getId(),
+                            resolveRequestTitle(request),
+                            request.getDescription(),
+                            request.getPriority(),
+                            recipe.getId(),
+                            recipe.getName()
+                    );
+                })
                 .toList();
     }
 
@@ -110,6 +177,11 @@ public class WIPBuilderService {
             if (sample.getBatch() != null) {
                 throw new RuntimeException("Sample " + sample.getId() + " is already assigned to a batch");
             }
+
+            if (sample.getRecipe() == null || !sample.getRecipe().getId().equals(recipe.getId())) {
+                throw new RuntimeException(
+                        "All selected samples must belong to recipe " + recipe.getName() + " (id=" + recipe.getId() + ")");
+            }
         }
 
         WIPbatch batch = new WIPbatch();
@@ -120,24 +192,52 @@ public class WIPBuilderService {
 
         WIPbatch savedBatch = wipbatchRepository.save(batch);
 
-        for (Sample sample : samples) {
-            sample.setBatch(savedBatch);
-            sample.setStatus("ASSIGNED");
-        }
-        sampleRepository.saveAll(samples);
+        // write test record 
+        User operator = userRepository.findById(request.getOperatorId())
+        .orElseThrow(() -> new RuntimeException("Operator not found"));
 
-        return toWIPBatchDTO(savedBatch);
-    }
+        TestRecords testRecord = new TestRecords();
+        testRecord.setBatch(savedBatch);
+        testRecord.setEquipment(equipment);
+        testRecord.setOperator(operator);
+        testRecord.setResultStatus("QUEUED");
+        testRecord.setStartTime(LocalDateTime.now());
+        testRecord.setEndTime(null);
+        testRecord.setResultData(
+                "{\"action\":\"CREATE_WIP_BATCH\",\"sampleIds\":\"" + request.getSampleIds() + "\"}"
+        );
+
+        testRecordsRepository.save(testRecord);
+
+                for (Sample sample : samples) {
+                    sample.setBatch(savedBatch);
+                    sample.setStatus("ASSIGNED");
+                }
+                sampleRepository.saveAll(samples);
+
+                // Check and update request status to DISPATCHED if all samples are assigned
+                samples.stream()
+                        .map(Sample::getRequest)
+                        .distinct()
+                        .forEach(this::checkAndUpdateRequestStatus);
+
+                // 通知前端資料已更新
+                notificationService.broadcast("REQUEST_UPDATED", "Batch created for samples");
+
+                return toWIPBatchDTO(savedBatch);
+            }
 
     private EquipmentWithRecipesDTO toEquipmentWithRecipesDTO(Equipment equipment) {
         EquipmentWithRecipesDTO dto = new EquipmentWithRecipesDTO();
         dto.setId(equipment.getId());
         dto.setName(equipment.getName());
+        dto.setEquipmentType(equipment.getEquipmentTypeSchema().getEquipmentType());
         dto.setMaxCapacity(equipment.getMaxCapacity());
         dto.setCurrentStatus(resolveCurrentEquipmentStatus(equipment.getId()));
-        dto.setRecipes(recipeRepository.findByEquipmentTypeSchema_Id(equipment.getEquipmentTypeSchema().getId()).stream()
-                .map(this::toRecipeDTO)
-                .toList());
+        dto.setRecipes(
+                recipeRepository.findByEquipmentTypeSchema_Id(equipment.getEquipmentTypeSchema().getId()).stream()
+                        .map(this::toRecipeDTO)
+                        .toList());
         return dto;
     }
 
@@ -168,7 +268,10 @@ public class WIPBuilderService {
     }
 
     private String resolveRequestTitle(Request request) {
-        return String.valueOf(request.getId());
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            return request.getTitle();
+        }
+        return "Request #" + request.getId();
     }
 
     private String resolveCurrentEquipmentStatus(Long equipmentId) {
@@ -177,6 +280,19 @@ public class WIPBuilderService {
                 .or(() -> equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipmentId))
                 .map(EquipmentStatusLogs::getStatus)
                 .orElse(null);
+    }
+
+    private void checkAndUpdateRequestStatus(Request request) {
+        List<Sample> allSamples = sampleRepository.findByRequest_Id(request.getId());
+
+        boolean allAssignedOrMore = allSamples.stream()
+                .allMatch(s -> "ASSIGNED".equals(s.getStatus()) || "RUNNING".equals(s.getStatus())
+                        || "COMPLETED".equals(s.getStatus()));
+
+        if (allAssignedOrMore && !"DONE".equals(request.getStatus()) && !"PROCESSING".equals(request.getStatus())) {
+            request.setStatus("DISPATCHED");
+            requestRepository.save(request);
+        }
     }
 
     private boolean isDispatchableRequest(Request request) {

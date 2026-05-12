@@ -3,9 +3,8 @@ import type { WIPBatchDTO } from "../../wip_management/model/WipManagementData";
 import type {
   CreateWIPBatchRequest,
   EquipmentWithRecipesDTO,
-  PendingSamplesGroupedByRequestDTO,
+  PendingSampleDTO,
 } from "../model/WIPBuilderData";
-
 async function parseErrorMessage(res: Response): Promise<string> {
   try {
     const data = await res.json();
@@ -21,11 +20,15 @@ async function parseErrorMessage(res: Response): Promise<string> {
   return `Request failed (${res.status})`;
 }
 
-export async function fetchPendingSamples(): Promise<PendingSamplesGroupedByRequestDTO[]> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/wip_builder/pending`);
-  return res.json();
-}
 
+export async function fetchPendingSamples(): Promise<PendingSampleDTO[]> {
+  const res = await fetch(`${CONFIG.API_BASE}/api/wip_builder/pending`);
+  const data = await res.json();
+
+  console.log("pending samples response:", data);
+
+  return data;
+}
 export async function fetchEquipments(): Promise<EquipmentWithRecipesDTO[]> {
   const res = await fetch(`${CONFIG.API_BASE}/api/wip_builder/equipments`);
   return res.json();

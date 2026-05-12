@@ -13,6 +13,7 @@ import { mapToApprovalItem } from "../api/ApprovalMapper";
 
 import type { ApprovalResponse, ApprovalItem } from "../model/ApprovalData";
 import type { AuthUser } from "../../auth/model/AuthUser";
+import { useSse } from "../../utils/useSse";
 
 type Props = {
   user: AuthUser;
@@ -33,8 +34,18 @@ function ApprovalPage({ user }: Props) {
     const uiData = mapToApprovalItem(data);
 
     setOrders(uiData);
-    setSelected(uiData[0] ?? null);
+    
+    // 只有在原本沒選中任何東西，或是原本選中的單子已經不見時，才自動選第一筆
+    setSelected(prev => {
+        if (!prev) return uiData[0] ?? null;
+        // 檢查原本選中的那筆是否還在名單內 (有可能被處理掉了)
+        const stillExists = uiData.find(o => o.id === prev.id);
+        return stillExists ? stillExists : (uiData[0] ?? null);
+    });
   };
+
+  // 當後端有任何狀態變更時，立即刷新經理的待審核清單
+  useSse("REQUEST_UPDATED", loadData);
 
   const handleApprove = async (id: number) => {
     await handleApproval(id, approverId, "APPROVE");
