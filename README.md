@@ -98,7 +98,14 @@ npm run dev
 ./mvnw test
 
 ## frontend
+1. 環境設定與安裝：
+```bash
 npm install
-npx playwright install chromium （only one time）
-npm test
-npm run test:ui
+npx playwright install chromium  # 只需要跑這一次
+```
+
+2. 執行測試：
+```bash
+npm test         # 執行測試並產生報告
+npm run test:ui  # 開啟視覺化選單
+```
