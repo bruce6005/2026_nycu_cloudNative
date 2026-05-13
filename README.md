@@ -98,14 +98,7 @@ npm run dev
 ./mvnw test
 
 ## frontend
-1. 更新依賴
 npm install
-
-2. 下載 Playwright 內建瀏覽器 (只需跑這一次)
-npx playwright install chromium
-
-3. 執行測試（會出現測試報告）
+npx playwright install chromium （only one time）
 npm test
-
-4. 如果想要看到「視覺化」的機器人操作過程（推薦！）
 npm run test:ui
