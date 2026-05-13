@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.request.repository.SampleRepository;
@@ -87,7 +89,18 @@ public class WIPManagementService {
                 .distinct()
                 .forEach(this::checkAndUpdateRequestStatus);
 
-        notificationService.broadcast("REQUEST_UPDATED", "Batch started: " + id);
+        // 在交易提交後才廣播信號，確保前端抓到的是最新資料
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    notificationService.broadcast("REQUEST_UPDATED", "Batch started: " + id);
+                }
+            });
+        } else {
+            notificationService.broadcast("REQUEST_UPDATED", "Batch started: " + id);
+        }
+        
         return toWIPBatchDTO(savedBatch);
     }
 
@@ -102,7 +115,17 @@ public class WIPManagementService {
 
         WIPbatch savedBatch = finishRunningBatch(batch);
 
-        notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + id);
+        // 在交易提交後才廣播信號
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + id);
+                }
+            });
+        } else {
+            notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + id);
+        }
 
         return toWIPBatchDTO(savedBatch);
     }
@@ -303,10 +326,28 @@ public class WIPManagementService {
             if (estimatedEndTime != null && !estimatedEndTime.isAfter(now)) {
                 if ("RUNNING_CRASH".equals(batch.getStatus())) {
                     failRunningBatch(batch);
-                    notificationService.broadcast("REQUEST_UPDATED", "Batch failed: " + batch.getId());
+                    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                notificationService.broadcast("REQUEST_UPDATED", "Batch failed: " + batch.getId());
+                            }
+                        });
+                    } else {
+                        notificationService.broadcast("REQUEST_UPDATED", "Batch failed: " + batch.getId());
+                    }
                 } else {
                     finishRunningBatch(batch);
-                    notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + batch.getId());
+                    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + batch.getId());
+                            }
+                        });
+                    } else {
+                        notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + batch.getId());
+                    }
                 }
             }
         }
