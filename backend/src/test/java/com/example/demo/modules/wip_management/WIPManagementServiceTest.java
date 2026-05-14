@@ -34,12 +34,26 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link WIPManagementService}.
- *
- * 測試範疇：
- * - getWIPBatches() 正常查詢 / 空列表
- * - startBatch() 正常啟動 / 狀態不符拋例外 / 找不到拋例外
- * - finishBatch() 正常完成 / 狀態不符拋例外 / 找不到拋例外
- * - checkAndUpdateRequestStatus() 各種樣本狀態組合
+ * 
+ * ----------------------------------------------------
+ * 測試功能清單 (Test Coverage Summary):
+ * ----------------------------------------------------
+ * 1. getWIPBatches (取得批次看板 - 核心驅動):
+ *    - [x] 正常查詢：應回傳所有批次列表
+ *    - [x] 自動校正 (Auto-Resolve Case 1)：過期的 RUNNING 應自動變更為 FINISHED
+ *    - [x] 自動校正 (Auto-Resolve Case 2)：過期的 RUNNING_CRASH 應自動變更為 FAILED
+ *    - [x] 自動校正 (Auto-Resolve Case 3)：未過期的批次應保持原狀
+ * 
+ * 2. startBatch (啟動批次):
+ *    - [x] 正常流程：QUEUED 狀態成功啟動，設備變 BUSY，發送廣播
+ *    - [x] 異常情境：非 QUEUED 狀態嘗試啟動拋出例外
+ * 
+ * 3. finishBatch (手動結案 - 已移除功能):
+ *    - [x] 功能已從系統移除，完全由 Auto-Resolve 取代
+ * 
+ * 4. 狀態連動檢核 (checkAndUpdateRequestStatus):
+ *    - [x] 型妥善處理所有 Sample 狀態與 Request 狀態同步
+ * ----------------------------------------------------
  */
 @ExtendWith(MockitoExtension.class)
 class WIPManagementServiceTest {
@@ -129,6 +143,72 @@ class WIPManagementServiceTest {
         assertTrue(result.isEmpty());
     }
 
+    @Test
+    @DisplayName("Auto-Resolve Case 1: 過期的 RUNNING 批次在查詢時應自動變為 FINISHED")
+    void getWIPBatches_expiredRunning_shouldAutoFinish() {
+        // Given
+        Equipment eq = buildEquipment(1L);
+        Recipe recipe = buildRecipe(1L);
+        WIPbatch expiredBatch = buildBatch(1L, "RUNNING", eq, recipe);
+        expiredBatch.setEstimatedEndTime(LocalDateTime.now().minusMinutes(5)); // 已過期 5 分鐘
+
+        when(wipbatchRepository.findByStatusIn(anyList())).thenReturn(List.of(expiredBatch));
+        when(wipbatchRepository.findAll(any(Sort.class))).thenReturn(List.of(expiredBatch));
+        when(sampleRepository.findByBatch_Id(1L)).thenReturn(Collections.emptyList());
+        when(wipbatchRepository.save(any(WIPbatch.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        List<WIPBatchDTO> result = wipManagementService.getWIPBatches();
+
+        // Then
+        assertEquals("FINISHED", result.get(0).getStatus());
+        verify(wipbatchRepository, atLeastOnce()).save(any(WIPbatch.class));
+        verify(notificationService, atLeastOnce()).broadcast(eq("REQUEST_UPDATED"), contains("Batch finished"));
+    }
+
+    @Test
+    @DisplayName("Auto-Resolve Case 2: 過期的 RUNNING_CRASH 批次在查詢時應自動變為 FAILED")
+    void getWIPBatches_expiredCrash_shouldAutoFail() {
+        // Given
+        Equipment eq = buildEquipment(1L);
+        Recipe recipe = buildRecipe(1L);
+        WIPbatch expiredCrashBatch = buildBatch(2L, "RUNNING_CRASH", eq, recipe);
+        expiredCrashBatch.setEstimatedEndTime(LocalDateTime.now().minusMinutes(10)); // 已過期 10 分鐘
+
+        when(wipbatchRepository.findByStatusIn(anyList())).thenReturn(List.of(expiredCrashBatch));
+        when(wipbatchRepository.findAll(any(Sort.class))).thenReturn(List.of(expiredCrashBatch));
+        when(sampleRepository.findByBatch_Id(2L)).thenReturn(Collections.emptyList());
+        when(wipbatchRepository.save(any(WIPbatch.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        List<WIPBatchDTO> result = wipManagementService.getWIPBatches();
+
+        // Then
+        assertEquals("FAILED", result.get(0).getStatus());
+        verify(notificationService, atLeastOnce()).broadcast(eq("REQUEST_UPDATED"), contains("Batch failed"));
+    }
+
+    @Test
+    @DisplayName("Auto-Resolve Case 3: 未過期的批次應保持狀態不變")
+    void getWIPBatches_ongoingBatch_shouldStayRunning() {
+        // Given
+        Equipment eq = buildEquipment(1L);
+        Recipe recipe = buildRecipe(1L);
+        WIPbatch ongoingBatch = buildBatch(3L, "RUNNING", eq, recipe);
+        ongoingBatch.setEstimatedEndTime(LocalDateTime.now().plusHours(1)); // 還有一小時才完工
+
+        when(wipbatchRepository.findByStatusIn(anyList())).thenReturn(List.of(ongoingBatch));
+        when(wipbatchRepository.findAll(any(Sort.class))).thenReturn(List.of(ongoingBatch));
+        when(sampleRepository.findByBatch_Id(3L)).thenReturn(Collections.emptyList());
+
+        // When
+        List<WIPBatchDTO> result = wipManagementService.getWIPBatches();
+
+        // Then
+        assertEquals("RUNNING", result.get(0).getStatus());
+        verify(wipbatchRepository, never()).save(any()); // 不應呼叫 save
+    }
+
     // -------------------------------------------------------
     // startBatch()
     // -------------------------------------------------------
@@ -179,48 +259,6 @@ class WIPManagementServiceTest {
     // finishBatch()
     // -------------------------------------------------------
 
-    @Test
-    @DisplayName("finishBatch() - RUNNING 狀態應成功完成並廣播通知")
-    void finishBatch_running_shouldFinishAndBroadcast() {
-        Equipment eq = buildEquipment(1L);
-        Recipe recipe = buildRecipe(1L);
-        WIPbatch batch = buildBatch(20L, "RUNNING", eq, recipe);
-        batch.setStartTime(LocalDateTime.now().minusMinutes(1));
-        batch.setEstimatedEndTime(LocalDateTime.now().plusMinutes(5));
-
-        when(wipbatchRepository.findById(20L)).thenReturn(Optional.of(batch));
-        when(wipbatchRepository.save(any(WIPbatch.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(sampleRepository.findByBatch_Id(20L)).thenReturn(Collections.emptyList());
-        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
-                .thenReturn(Optional.empty());
-
-        WIPBatchDTO result = wipManagementService.finishBatch(20L);
-
-        assertNotNull(result);
-        assertEquals("FINISHED", result.getStatus());
-        verify(notificationService, times(1)).broadcast(eq("REQUEST_UPDATED"), anyString());
-    }
-
-    @Test
-    @DisplayName("finishBatch() - RUNNING_CRASH 狀態手動呼叫應拋 RuntimeException")
-    void finishBatch_runningCrash_shouldThrow() {
-        Equipment eq = buildEquipment(1L);
-        Recipe recipe = buildRecipe(1L);
-        WIPbatch batch = buildBatch(20L, "RUNNING_CRASH", eq, recipe);
-
-        when(wipbatchRepository.findById(20L)).thenReturn(Optional.of(batch));
-
-        assertThrows(RuntimeException.class, () -> wipManagementService.finishBatch(20L));
-        verify(notificationService, never()).broadcast(anyString(), anyString());
-    }
-
-    @Test
-    @DisplayName("finishBatch() - 找不到 batch 時應拋 RuntimeException")
-    void finishBatch_notFound_shouldThrow() {
-        when(wipbatchRepository.findById(999L)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class, () -> wipManagementService.finishBatch(999L));
-    }
 
     // -------------------------------------------------------
     // checkAndUpdateRequestStatus()
