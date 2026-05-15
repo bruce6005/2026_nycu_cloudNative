@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,7 @@ public class DataInitializer implements CommandLineRunner {
     private final SampleRepository sampleRepository;
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final WIPbatchRepository wipbatchRepository;
+    private final boolean resetDataOnStartup;
     private final TestRecordsRepository testRecordsRepository;
 
     public DataInitializer(UserRepository userRepository,
@@ -47,7 +49,8 @@ public class DataInitializer implements CommandLineRunner {
                            SampleRepository sampleRepository,
                            EquipmentStatusLogsRepository equipmentStatusLogsRepository,
                            WIPbatchRepository wipbatchRepository,
-                           TestRecordsRepository testRecordsRepository) {
+                           TestRecordsRepository testRecordsRepository,
+                           @Value("${app.reset-data-on-startup:true}") boolean resetDataOnStartup) {
         this.userRepository = userRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentTypeSchemaRepository = equipmentTypeSchemaRepository;
@@ -57,10 +60,15 @@ public class DataInitializer implements CommandLineRunner {
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.wipbatchRepository = wipbatchRepository;
         this.testRecordsRepository = testRecordsRepository;
+        this.resetDataOnStartup = resetDataOnStartup;
     }
 
     @Override
     public void run(String... args) {
+        if (!resetDataOnStartup) {
+            return;
+        }
+
         clearSeedTables();
         seedUsers();
         seedEquipmentTypeSchemas();
@@ -109,7 +117,7 @@ public class DataInitializer implements CommandLineRunner {
                 {3L, "ETCHING", "{\"type\": \"object\", \"properties\": {\"gas_flow_sccm\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 500}, \"rf_power_w\": {\"type\": \"integer\", \"minimum\": 10, \"maximum\": 2000}}, \"required\": [\"gas_flow_sccm\", \"rf_power_w\"]}"},
                 {4L, "INSPECT", "{\"type\": \"object\", \"properties\": {\"magnification\": {\"type\": \"string\", \"enum\": [\"10x\", \"20x\", \"50x\"]}, \"threshold\": {\"type\": \"number\", \"minimum\": 0, \"maximum\": 1}}, \"required\": [\"magnification\", \"threshold\"]}"},
                 {5L, "UV_CURE", "{\"type\": \"object\", \"properties\": {\"temperature\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 100}, \"time_minutes\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 60}}, \"required\": [\"temperature\", \"time_minutes\"]}"},
-        };      
+        };
 
         for (Object[] row : schemaRows) {
             execute(
@@ -120,7 +128,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedEquipments() {
-    Object[][] equipmentRows = new Object[][] {
+        Object[][] equipmentRows = new Object[][] {
             {1L, 2L, "High-Temp Oven 1 (高溫烤箱)", "THERMAL", 1L, 10},
             {2L, 2L, "Spin Coater 1 (光阻塗佈機)", "COATING", 2L, 1},
             {3L, 2L, "Plasma Etcher 1 (電漿蝕刻機)", "ETCHING", 3L, 4},
@@ -135,8 +143,8 @@ public class DataInitializer implements CommandLineRunner {
 
         for (Object[] row : equipmentRows) {
             execute(
-                    "INSERT INTO equipment (id, handler_id, name, type, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?, ?)",
-                    row[0], row[1], row[2], row[3], row[4], row[5]
+                    "INSERT INTO equipment (id, handler_id, name, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?)",
+                    row[0], row[1], row[2], row[4], row[5]
             );
         }
     }

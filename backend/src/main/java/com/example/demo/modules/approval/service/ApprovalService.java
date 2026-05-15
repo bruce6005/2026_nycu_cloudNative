@@ -17,7 +17,7 @@ public class ApprovalService {
     private final com.example.demo.modules.request.repository.SampleRepository sampleRepository;
     private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
-    public ApprovalService(RequestRepository requestRepository, 
+    public ApprovalService(RequestRepository requestRepository,
                          com.example.demo.modules.request.repository.SampleRepository sampleRepository,
                          com.example.demo.modules.notification.service.NotificationService notificationService) {
         this.requestRepository = requestRepository;
@@ -96,7 +96,7 @@ public class ApprovalService {
                 }
                 return sDto;
             }).collect(java.util.stream.Collectors.toList());
-        
+
         res.setSamples(sampleDTOs);
 
         return res;

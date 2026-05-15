@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ApprovalItem } from "../model/ApprovalData";
 
 type Props = {
@@ -43,8 +42,8 @@ function ApprovalDetail({ order }: Props) {
           <div className="form-group" style={{ flex: 1 }}>
             <label className="label" style={{ color: '#6b7280', fontSize: '13px' }}>優先度</label>
             <div style={{ marginTop: '4px' }}>
-              <span className={`tag ${order.priority.toLowerCase()}`} 
-                    style={{ 
+              <span className={`tag ${order.priority.toLowerCase()}`}
+                    style={{
                         background: order.priority === 'URGENT' ? '#fee2e2' : '#f3f4f6',
                         color: order.priority === 'URGENT' ? '#991b1b' : '#374151',
                         border: order.priority === 'URGENT' ? '1px solid #fecaca' : '1px solid #d1d5db'
@@ -58,11 +57,11 @@ function ApprovalDetail({ order }: Props) {
         {/* 描述區 */}
         <div className="form-group" style={{ marginBottom: '24px' }}>
           <label className="label" style={{ color: '#6b7280', fontSize: '13px' }}>詳細描述</label>
-          <div style={{ 
+          <div style={{
             marginTop: '8px',
-            padding: '16px', 
-            background: '#f9fafb', 
-            border: '1px solid #f3f4f6', 
+            padding: '16px',
+            background: '#f9fafb',
+            border: '1px solid #f3f4f6',
             borderRadius: '8px',
             minHeight: '80px',
             lineHeight: '1.6',
@@ -80,10 +79,10 @@ function ApprovalDetail({ order }: Props) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {order.samples && order.samples.length > 0 ? (
               order.samples.map((s, idx) => (
-                <div key={idx} style={{ 
-                  padding: '12px 16px', 
-                  background: '#fff', 
-                  border: '1px solid #e5e7eb', 
+                <div key={idx} style={{
+                  padding: '12px 16px',
+                  background: '#fff',
+                  border: '1px solid #e5e7eb',
                   borderRadius: '10px',
                   display: 'flex',
                   justifyContent: 'space-between',

@@ -34,7 +34,7 @@ function ApprovalPage({ user }: Props) {
     const uiData = mapToApprovalItem(data);
 
     setOrders(uiData);
-    
+
     // 只有在原本沒選中任何東西，或是原本選中的單子已經不見時，才自動選第一筆
     setSelected(prev => {
         if (!prev) return uiData[0] ?? null;

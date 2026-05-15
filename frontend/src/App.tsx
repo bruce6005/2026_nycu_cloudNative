@@ -12,7 +12,6 @@ import EquipmentPage from "./features/equipment/page/EquipmentPage";
 import EquipmentTypeManagementPage from "./features/equipment/page/EquipmentTypeManagementPage";
 import RecipeManagementPage from "./features/recipe/page/RecipeManagementPage";
 import ManagerDashboardPage from "./features/managerLog/page/ManagerDashboardPage";
-
 import type { AuthUser } from "./features/auth/model/AuthUser";
 import { getNavItems, type Page } from "./features/utils/getNavItems";
 
