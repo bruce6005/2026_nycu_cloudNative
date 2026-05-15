@@ -31,7 +31,7 @@ public class RequestService {
     private final RecipeRepository recipeRepository;
     private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
-    public RequestService(RequestRepository requestRepository, 
+    public RequestService(RequestRepository requestRepository,
                          UserRepository userRepository,
                          SampleRepository sampleRepository,
                          RecipeRepository recipeRepository,
@@ -49,7 +49,7 @@ public class RequestService {
     @org.springframework.transaction.annotation.Transactional
     public RequestDTO createRequest(RequestDTO dto) {
         System.out.println("[DEBUG] createRequest for user: " + dto.getFactoryUserId());
-        
+
         User factoryUser = userRepository.findById(dto.getFactoryUserId())
                 .orElseThrow(() -> new RuntimeException("Factory user not found"));
 
@@ -106,13 +106,13 @@ public class RequestService {
                 sample.setRequest(saved);
                 sample.setBarcode(sDto.getBarcode());
                 sample.setStatus("PENDING");
-                
+
                 if (sDto.getRecipeId() != null) {
                     Recipe recipe = recipeRepository.findById(sDto.getRecipeId())
                             .orElseThrow(() -> new RuntimeException("Recipe not found: " + sDto.getRecipeId()));
                     sample.setRecipe(recipe);
                 }
-                
+
                 sampleRepository.save(sample);
             }
         } else {

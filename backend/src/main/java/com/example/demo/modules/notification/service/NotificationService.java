@@ -23,7 +23,7 @@ public class NotificationService {
     public SseEmitter subscribe() {
         // 設定 30 分鐘超時
         SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
-        
+
         this.emitters.add(emitter);
 
         // 連線結束、超時或錯誤時移除

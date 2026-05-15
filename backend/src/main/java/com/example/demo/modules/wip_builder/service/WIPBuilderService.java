@@ -199,7 +199,7 @@ public class WIPBuilderService {
 
         WIPbatch savedBatch = wipbatchRepository.save(batch);
 
-        // write test record 
+        // write test record
         User operator = userRepository.findById(request.getOperatorId())
         .orElseThrow(() -> new RuntimeException("Operator not found"));
 

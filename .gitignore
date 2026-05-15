@@ -18,6 +18,9 @@ test-final-success.png
 # env
 .env
 
+# docs
+docs/
+
 # mac
 .DS_Store
 

@@ -1,6 +1,6 @@
-const API_BASE = "http://localhost:8080";
+import { CONFIG } from "../../../config/config";
 
 export const getOrders = async () => {
-  const res = await fetch(`${API_BASE}/orders`);
+  const res = await fetch(`${CONFIG.API_BASE}/orders`);
   return res.json();
 };

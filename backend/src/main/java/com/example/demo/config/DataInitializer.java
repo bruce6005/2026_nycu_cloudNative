@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,17 +38,19 @@ public class DataInitializer implements CommandLineRunner {
     private final SampleRepository sampleRepository;
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final WIPbatchRepository wipbatchRepository;
+    private final boolean resetDataOnStartup;
     private final TestRecordsRepository testRecordsRepository;
 
     public DataInitializer(UserRepository userRepository,
-            EquipmentRepository equipmentRepository,
-            EquipmentTypeSchemaRepository equipmentTypeSchemaRepository,
-            RecipeRepository recipeRepository,
-            RequestRepository requestRepository,
-            SampleRepository sampleRepository,
-            EquipmentStatusLogsRepository equipmentStatusLogsRepository,
-            WIPbatchRepository wipbatchRepository,
-            TestRecordsRepository testRecordsRepository) {
+                           EquipmentRepository equipmentRepository,
+                           EquipmentTypeSchemaRepository equipmentTypeSchemaRepository,
+                           RecipeRepository recipeRepository,
+                           RequestRepository requestRepository,
+                           SampleRepository sampleRepository,
+                           EquipmentStatusLogsRepository equipmentStatusLogsRepository,
+                           WIPbatchRepository wipbatchRepository,
+                           TestRecordsRepository testRecordsRepository,
+                           @Value("${app.reset-data-on-startup:true}") boolean resetDataOnStartup) {
         this.userRepository = userRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentTypeSchemaRepository = equipmentTypeSchemaRepository;
@@ -57,10 +60,15 @@ public class DataInitializer implements CommandLineRunner {
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.wipbatchRepository = wipbatchRepository;
         this.testRecordsRepository = testRecordsRepository;
+        this.resetDataOnStartup = resetDataOnStartup;
     }
 
     @Override
     public void run(String... args) {
+        if (!resetDataOnStartup) {
+            return;
+        }
+
         clearSeedTables();
         seedUsers();
         seedEquipmentTypeSchemas();
@@ -102,16 +110,11 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedEquipmentTypeSchemas() {
         Object[][] schemaRows = new Object[][] {
-                { 1L, "THERMAL",
-                        "{\"type\": \"object\", \"properties\": {\"temperature\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 1200}, \"time_minutes\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 600}}, \"required\": [\"temperature\", \"time_minutes\"]}" },
-                { 2L, "COATING",
-                        "{\"type\": \"object\", \"properties\": {\"spin_speed_rpm\": {\"type\": \"integer\", \"minimum\": 100, \"maximum\": 5000}, \"thickness_nm\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 1000}}, \"required\": [\"spin_speed_rpm\"]}" },
-                { 3L, "ETCHING",
-                        "{\"type\": \"object\", \"properties\": {\"gas_flow_sccm\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 500}, \"rf_power_w\": {\"type\": \"integer\", \"minimum\": 10, \"maximum\": 2000}}, \"required\": [\"gas_flow_sccm\", \"rf_power_w\"]}" },
-                { 4L, "INSPECT",
-                        "{\"type\": \"object\", \"properties\": {\"magnification\": {\"type\": \"string\", \"enum\": [\"10x\", \"20x\", \"50x\"]}, \"threshold\": {\"type\": \"number\", \"minimum\": 0, \"maximum\": 1}}, \"required\": [\"magnification\", \"threshold\"]}" },
-                { 5L, "UV_CURE",
-                        "{\"type\": \"object\", \"properties\": {\"temperature\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 100}, \"time_minutes\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 60}}, \"required\": [\"temperature\", \"time_minutes\"]}" },
+                {1L, "THERMAL", "{\"type\": \"object\", \"properties\": {\"temperature\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 1200}, \"time_minutes\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 600}}, \"required\": [\"temperature\", \"time_minutes\"]}"},
+                {2L, "COATING", "{\"type\": \"object\", \"properties\": {\"spin_speed_rpm\": {\"type\": \"integer\", \"minimum\": 100, \"maximum\": 5000}, \"thickness_nm\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 1000}}, \"required\": [\"spin_speed_rpm\"]}"},
+                {3L, "ETCHING", "{\"type\": \"object\", \"properties\": {\"gas_flow_sccm\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 500}, \"rf_power_w\": {\"type\": \"integer\", \"minimum\": 10, \"maximum\": 2000}}, \"required\": [\"gas_flow_sccm\", \"rf_power_w\"]}"},
+                {4L, "INSPECT", "{\"type\": \"object\", \"properties\": {\"magnification\": {\"type\": \"string\", \"enum\": [\"10x\", \"20x\", \"50x\"]}, \"threshold\": {\"type\": \"number\", \"minimum\": 0, \"maximum\": 1}}, \"required\": [\"magnification\", \"threshold\"]}"},
+                {5L, "UV_CURE", "{\"type\": \"object\", \"properties\": {\"temperature\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 100}, \"time_minutes\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 60}}, \"required\": [\"temperature\", \"time_minutes\"]}"},
         };
 
         for (Object[] row : schemaRows) {
@@ -123,22 +126,22 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedEquipments() {
         Object[][] equipmentRows = new Object[][] {
-                { 1L, 2L, "High-Temp Oven 1 (高溫烤箱)", 1L, 10 },
-                { 2L, 2L, "Spin Coater 1 (光阻塗佈機)", 2L, 1 },
-                { 3L, 2L, "Plasma Etcher 1 (電漿蝕刻機)", 3L, 4 },
-                { 4L, 2L, "SEM Microscope 1 (電子顯微鏡)", 4L, 5 },
-                { 5L, 2L, "UV Curing 1 (UV固化機)", 5L, 5 },
-                { 6L, 2L, "High-Temp Oven 2 (高溫烤箱)", 1L, 8 },
-                { 7L, 2L, "Spin Coater 2 (光阻塗佈機)", 2L, 1 },
-                { 8L, 2L, "Plasma Etcher 2 (電漿蝕刻機)", 3L, 4 },
-                { 9L, 2L, "SEM Microscope 2 (電子顯微鏡)", 4L, 10 },
-                { 10L, 2L, "UV Curing 2 (UV固化機)", 5L, 5 },
+            {1L, 2L, "High-Temp Oven 1 (高溫烤箱)", "THERMAL", 1L, 10},
+            {2L, 2L, "Spin Coater 1 (光阻塗佈機)", "COATING", 2L, 1},
+            {3L, 2L, "Plasma Etcher 1 (電漿蝕刻機)", "ETCHING", 3L, 4},
+            {4L, 2L, "SEM Microscope 1 (電子顯微鏡)", "INSPECT", 4L, 5},
+            {5L, 2L, "UV Curing 1 (UV固化機)", "UV_CURE", 5L, 5},
+            {6L, 2L, "High-Temp Oven 2 (高溫烤箱)", "THERMAL", 1L, 8},
+            {7L, 2L, "Spin Coater 2 (光阻塗佈機)", "COATING", 2L, 1},
+            {8L, 2L, "Plasma Etcher 2 (電漿蝕刻機)", "ETCHING", 3L, 4},
+            {9L, 2L, "SEM Microscope 2 (電子顯微鏡)", "INSPECT", 4L, 10},
+            {10L, 2L, "UV Curing 2 (UV固化機)", "UV_CURE", 5L, 5},
         };
 
         for (Object[] row : equipmentRows) {
             execute(
                     "INSERT INTO equipment (id, handler_id, name, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?)",
-                    row[0], row[1], row[2], row[3], row[4]);
+                    row[0], row[1], row[2], row[4], row[5]);
             
             execute(
                     "INSERT INTO equipment_status_logs (equipment_id, status, start_time) VALUES (?, 'READY', CURRENT_TIMESTAMP)",

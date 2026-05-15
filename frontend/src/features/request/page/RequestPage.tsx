@@ -12,7 +12,6 @@ type Props = {
 function RequestPage({ user }: Props) {
   const [requests, setRequests] = useState<any[]>([]); // 修正：給予明確型別並改回複數變數名（代表複數資料）
   const [error, setError] = useState("");
-  
   const loadRequest = useCallback(async () => {
     try {
       const data: RequestListItemDTO[] = await getRequest();
@@ -39,7 +38,7 @@ function RequestPage({ user }: Props) {
   return (
     <div className="flex" style={{ padding: '24px', alignItems: 'flex-start' }}>
       {error && <p style={{ color: "red" }}>{error}</p>}
-      
+
       {/* 左側：表單操作區 */}
       <div className="column" style={{ flex: '0 0 320px' }}>
         <h2>建立委託單</h2>
@@ -50,8 +49,8 @@ function RequestPage({ user }: Props) {
       <div className="column" style={{ flex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ margin: 0 }}>委託單清單</h2>
-          <button 
-            className="button secondary" 
+          <button
+            className="button secondary"
             onClick={loadRequest}
             style={{ padding: '6px 16px', borderRadius: '8px' }}
           >

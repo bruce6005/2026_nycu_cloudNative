@@ -16,7 +16,6 @@ const BatchExecutionDetail: React.FC<Props> = ({
   batch,
   loading,
   onStart,
-  onFinish,
 }) => {
   if (!batch) {
     return (
