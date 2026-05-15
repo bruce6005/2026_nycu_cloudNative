@@ -128,7 +128,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedEquipments() {
-    Object[][] equipmentRows = new Object[][] {
+        Object[][] equipmentRows = new Object[][] {
             {1L, 2L, "High-Temp Oven 1 (高溫烤箱)", "THERMAL", 1L, 10},
             {2L, 2L, "Spin Coater 1 (光阻塗佈機)", "COATING", 2L, 1},
             {3L, 2L, "Plasma Etcher 1 (電漿蝕刻機)", "ETCHING", 3L, 4},
@@ -143,8 +143,8 @@ public class DataInitializer implements CommandLineRunner {
 
         for (Object[] row : equipmentRows) {
             execute(
-                    "INSERT INTO equipment (id, handler_id, name, type, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?, ?)",
-                    row[0], row[1], row[2], row[3], row[4], row[5]
+                    "INSERT INTO equipment (id, handler_id, name, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?)",
+                    row[0], row[1], row[2], row[4], row[5]
             );
         }
     }
