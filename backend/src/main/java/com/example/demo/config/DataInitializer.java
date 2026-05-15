@@ -73,10 +73,10 @@ public class DataInitializer implements CommandLineRunner {
         seedUsers();
         seedEquipmentTypeSchemas();
         seedEquipments();
+        seedEquipmentStatusLogs();
         seedRecipes();
         seedRequestsAndSamples();
         seedWIPBatches();
-        seedEquipmentStatusLogs();
     }
 
     private void clearSeedTables() {
@@ -142,10 +142,6 @@ public class DataInitializer implements CommandLineRunner {
             execute(
                     "INSERT INTO equipment (id, handler_id, name, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?)",
                     row[0], row[1], row[2], row[4], row[5]);
-            
-            execute(
-                    "INSERT INTO equipment_status_logs (equipment_id, status, start_time) VALUES (?, 'READY', CURRENT_TIMESTAMP)",
-                    row[0]);
         }
     }
 
@@ -234,6 +230,11 @@ public class DataInitializer implements CommandLineRunner {
                 { 3L, 3L, "BUSY", LocalDateTime.of(2026, 4, 1, 8, 10) },
                 { 4L, 4L, "IDLE", LocalDateTime.of(2026, 4, 1, 8, 15) },
                 { 5L, 5L, "MAINTENANCE", LocalDateTime.of(2026, 4, 1, 8, 20) },
+                { 6L, 6L, "READY", LocalDateTime.now() },
+                { 7L, 7L, "READY", LocalDateTime.now() },
+                { 8L, 8L, "READY", LocalDateTime.now() },
+                { 9L, 9L, "READY", LocalDateTime.now() },
+                { 10L, 10L, "READY", LocalDateTime.now() },
         };
 
         for (Object[] row : logs) {
