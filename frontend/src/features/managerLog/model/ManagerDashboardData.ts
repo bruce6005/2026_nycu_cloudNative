@@ -11,10 +11,23 @@ export type EquipmentUsageDTO = {
   equipmentId: number;
   equipmentName: string;
   equipmentType: string;
-  runningMinutes: number;
-  totalMinutes: number;
+
+  usageCount: number;
+  totalUsageCount: number;
   usageRate: number;
+
+  averageRunSeconds: number;
+
+  successCount: number;
+  failedCount: number;
+  failureRate: number;
+
   currentStatus?: string | null;
+
+  activeBatchId?: number | null;
+  activeBatchStatus?: string | null;
+  activeProgressPercent?: number | null;
+  remainingSeconds?: number | null;
 };
 
 export type TestRecordLogDTO = {

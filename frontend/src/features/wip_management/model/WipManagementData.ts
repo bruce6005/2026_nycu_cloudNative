@@ -9,4 +9,8 @@ export type WIPBatchDTO = {
   createTime: string;
   startTime?: string | null;
   endTime?: string | null;
+
+  estimatedEndTime?: string | null;
+  progressPercent?: number | null;
+  remainingSeconds?: number | null;
 };

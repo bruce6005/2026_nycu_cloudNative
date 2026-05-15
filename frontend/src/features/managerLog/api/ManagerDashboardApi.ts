@@ -36,7 +36,6 @@ export async function fetchRequestStats(): Promise<RequestStatsDTO> {
 
 export async function fetchEquipmentUsage(): Promise<EquipmentUsageDTO[]> {
   const res = await fetch(`${CONFIG.API_BASE}/api/manager_dashboard/equipment-usage`);
-  console.log("equipment-usage:", res);
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res));
   }
@@ -46,7 +45,6 @@ export async function fetchEquipmentUsage(): Promise<EquipmentUsageDTO[]> {
 
 export async function fetchTestRecordLogs(): Promise<TestRecordLogDTO[]> {
   const res = await fetch(`${CONFIG.API_BASE}/api/manager_dashboard/test-records`);
-  console.log("test-records:", res);
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res));
   }

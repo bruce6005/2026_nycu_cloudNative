@@ -18,6 +18,7 @@ import com.example.demo.modules.request.repository.RequestRepository;
 import com.example.demo.modules.request.repository.SampleRepository;
 import com.example.demo.modules.recipe.repository.RecipeRepository;
 import com.example.demo.modules.recipe.model.Recipe;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RequestService {
@@ -155,5 +156,20 @@ public class RequestService {
         dto.setSamples(sampleDTOs);
 
         return dto;
+    }
+
+    @Transactional
+    public void archiveRequest(Long id) {
+        Request request = requestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Request not found"));
+
+        String status = request.getStatus() == null ? "" : request.getStatus().trim().toUpperCase();
+
+        if (!"DONE".equals(status) && !"COMPLETED".equals(status)) {
+            throw new RuntimeException("Only completed requests can be archived");
+        }
+
+        request.setStatus("ARCHIVED");
+        requestRepository.save(request);
     }
 }

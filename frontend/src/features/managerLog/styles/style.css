@@ -202,3 +202,58 @@
     grid-template-columns: 1fr;
   }
 }
+.manager-dashboard-page {
+  height: calc(100vh - 60px);
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dashboard-error {
+  flex-shrink: 0;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.dashboard-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.dashboard-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.dashboard-bottom {
+  min-height: 220px;
+}
+.equipment-active-box {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.active-progress-bg {
+  margin-top: 6px;
+}

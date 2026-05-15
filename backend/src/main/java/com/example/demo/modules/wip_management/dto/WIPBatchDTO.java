@@ -17,4 +17,8 @@ public class WIPBatchDTO {
     private LocalDateTime createTime;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+
+    private LocalDateTime estimatedEndTime;
+    private Integer progressPercent;
+    private Long remainingSeconds;
 }

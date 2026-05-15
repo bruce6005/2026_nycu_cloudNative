@@ -136,3 +136,18 @@
   padding-bottom: 12px;
   margin-bottom: 8px;
 }
+
+.request-list-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.request-archive-button {
+  padding: 6px 10px;
+  font-size: 12px;
+}
