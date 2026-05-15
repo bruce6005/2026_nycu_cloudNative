@@ -30,12 +30,32 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link RequestService}.
- *
- * 測試範疇：
- *  - createRequest() 正常流程 / 各種例外情境
- *  - getAllRequest() 列表查詢
- *  - getRequestById() 查詢單筆 / 找不到時拋例外
- *  - archiveRequest() 正常封存 / 狀態不符時拋例外
+ * 
+ * ----------------------------------------------------
+ * 測試功能清單 (Test Coverage Summary):
+ * ----------------------------------------------------
+ * 1. createRequest (建立委託單):
+ *    - [x] 正常流程：應成功儲存 Request 與 Samples，並廣播通知
+ *    - [x] 異常檢核：標題缺失
+ *    - [x] 異常檢核：使用者未分配經理 (managerId is null)
+ *    - [ ] 異常檢核：分配的經理角色不合法 (非 MANAGER 或 ADMIN) -> 新增
+ *    - [x] 異常檢核：未傳入 Sample
+ *    - [ ] 異常檢核：傳入的食譜 (Recipe) ID 找不到 -> 新增
+ * 
+ * 2. getAllRequest (取得所有委託單):
+ *    - [x] 正常流程：資料庫有資料時應回傳列表
+ *    - [x] 異常情境：資料庫為空
+ * 
+ * 3. getRequestById (取得單筆委託單):
+ *    - [x] 正常流程：應正確映射所有 DTO 欄位
+ *    - [x] 異常情境：找不到該 ID
+ * 
+ * 4. archiveRequest (封存委託單):
+ *    - [x] 正常流程：DONE / COMPLETED 狀態應成功
+ *    - [x] 異常檢核：PENDING 等非完工狀態不可封存
+ *    - [ ] 異常檢核：狀態為空 (null) 時不可封存 -> 新增
+ *    - [x] 異常檢核：找不到 Request
+ * ----------------------------------------------------
  */
 @ExtendWith(MockitoExtension.class)
 class RequestServiceTest {
@@ -186,6 +206,50 @@ class RequestServiceTest {
         assertEquals("At least one sample is required", ex.getMessage());
     }
 
+    @Test
+    @DisplayName("createRequest() - 分配的經理角色不合法時應拋 RuntimeException")
+    void createRequest_invalidManagerRole_shouldThrow() {
+        User factoryUser = buildFactoryUser(1L, 2L);
+        User invalidManager = new User();
+        invalidManager.setId(2L);
+        invalidManager.setRole(UserRole.REQUESTER); // 錯誤的角色
+
+        RequestDTO dto = new RequestDTO();
+        dto.setFactoryUserId(1L);
+        dto.setTitle("Valid Title");
+        dto.setSamples(List.of(new SampleDTO()));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(factoryUser));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(invalidManager));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> requestService.createRequest(dto));
+        assertEquals("Assigned manager is not valid", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("createRequest() - 樣本指定的食譜找不到時應拋 RuntimeException")
+    void createRequest_recipeNotFound_shouldThrow() {
+        User factoryUser = buildFactoryUser(1L, 2L);
+        User manager = buildManager(2L);
+
+        RequestDTO dto = new RequestDTO();
+        dto.setFactoryUserId(1L);
+        dto.setTitle("Valid Title");
+        
+        SampleDTO sDto = new SampleDTO();
+        sDto.setBarcode("B001");
+        sDto.setRecipeId(999L); // 不存在的食譜ID
+        dto.setSamples(List.of(sDto));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(factoryUser));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(manager));
+        when(requestRepository.save(any(Request.class))).thenReturn(new Request());
+        when(recipeRepository.findById(999L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> requestService.createRequest(dto));
+        assertTrue(ex.getMessage().contains("Recipe not found"));
+    }
+
     // -------------------------------------------------------
     // getAllRequest()
     // -------------------------------------------------------
@@ -288,6 +352,18 @@ class RequestServiceTest {
         when(requestRepository.findById(3L)).thenReturn(Optional.of(r));
 
         assertThrows(RuntimeException.class, () -> requestService.archiveRequest(3L));
+    }
+
+    @Test
+    @DisplayName("archiveRequest() - 狀態為 null 時應拋 RuntimeException")
+    void archiveRequest_nullStatus_shouldThrow() {
+        Request r = new Request();
+        r.setId(4L);
+        r.setStatus(null);
+
+        when(requestRepository.findById(4L)).thenReturn(Optional.of(r));
+
+        assertThrows(RuntimeException.class, () -> requestService.archiveRequest(4L));
     }
 
     @Test

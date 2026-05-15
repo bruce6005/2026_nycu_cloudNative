@@ -104,32 +104,6 @@ public class WIPManagementService {
         return toWIPBatchDTO(savedBatch);
     }
 
-    @Transactional
-    public WIPBatchDTO finishBatch(Long id) {
-        WIPbatch batch = wipbatchRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
-
-        if (!"RUNNING".equals(batch.getStatus())) {
-            throw new RuntimeException("Only RUNNING batches can be manually finished. Current status: " + batch.getStatus());
-        }
-
-        WIPbatch savedBatch = finishRunningBatch(batch);
-
-        // 在交易提交後才廣播信號
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + id);
-                }
-            });
-        } else {
-            notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + id);
-        }
-
-        return toWIPBatchDTO(savedBatch);
-    }
-
     private void updateEquipmentStatus(Equipment equipment, String status) {
         // First end the previous log if any
         equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId())
