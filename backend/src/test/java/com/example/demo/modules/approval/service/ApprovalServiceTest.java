@@ -243,32 +243,23 @@ class ApprovalServiceTest {
     }
 
     @Test
-    @DisplayName("handle() - 當資料庫寫入發生異常時，應向外拋出對應例外")
-    void handle_databaseError_shouldThrow() {
-        // 1. Arrange: 準備合法的審核情境
-        Request req = new Request();
-        req.setId(1L);
-        req.setStatus("PENDING");
-        User approver = new User();
-        approver.setId(10L);
-        req.setApprover(approver);
+    @DisplayName("handle() - 模擬資料庫完整性錯誤，更新 request 時應拋出 DataIntegrityViolationException")
+    void handle_databaseIntegrityViolation_shouldThrowException() {
+        // Arrange: 建立一個合法可被 Approver 執行的 Request，使流程能到 requestRepository.save(...)
+        User approver = buildUser(2L);
+        Request r = buildRequest(1L, null, approver, "PENDING");
+        when(requestRepository.findById(1L)).thenReturn(Optional.of(r));
 
-        ApprovalActionRequest actionReq = new ApprovalActionRequest();
-        actionReq.setApproverId(10L);
-        actionReq.setAction("APPROVE");
-
-        when(requestRepository.findById(1L)).thenReturn(Optional.of(req));
-
-        // 💀 致命設定：命令 Mock 的 Repository 在執行 save 時「假裝發生資料庫崩潰」
-        // 這裡我們模擬最常見的 Deadlock (死結) 或連線逾時例外
+        // Fault injection: 模擬 requestRepository.save 時發生資料庫完整性錯誤
         when(requestRepository.save(any(Request.class)))
-                .thenThrow(new CannotAcquireLockException("Simulated Database Deadlock"));
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("Simulated DB Crash"));
 
-        // 2. Act & Assert: 驗證 Service 是否安全地把這個例外往上拋，沒有亂寫資料
-        CannotAcquireLockException ex = assertThrows(CannotAcquireLockException.class, () -> {
-            approvalService.handle(1L, actionReq);
-        });
+        ApprovalActionRequest req = new ApprovalActionRequest();
+        req.setApproverId(2L);
+        req.setAction("APPROVE");
 
-        assertTrue(ex.getMessage().contains("Simulated Database Deadlock"));
+        // Act & Assert: 確認例外被向上拋出
+        assertThrows(org.springframework.dao.DataIntegrityViolationException.class, () -> approvalService.handle(1L, req));
     }
+
 }

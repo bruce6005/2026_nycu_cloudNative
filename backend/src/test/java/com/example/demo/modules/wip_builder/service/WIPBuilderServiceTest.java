@@ -325,4 +325,44 @@ class WIPBuilderServiceTest {
 
         assertThrows(RuntimeException.class, () -> wipBuilderService.createWIPBatch(req));
     }
+
+    @Test
+    @DisplayName("createWIPBatch() - 模擬資料庫死鎖，應拋出 CannotAcquireLockException")
+    void createWIPBatch_databaseDeadlock_shouldThrowException() {
+        // Arrange: 準備合法的 request/equipment/recipe/samples，使流程能走到 sampleRepository.saveAll
+        CreateWIPBatchRequest req = new CreateWIPBatchRequest();
+        req.setOperatorId(10L);
+        req.setEquipmentId(1L);
+        req.setRecipeId(2L);
+        req.setSampleIds(List.of(100L, 101L));
+
+        Equipment eq = buildEquipment(1L, 10, 500L);
+        Recipe recipe = buildRecipe(2L, 500L);
+        Request request = buildRequest(200L, "APPROVED");
+        Sample s1 = buildSample(100L, request, recipe, "NEW", null);
+        Sample s2 = buildSample(101L, request, recipe, "NEW", null);
+
+        when(equipmentRepository.findById(1L)).thenReturn(Optional.of(eq));
+        when(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe));
+        when(sampleRepository.findAllById(List.of(100L, 101L))).thenReturn(List.of(s1, s2));
+
+        WIPbatch saved = new WIPbatch();
+        saved.setId(5000L);
+        saved.setEquipment(eq);
+        saved.setRecipe(recipe);
+        saved.setStatus("QUEUED");
+        when(wipbatchRepository.save(any(WIPbatch.class))).thenReturn(saved);
+
+        User operator = new User();
+        operator.setId(10L);
+        operator.setEmail("op@example.com");
+        when(userRepository.findById(10L)).thenReturn(Optional.of(operator));
+
+        when(testRecordsRepository.save(any(TestRecords.class))).thenAnswer(inv -> inv.getArgument(0));
+        // Fault injection: 模擬資料庫死鎖於 saveAll
+        when(sampleRepository.saveAll(any())).thenThrow(new org.springframework.dao.CannotAcquireLockException("Simulated Database Deadlock"));
+
+        // Act & Assert: 確認例外被向上拋出
+        assertThrows(org.springframework.dao.CannotAcquireLockException.class, () -> wipBuilderService.createWIPBatch(req));
+    }
 }
