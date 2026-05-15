@@ -1,0 +1,153 @@
+.request-detail {
+  width: 100%;
+}
+
+.request-detail-inline {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.request-expanded-detail {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.request-card {
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.request-card.expanded {
+  background: #fafafa;
+}
+
+.request-expand-button {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.request-sample-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.request-sample-card {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+}
+
+.request-sample-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.request-sample-barcode,
+.request-sample-recipe {
+  font-weight: 600;
+  color: #111827;
+}
+
+.request-sample-recipe {
+  display: none;
+}
+
+.request-sample-status {
+  background: #e0f2fe;
+  color: #0369a1;
+  white-space: nowrap;
+}
+
+.request-sample-meta {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+
+.request-sample-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--subtext);
+}
+
+.label-inline {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.request-sample-params {
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .request-sample-main {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .request-sample-barcode {
+    display: none;
+  }
+
+  .request-sample-recipe {
+    display: inline;
+  }
+
+  .request-sample-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+.request-list-panel {
+  height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.request-list-panel > h3 {
+  flex-shrink: 0;
+}
+
+.request-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  gap: 8px;
+}
+
+.request-card {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+}
+
+.request-list-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.request-archive-button {
+  padding: 6px 10px;
+  font-size: 12px;
+}

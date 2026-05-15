@@ -7,6 +7,11 @@ export async function fetchRecipesByEquipment(equipmentType: string): Promise<Re
     return res.data;
 }
 
+export async function fetchAllRecipes(): Promise<Recipe[]> {
+    const res = await axios.get(`${CONFIG.API_BASE}/api/recipes`);
+    return res.data;
+}
+
 export async function createRecipe(equipmentType: string, data: RecipeRequest): Promise<Recipe> {
     const res = await axios.post(`${CONFIG.API_BASE}/api/equipment-types/${equipmentType}/recipes`, data);
     return res.data;

@@ -4,9 +4,12 @@ type Props = {
   items: EquipmentWithRecipesDTO[];
   selectedEquipmentId: number | null;
   onSelect: (item: EquipmentWithRecipesDTO) => void;
+  filterEquipmentId?: number | null;
+  filterEquipmentName?: string | null;
+  onClearFilter?: () => void;
 };
 
-function EquipmentList({ items, selectedEquipmentId, onSelect }: Props) {
+function EquipmentList({ items, selectedEquipmentId, onSelect, filterEquipmentId, filterEquipmentName, onClearFilter }: Props) {
   const getStatusClass = (status: string | null | undefined) => {
     const normalized = (status ?? "UNKNOWN").toUpperCase();
 
@@ -29,7 +32,19 @@ function EquipmentList({ items, selectedEquipmentId, onSelect }: Props) {
     <div className="card column dispatch-panel">
       <div className="dispatch-title">Equipments & Recipes</div>
       <div className="text-muted dispatch-subtitle">
-        Select a machine, then choose a recipe
+      {filterEquipmentId != null ? (
+        <div className="filter-indicator" style={{ marginBottom: 8 }}>
+          <div className="filter-indicator-content">
+            <span className="filter-label">Filtering by:</span>
+            <span className="filter-value">Equipment: {filterEquipmentName}</span>
+          </div>
+          <button type="button" className="filter-clear-btn" onClick={onClearFilter}>
+            ✕
+          </button>
+        </div>
+      ) : (
+        <div />
+      )}
       </div>
 
       <div className="dispatch-list">

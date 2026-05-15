@@ -3,12 +3,16 @@ export type ApprovalResponse = {
   factoryUserId: number;
   approverId: number;
   title: string;
-  priority: number;
+  priority: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   description: string;
   createTime: string;
   endTime?: string;
   draftContent?: any;
+  samples?: {
+    barcode: string;
+    recipeName?: string;
+  }[];
 };
 
 export type ApprovalItem = {
@@ -16,9 +20,13 @@ export type ApprovalItem = {
   title: string;
   factoryUserId: number;
   approverId: number;
-  priority: number;
-  priorityLabel: "HIGH" | "MEDIUM" | "LOW";
+  priority: string;
+  priorityLabel: "URGENT" | "NORMAL";
   description: string;
   status: string;
   createTime: string;
+  samples?: {
+    barcode: string;
+    recipeName?: string;
+  }[];
 };

@@ -31,6 +31,10 @@ public class RecipeService {
         return recipeRepository.findByEquipmentTypeSchema_Id(schema.getId());
     }
 
+    public List<Recipe> getAllRecipes() {
+        return recipeRepository.findAll();
+    }
+
     public Recipe getRecipeById(Long id) {
         return recipeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Recipe not found"));

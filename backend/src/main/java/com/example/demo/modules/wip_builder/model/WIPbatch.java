@@ -34,4 +34,9 @@ public class WIPbatch {
 
     @Column(name = "end_time")
     private LocalDateTime endTime;
+
+    @Column(name = "estimated_end_time")
+    private LocalDateTime estimatedEndTime;
+
+
 }

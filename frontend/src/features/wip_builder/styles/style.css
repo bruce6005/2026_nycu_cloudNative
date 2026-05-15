@@ -38,7 +38,65 @@
 }
 
 .dispatch-subtitle {
-  margin-bottom: 16px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.filter-indicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  border-left: 4px solid #0c4a6e;
+}
+
+.filter-indicator-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-label {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.filter-value {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.filter-count {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.filter-clear-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.recipe-filter-trigger {
+  color: #3b82f6;
+  font-weight: 500;
+  border-bottom: 2px dotted #3b82f6;
+  padding-bottom: 2px;
+  transition: 0.15s;
+}
+
+.recipe-filter-trigger:hover {
+  color: #1e40af;
+  border-bottom-color: #1e40af;
+  background: rgba(59, 130, 246, 0.05);
 }
 
 .no-wrap {
@@ -62,6 +120,11 @@
   border-radius: 10px;
   cursor: pointer;
   transition: 0.15s;
+}
+
+.request-action-btn {
+  padding: 4px 10px;
+  font-size: 12px;
 }
 
 .dispatch-card:hover {
@@ -102,7 +165,7 @@
 
 .dispatch-card-meta {
   margin-top: 6px;
-  font-size: 13px;
+  font-size: 10px;
   color: var(--subtext);
 }
 
@@ -210,37 +273,93 @@
   gap: 16px;
 }
 
-.recipe-grid {
+.dispatch-summary-row.flex-column {
+  flex-direction: column;
+}
+
+.capacity-large {
+  font-size: 18px !important;
+  font-weight: 600;
+}
+
+.recipes-container {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 4px;
 }
 
-.recipe-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--border);
-  background: white;
-  border-radius: 999px;
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: 0.15s;
-}
-
-.recipe-pill:hover {
-  background: var(--hover);
-}
-
-.recipe-pill.selected {
-  border-color: #111827;
-  background: #111827;
-  color: white;
-}
-
-.recipe-version {
+.recipe-tag {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
   font-size: 12px;
-  opacity: 0.8;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.recipe-tag-0 {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.recipe-tag-1 {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.recipe-tag-2 {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.recipe-tag-3 {
+  background-color: #fecaca;
+  color: #7f1d1d;
+  border: 1px solid #fca5a5;
+}
+
+.recipe-tag-4 {
+  background-color: #e9d5ff;
+  color: #6b21a8;
+  border: 1px solid #d8b4fe;
+}
+
+.batch-request-list-wrap {
+  margin-top: 4px;
+}
+
+.batch-request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.batch-request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fafafa;
+}
+
+.batch-request-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.batch-remove-btn {
+  min-width: 34px;
+  padding: 4px 8px;
 }
 
 .dispatch-footer {
@@ -263,10 +382,56 @@
   font-size: 14px;
 }
 
+.create-batch-panel {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.create-batch-panel .dispatch-title,
+.create-batch-panel .dispatch-subtitle,
+.create-batch-panel .dispatch-summary {
+  flex-shrink: 0;
+}
+
+.create-batch-panel .batch-request-list-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.create-batch-panel .batch-request-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.create-batch-panel .dispatch-footer {
+  flex-shrink: 0;
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+}
+
+.create-batch-panel .dispatch-error,
+.create-batch-panel .dispatch-success {
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+
 @media (max-width: 1180px) {
   .dispatch-layout {
     flex-direction: column;
     height: auto;
+    overflow: visible;
   }
 
   .dispatch-left,
@@ -275,4 +440,101 @@
     width: 100%;
     min-height: 320px;
   }
+
+  .create-batch-panel {
+    height: calc(100vh - 140px);
+  }
+}
+
+/* Create batch panel scoped overrides */
+.create-batch-panel .detail-label {
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--subtext);
+  margin: 0;
+}
+
+.create-batch-panel .detail-value {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: var(--text);
+  margin: 0;
+}
+
+.create-batch-panel .dispatch-summary {
+  gap: 4px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+}
+
+.create-batch-panel .dispatch-summary-row {
+  gap: 8px;
+  min-height: 18px;
+  align-items: center;
+}
+
+.create-batch-panel .dispatch-summary-row.flex-column {
+  gap: 3px;
+}
+
+.create-batch-panel .capacity-large {
+  font-size: 14px !important;
+  line-height: 1.2;
+}
+
+.create-batch-panel .recipes-container {
+  max-height: 26px;
+  overflow-y: auto;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.create-batch-panel .recipe-tag {
+  padding: 2px 7px;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.create-batch-panel .dispatch-title {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.create-batch-panel .dispatch-subtitle {
+  margin-top: 4px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.create-batch-panel .batch-request-list-wrap {
+  margin-top: 6px;
+}
+
+.create-batch-panel .batch-request-list-wrap > .detail-label {
+  margin-bottom: 4px;
+}
+
+.create-batch-panel .batch-request-item {
+  padding: 7px 10px;
+  gap: 8px;
+}
+
+.create-batch-panel .batch-request-title {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.create-batch-panel .dispatch-card-meta {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.create-batch-panel .batch-remove-btn {
+  min-width: 30px;
+  padding: 3px 7px;
+  font-size: 12px;
 }

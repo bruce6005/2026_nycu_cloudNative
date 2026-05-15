@@ -1,0 +1,259 @@
+.manager-dashboard-page {
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.dashboard-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.dashboard-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.dashboard-grid-left,
+.dashboard-grid-right,
+.dashboard-bottom {
+  min-width: 0;
+}
+
+.dashboard-section {
+  margin-bottom: 0;
+}
+
+.dashboard-section h3 {
+  margin-bottom: 12px;
+}
+
+.dashboard-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.dashboard-stat-card {
+  min-height: 86px;
+}
+
+.dashboard-stat-title {
+  color: var(--subtext);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.dashboard-stat-value {
+  color: var(--text);
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.dashboard-equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.dashboard-equipment-card {
+  min-height: 150px;
+}
+
+.dashboard-equipment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.dashboard-equipment-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.dashboard-usage-rate {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.dashboard-usage-rate.usage-high {
+  color: #b91c1c;
+}
+
+.dashboard-usage-rate.usage-medium {
+  color: #b45309;
+}
+
+.dashboard-usage-rate.usage-low {
+  color: #047857;
+}
+
+.dashboard-usage-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.dashboard-usage-bar {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.dashboard-usage-bar.usage-high {
+  background: #ef4444;
+}
+
+.dashboard-usage-bar.usage-medium {
+  background: #f59e0b;
+}
+
+.dashboard-usage-bar.usage-low {
+  background: #10b981;
+}
+
+.dashboard-equipment-meta {
+  color: var(--subtext);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.dashboard-table-card {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.dashboard-log-table {
+  min-width: 980px;
+}
+
+.dashboard-log-table th {
+  background: #f9fafb;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dashboard-log-table td {
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.dashboard-log-detail {
+  max-width: 360px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+  }
+
+  .dashboard-equipment-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-header {
+    flex-direction: column;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .dashboard-equipment-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.manager-dashboard-page {
+  height: calc(100vh - 60px);
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dashboard-error {
+  flex-shrink: 0;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.dashboard-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.dashboard-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.dashboard-bottom {
+  min-height: 220px;
+}
+.equipment-active-box {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.active-progress-bg {
+  margin-top: 6px;
+}

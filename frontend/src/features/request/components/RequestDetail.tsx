@@ -1,39 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { getRequestById } from '../api/requestApi';
+import { getRequestById, type RequestDetailDTO } from '../api/requestApi';
+import { useSse } from '../../utils/useSse';
+import '../styles/request.css';
 
 interface RequestDetailProps {
   id: number;
-  onBack: () => void; // 提供返回列表的功能
+    onBack?: () => void; // 提供返回列表的功能
+    inline?: boolean;
 }
 
-export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack }) => {
-  const [request, setRequest] = useState<any>(null);
+export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack, inline = false }) => {
+    const [request, setRequest] = useState<RequestDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchDetail = async () => {
+    try {
+      const data = await getRequestById(id);
+      setRequest(data);
+    } catch (error) {
+      console.error("載入詳情失敗", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDetail = async () => {
-      try {
-        const data = await getRequestById(id);
-        setRequest(data);
-      } catch (error) {
-        alert("載入詳情失敗");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDetail();
   }, [id]);
+
+  // 當收到更新信號時，詳情頁面也同步重新抓取
+  useSse("REQUEST_UPDATED", fetchDetail);
 
   if (loading) return <p>載入中...</p>;
   if (!request) return <p>找不到資料</p>;
 
     return (
-        <div className="card" style={{ maxWidth: '600px', margin: '24px' }}>
-            <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div className={`request-detail ${inline ? 'request-detail-inline' : 'card'}`}>
+            <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px' }}>
                 <h2 style={{ margin: 0 }}>委託單詳情 - #{request.id}</h2>
-                <button className="button secondary" onClick={onBack}>
-                    ← 返回列表
-                </button>
+                {!inline && onBack && (
+                    <button className="button secondary" onClick={onBack}>
+                        ← 返回列表
+                    </button>
+                )}
             </div>
 
             <div className="column">
@@ -61,10 +70,61 @@ export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack }) => {
                     </div>
                 </div>
 
+                {/* 顯示退回原因 */}
+                {request.status === 'REJECTED' && request.rejectReason && (
+                    <div className="form-group" style={{ marginBottom: '16px' }}>
+                        <label className="label" style={{ color: '#e5484d' }}>⚠️ 審核退回原因</label>
+                        <div style={{
+                            padding: '12px',
+                            background: '#fff5f5',
+                            border: '1px solid #fecaca',
+                            borderRadius: '8px',
+                            color: '#991b1b',
+                            fontWeight: 500,
+                            fontSize: '14px'
+                        }}>
+                            {request.rejectReason}
+                        </div>
+                    </div>
+                )}
+
                 <div className="form-group">
                     <label className="label">詳細描述</label>
-                    <div className="card" style={{ background: '#fcfcfc', minHeight: '100px' }}>
+                    <div className="card" style={{ background: '#fcfcfc', minHeight: '60px', marginBottom: '16px' }}>
                         {request.description || <span className="text-muted">(無詳細描述)</span>}
+                    </div>
+                </div>
+
+                <div className="form-group">
+                    <label className="label">樣本與配方清單</label>
+                    <div className="request-sample-list">
+                        {request.samples && request.samples.length > 0 ? (
+                            request.samples.map((s, idx: number) => (
+                                <div key={idx} className="request-sample-card">
+                                    <div className="request-sample-main">
+                                        <span className="request-sample-barcode">{s.barcode}</span>
+                                        <span className="request-sample-recipe">下一步 Recipe：{s.recipeName || '未指定配方'}</span>
+                                        <span className="tag request-sample-status">
+                                            {s.status || 'UNKNOWN'}
+                                        </span>
+                                    </div>
+                                    <div className="request-sample-meta">
+                                        <div className="request-sample-meta-item">
+                                            <span className="label-inline">Recipe</span>
+                                            <span>{s.recipeName || '未指定配方'}</span>
+                                        </div>
+                                        <div className="request-sample-meta-item">
+                                            <span className="label-inline">Recipe 詳細</span>
+                                            <span className="request-sample-params">
+                                                {s.recipeParameters || '無參數資訊'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-muted">此單無樣本資料</div>
+                        )}
                     </div>
                 </div>
             </div>
