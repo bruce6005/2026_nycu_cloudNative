@@ -25,3 +25,9 @@ dist-ssr
 
 #
 .env
+
+# Playwright 測試產物
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
