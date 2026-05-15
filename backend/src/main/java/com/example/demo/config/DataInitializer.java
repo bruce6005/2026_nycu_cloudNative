@@ -4,9 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,12 +12,15 @@ import com.example.demo.modules.auth.model.UserRole;
 import com.example.demo.modules.auth.repository.UserRepository;
 import com.example.demo.modules.equipment.repository.EquipmentRepository;
 import com.example.demo.modules.equipment.repository.EquipmentTypeSchemaRepository;
-import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.recipe.repository.RecipeRepository;
-import com.example.demo.modules.request.repository.SampleRepository;
-import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
 import com.example.demo.modules.request.repository.RequestRepository;
+import com.example.demo.modules.request.repository.SampleRepository;
+import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
+import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Component
 @Transactional

@@ -1,7 +1,7 @@
 package com.example.demo.modules.equipment.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.example.demo.modules.auth.model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,6 +37,8 @@ public class Equipment {
 
     @Column(name = "max_capacity", nullable = false)
     private Integer maxCapacity;
+    @Column(name = "type", nullable = false)
+    private String type;
 
     @Transient
     public String getType() {

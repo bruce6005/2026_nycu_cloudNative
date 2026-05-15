@@ -11,7 +11,6 @@ import ProfileSetupPage from "./features/auth/page/ProfileSetupPage";
 import EquipmentPage from "./features/equipment/page/EquipmentPage";
 import EquipmentTypeManagementPage from "./features/equipment/page/EquipmentTypeManagementPage";
 import RecipeManagementPage from "./features/recipe/page/RecipeManagementPage";
-import RequestsReceivePage from "./features/requestsReceive/page/RequestsReceivePage";
 import ManagerDashboardPage from "./features/managerLog/page/ManagerDashboardPage";
 
 import type { AuthUser } from "./features/auth/model/AuthUser";
@@ -20,7 +19,6 @@ import { getNavItems, type Page } from "./features/utils/getNavItems";
 const pageMap: Record<Page, React.ComponentType<any>> = {
   approval: ApprovalPage,
   request: RequestPage,
-  requestsReceive: RequestsReceivePage,
   equipment: EquipmentPage,
   equipmentTypes: EquipmentTypeManagementPage,
   recipe: RecipeManagementPage,
