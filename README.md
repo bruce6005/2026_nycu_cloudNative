@@ -108,4 +108,7 @@ npx playwright install chromium  # 只需要跑這一次
 ```bash
 npm test         # 執行測試並產生報告
 npm run test:ui  # 開啟視覺化選單
+
+#vitest
+npm run test:unit # or npx vitest run
 ```

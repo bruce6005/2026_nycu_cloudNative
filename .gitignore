@@ -6,6 +6,15 @@ dist/
 target/
 *.log
 
+# Tests
+test-results/
+playwright-report/
+blob-report/
+test-results.xml
+test-failure.png
+test-final-success.png
+*.png
+
 # env
 .env
 

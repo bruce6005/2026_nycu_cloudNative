@@ -139,6 +139,10 @@ public class DataInitializer implements CommandLineRunner {
             execute(
                     "INSERT INTO equipment (id, handler_id, name, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?)",
                     row[0], row[1], row[2], row[3], row[4]);
+            
+            execute(
+                    "INSERT INTO equipment_status_logs (equipment_id, status, start_time) VALUES (?, 'READY', CURRENT_TIMESTAMP)",
+                    row[0]);
         }
     }
 
@@ -259,6 +263,14 @@ public class DataInitializer implements CommandLineRunner {
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, NULL)",
                 2L, 2L, 2L, "RUNNING", baseTime.plusMinutes(15), runStartTime);
+        
+        // Update Equipment 2 status to BUSY when batch starts
+        execute(
+                "UPDATE equipment_status_logs SET end_time = ? WHERE equipment_id = ? AND end_time IS NULL",
+                runStartTime, 2L);
+        execute(
+                "INSERT INTO equipment_status_logs (equipment_id, status, start_time) VALUES (?, 'BUSY', ?)",
+                2L, runStartTime);
         // Assign samples 5-9 to batch 2, mark as PROCESSING
         for (long i = 5; i <= 9; i++) {
             if (i <= sampleIds.size()) {
@@ -272,7 +284,18 @@ public class DataInitializer implements CommandLineRunner {
         LocalDateTime finishTime = baseTime.minusHours(2);
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                3L, 3L, 3L, "FINISHED", finishTime.minusHours(1), finishTime.minusMinutes(30), finishTime);
+                3L, 3L, 3L, "FINISHED", finishTime.minusHours(1), finishTime.minusMinutes(45), finishTime);
+        
+        // Equipment 3 was BUSY during the batch, then back to READY
+        execute(
+                "UPDATE equipment_status_logs SET end_time = ? WHERE equipment_id = ? AND end_time IS NULL",
+                finishTime.minusMinutes(45), 3L);
+        execute(
+                "INSERT INTO equipment_status_logs (equipment_id, status, start_time, end_time) VALUES (?, 'BUSY', ?, ?)",
+                3L, finishTime.minusMinutes(45), finishTime);
+        execute(
+                "INSERT INTO equipment_status_logs (equipment_id, status, start_time) VALUES (?, 'READY', ?)",
+                3L, finishTime);
         // Assign samples 10-12 to batch 3, mark as COMPLETED
         for (long i = 10; i <= 12; i++) {
             if (i <= sampleIds.size()) {

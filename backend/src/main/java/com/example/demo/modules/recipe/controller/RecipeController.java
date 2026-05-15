@@ -49,4 +49,10 @@ public class RecipeController {
         recipeService.deleteRecipe(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/recipes/{id}/recover")
+    public ResponseEntity<Void> recoverRecipe(@PathVariable Long id) {
+        recipeService.recoverRecipe(id);
+        return ResponseEntity.ok().build();
+    }
 }

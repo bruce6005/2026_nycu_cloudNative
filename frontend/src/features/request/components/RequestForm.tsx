@@ -19,9 +19,10 @@ export const RequestForm: React.FC<RequestFormProps> = ({ userId, onSuccess }) =
         const loadRecipes = async () => {
             try {
                 const data = await fetchAllRecipes();
-                setAllRecipes(data);
-                if (data.length > 0) {
-                    setSamples([{ barcode: '', recipeId: data[0].id }]);
+                const activeRecipes = data.filter(r => r.isActive !== false);
+                setAllRecipes(activeRecipes);
+                if (activeRecipes.length > 0) {
+                    setSamples([{ barcode: '', recipeId: activeRecipes[0].id }]);
                 }
             } catch (err) {
                 console.error("Failed to load recipes", err);

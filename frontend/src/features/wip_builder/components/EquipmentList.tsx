@@ -22,8 +22,11 @@ function EquipmentList({ items, selectedEquipmentId, onSelect, filterEquipmentId
     if (normalized === "MAINTENANCE" || normalized === "CLEANING" || normalized === "CALIBRATING") {
       return "status-maintenance";
     }
-    if (normalized === "ERROR" || normalized === "OFFLINE") {
+    if (normalized === "ERROR") {
       return "status-error";
+    }
+    if (normalized === "OFFLINE") {
+      return "status-offline";
     }
     return "status-unknown";
   };
@@ -58,6 +61,7 @@ function EquipmentList({ items, selectedEquipmentId, onSelect, filterEquipmentId
               className={`dispatch-card ${selectedEquipmentId === item.id ? "selected" : ""
                 }`}
               onClick={() => onSelect(item)}
+              disabled={item.currentStatus?.toUpperCase() === "OFFLINE"}
             >
               <div className="dispatch-card-header">
                 <span className="dispatch-card-title">{item.name}</span>

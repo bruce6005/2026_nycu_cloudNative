@@ -7,7 +7,7 @@ export async function loginWithGoogle(credential: string): Promise<AuthUser> {
   const res = await axios.post(`${CONFIG.API_BASE}/api/auth/google`, {
     credential,
   });
-  console.log("Login response:", res.data);
+  // console.log("Login response:", res.data);
   return res.data.user;
 }
 

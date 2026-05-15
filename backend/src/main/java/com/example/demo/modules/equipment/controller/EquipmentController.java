@@ -44,4 +44,10 @@ public class EquipmentController {
         equipmentService.deleteEquipment(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}/recover")
+    public ResponseEntity<Void> recoverEquipment(@PathVariable Long id) {
+        equipmentService.recoverEquipment(id);
+        return ResponseEntity.ok().build();
+    }
 }
