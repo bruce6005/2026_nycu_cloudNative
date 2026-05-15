@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.example.demo.modules.wip_builder.dto.CreateWIPBatchRequest;
 import com.example.demo.modules.wip_builder.dto.EquipmentWithRecipesDTO;
@@ -156,6 +158,11 @@ public class WIPBuilderService {
         Equipment equipment = equipmentRepository.findById(request.getEquipmentId())
                 .orElseThrow(() -> new RuntimeException("Equipment not found"));
 
+        String currentStatus = resolveCurrentEquipmentStatus(equipment.getId());
+        if ("BUSY".equalsIgnoreCase(currentStatus) || "RUNNING".equalsIgnoreCase(currentStatus)) {
+            throw new RuntimeException("Equipment " + equipment.getName() + " is currently BUSY and cannot accept new batches.");
+        }
+
         Recipe recipe = recipeRepository.findById(request.getRecipeId())
                 .orElseThrow(() -> new RuntimeException("Recipe not found"));
 
@@ -221,8 +228,17 @@ public class WIPBuilderService {
                         .distinct()
                         .forEach(this::checkAndUpdateRequestStatus);
 
-                // 通知前端資料已更新
-                notificationService.broadcast("REQUEST_UPDATED", "Batch created for samples");
+                // 在交易提交後才廣播信號
+                if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            notificationService.broadcast("REQUEST_UPDATED", "Batch created for samples");
+                        }
+                    });
+                } else {
+                    notificationService.broadcast("REQUEST_UPDATED", "Batch created for samples");
+                }
 
                 return toWIPBatchDTO(savedBatch);
             }

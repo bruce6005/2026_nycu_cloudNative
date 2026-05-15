@@ -22,8 +22,11 @@ function EquipmentList({ items, selectedEquipmentId, onSelect, filterEquipmentId
     if (normalized === "MAINTENANCE" || normalized === "CLEANING" || normalized === "CALIBRATING") {
       return "status-maintenance";
     }
-    if (normalized === "ERROR" || normalized === "OFFLINE") {
+    if (normalized === "ERROR") {
       return "status-error";
+    }
+    if (normalized === "OFFLINE") {
+      return "status-offline";
     }
     return "status-unknown";
   };
@@ -32,19 +35,19 @@ function EquipmentList({ items, selectedEquipmentId, onSelect, filterEquipmentId
     <div className="card column dispatch-panel">
       <div className="dispatch-title">Equipments & Recipes</div>
       <div className="text-muted dispatch-subtitle">
-      {filterEquipmentId != null ? (
-        <div className="filter-indicator" style={{ marginBottom: 8 }}>
-          <div className="filter-indicator-content">
-            <span className="filter-label">Filtering by:</span>
-            <span className="filter-value">Equipment: {filterEquipmentName}</span>
+        {filterEquipmentId != null ? (
+          <div className="filter-indicator" style={{ marginBottom: 8 }}>
+            <div className="filter-indicator-content">
+              <span className="filter-label">Filtering by:</span>
+              <span className="filter-value">Equipment: {filterEquipmentName}</span>
+            </div>
+            <button type="button" className="filter-clear-btn" onClick={onClearFilter}>
+              ✕
+            </button>
           </div>
-          <button type="button" className="filter-clear-btn" onClick={onClearFilter}>
-            ✕
-          </button>
-        </div>
-      ) : (
-        <div />
-      )}
+        ) : (
+          <div />
+        )}
       </div>
 
       <div className="dispatch-list">
@@ -55,10 +58,10 @@ function EquipmentList({ items, selectedEquipmentId, onSelect, filterEquipmentId
             <button
               key={item.id}
               type="button"
-              className={`dispatch-card ${
-                selectedEquipmentId === item.id ? "selected" : ""
-              }`}
+              className={`dispatch-card ${selectedEquipmentId === item.id ? "selected" : ""
+                }`}
               onClick={() => onSelect(item)}
+              disabled={item.currentStatus?.toUpperCase() === "OFFLINE"}
             >
               <div className="dispatch-card-header">
                 <span className="dispatch-card-title">{item.name}</span>

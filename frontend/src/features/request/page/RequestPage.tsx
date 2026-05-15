@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { RequestForm } from "../components/RequestForm";
 import { RequestList } from "../components/RequestList";
 import { getRequest, type RequestListItemDTO } from "../api/requestApi";
@@ -12,9 +12,8 @@ type Props = {
 function RequestPage({ user }: Props) {
   const [requests, setRequests] = useState<any[]>([]); // 修正：給予明確型別並改回複數變數名（代表複數資料）
   const [error, setError] = useState("");
-
-  const loadRequest = async () => {
-  try {
+  const loadRequest = useCallback(async () => {
+    try {
       const data: RequestListItemDTO[] = await getRequest();
 
       const visibleRequests = data.filter((req) => {
@@ -27,11 +26,11 @@ function RequestPage({ user }: Props) {
     } catch {
       setError("無法載入委託單資料");
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadRequest();
-  }, []);
+  }, [loadRequest]);
 
   // 接收到後端的 REQUEST_UPDATED 信號時，自動重新載入資料
   useSse("REQUEST_UPDATED", loadRequest);

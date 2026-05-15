@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { fetchWIPBatches, startWIPBatch, finishWIPBatch } from "../api/wipManagementApi";
 import type { WIPBatchDTO } from "../model/WipManagementData";
 import QueuedBatchList from "../components/QueuedBatchList";
 import InProgressDashboard from "../components/InProgressDashboard";
 import BatchExecutionDetail from "../components/BatchExecutionDetail";
 import type { AuthUser } from "../../auth/model/AuthUser";
+import { useSse } from "../../utils/useSse";
 import "../styles/wip_management.css";
 
 type Props = {
@@ -17,31 +18,37 @@ const WIPManagementPage: React.FC<Props> = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadBatches();
-  }, []);
-
-  const loadBatches = async () => {
+  // useCallback 確保 useSse 拿到穩定的 reference，不會每次 render 重建連線
+  const loadBatches = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchWIPBatches();
       setBatches(data);
-      if (selectedBatch) {
-        const updated = data.find(b => b.id === selectedBatch.id);
-        if (updated) setSelectedBatch(updated);
-      }
+      // 用 functional updater 讀取最新 selectedBatch，避免 stale closure
+      setSelectedBatch((prev) => {
+        if (!prev) return prev;
+        return data.find((b) => b.id === prev.id) ?? prev;
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadBatches();
+  }, [loadBatches]);
+
+  // 收到後端 REQUEST_UPDATED 事件時自動重新載入（修復 WIP 階段狀態不即時問題）
+  useSse("REQUEST_UPDATED", loadBatches);
 
   const handleStart = async (id: number) => {
     try {
       setLoading(true);
       await startWIPBatch(id);
-      await refreshData();
+      // 操作完成後，SSE 會自動觸發 loadBatches，但為了更好的體驗，手動觸發一次
+      await loadBatches();
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -53,20 +60,12 @@ const WIPManagementPage: React.FC<Props> = ({ user }) => {
     try {
       setLoading(true);
       await finishWIPBatch(id);
-      await refreshData();
+      // 同上
+      await loadBatches();
     } catch (err: any) {
       alert(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const refreshData = async () => {
-    const data = await fetchWIPBatches();
-    setBatches(data);
-    if (selectedBatch) {
-      const updated = data.find(b => b.id === selectedBatch.id);
-      setSelectedBatch(updated || null);
     }
   };
 

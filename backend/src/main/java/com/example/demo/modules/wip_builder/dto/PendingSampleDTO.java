@@ -1,12 +1,12 @@
 package com.example.demo.modules.wip_builder.dto;
 
-import java.util.List;
-
 import lombok.Data;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class PendingSampleDTO {
     private Long sampleId;
     private String barcode;

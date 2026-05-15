@@ -91,7 +91,16 @@ public class RecipeService {
 
     @Transactional
     public void deleteRecipe(Long id) {
-        recipeRepository.deleteById(id);
+        Recipe recipe = getRecipeById(id);
+        recipe.setIsActive(false);
+        recipeRepository.save(recipe);
+    }
+
+    @Transactional
+    public void recoverRecipe(Long id) {
+        Recipe recipe = getRecipeById(id);
+        recipe.setIsActive(true);
+        recipeRepository.save(recipe);
     }
 
     private EquipmentTypeSchema getSchemaByEquipmentType(String equipmentType) {

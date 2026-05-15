@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 
 import com.example.demo.modules.wip_builder.model.WIPbatch;
@@ -88,16 +90,28 @@ public class ManagerDashboardService {
             if (estimatedEndTime != null && !estimatedEndTime.isAfter(now)) {
                 if ("RUNNING_CRASH".equals(batch.getStatus())) {
                     failRunningBatch(batch);
-                    notificationService.broadcast(
-                            "REQUEST_UPDATED",
-                            "Batch failed: " + batch.getId()
-                    );
+                    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                notificationService.broadcast("REQUEST_UPDATED", "Batch failed: " + batch.getId());
+                            }
+                        });
+                    } else {
+                        notificationService.broadcast("REQUEST_UPDATED", "Batch failed: " + batch.getId());
+                    }
                 } else {
                     finishRunningBatch(batch);
-                    notificationService.broadcast(
-                            "REQUEST_UPDATED",
-                            "Batch finished: " + batch.getId()
-                    );
+                    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + batch.getId());
+                            }
+                        });
+                    } else {
+                        notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + batch.getId());
+                    }
                 }
             }
         }

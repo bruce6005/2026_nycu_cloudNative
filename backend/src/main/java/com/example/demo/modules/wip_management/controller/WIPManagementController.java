@@ -31,8 +31,4 @@ public class WIPManagementController {
         return wipManagementService.startBatch(id);
     }
 
-    @PatchMapping("/{id}/finish")
-    public WIPBatchDTO finishBatch(@PathVariable Long id) {
-        return wipManagementService.finishBatch(id);
-    }
 }

@@ -244,3 +244,24 @@ Cloud Run 上兩個服務都會使用 container image 部署：
 
 - backend image：runtime 由 Cloud Run 設定 DB / Google OAuth / CORS 環境變數
 - frontend image：build image 時注入 `VITE_API_BASE` 與 `VITE_GOOGLE_CLIENT_ID`
+
+# Test
+
+## backend
+./mvnw test
+
+## frontend
+1. 環境設定與安裝：
+```bash
+npm install
+npx playwright install chromium  # 只需要跑這一次
+```
+
+2. 執行測試：
+```bash
+npm test         # 執行測試並產生報告
+npm run test:ui  # 開啟視覺化選單
+
+#vitest
+npm run test:unit # or npx vitest run
+```

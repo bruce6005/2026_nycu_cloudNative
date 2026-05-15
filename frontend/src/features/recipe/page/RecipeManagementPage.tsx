@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { fetchEquipmentSchemas } from "../../equipment/api/equipmentApi";
 import type { EquipmentTypeSchema } from "../../equipment/model/Equipment";
 import type { Recipe, RecipeRequest } from "../model/Recipe";
-import { fetchRecipesByEquipment, createRecipe, deleteRecipe } from "../api/recipeApi";
+import { fetchRecipesByEquipment, createRecipe, deleteRecipe, recoverRecipe } from "../api/recipeApi";
 import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import "../../approval/styles/style.css";
@@ -63,12 +63,23 @@ export default function RecipeManagementPage() {
     };
 
     const handleDelete = async (id: number) => {
-        if (window.confirm("Are you sure you want to delete this recipe?")) {
+        if (window.confirm("Are you sure you want to soft delete this recipe?")) {
             try {
                 await deleteRecipe(id);
                 loadData(selectedEquipmentType);
             } catch (error) {
                 console.error("Failed to delete recipe", error);
+            }
+        }
+    };
+
+    const handleRecover = async (id: number) => {
+        if (window.confirm("Are you sure you want to recover this recipe?")) {
+            try {
+                await recoverRecipe(id);
+                loadData(selectedEquipmentType);
+            } catch (error) {
+                console.error("Failed to recover recipe", error);
             }
         }
     };
@@ -168,15 +179,27 @@ export default function RecipeManagementPage() {
 
                     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                         {recipes.map(recipe => (
-                            <div key={recipe.id} className="order-card">
+                            <div key={recipe.id} className="order-card" style={{ opacity: recipe.isActive === false ? 0.6 : 1 }}>
                                 <div className="order-card-header">
-                                    <div className="order-title">{recipe.name}</div>
-                                    <button 
-                                        onClick={(e) => { e.stopPropagation(); handleDelete(recipe.id); }}
-                                        style={{ background: "transparent", color: "#e5484d", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}
-                                    >
-                                        Delete
-                                    </button>
+                                    <div className="order-title">
+                                        {recipe.name}
+                                        {recipe.isActive === false && <span style={{ marginLeft: '10px', fontSize: '12px', color: '#e5484d', fontWeight: 'bold' }}>(INACTIVE)</span>}
+                                    </div>
+                                    {recipe.isActive === false ? (
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); handleRecover(recipe.id); }}
+                                            style={{ background: "transparent", color: "#4caf50", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}
+                                        >
+                                            Recover
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(recipe.id); }}
+                                            style={{ background: "transparent", color: "#e5484d", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="order-sub" style={{ marginTop: "8px", fontFamily: "monospace" }}>
                                     {recipe.parameters}
