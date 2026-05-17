@@ -1,4 +1,4 @@
-package com.example.demo.modules.equipment.service;
+package com.example.demo.modules.equipment;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -21,6 +21,7 @@ import com.example.demo.modules.equipment.model.Equipment;
 import com.example.demo.modules.equipment.model.EquipmentTypeSchema;
 import com.example.demo.modules.equipment.repository.EquipmentRepository;
 import com.example.demo.modules.equipment.repository.EquipmentTypeSchemaRepository;
+import com.example.demo.modules.equipment.service.EquipmentService;
 
 @ExtendWith(MockitoExtension.class)
 public class EquipmentServiceTest {

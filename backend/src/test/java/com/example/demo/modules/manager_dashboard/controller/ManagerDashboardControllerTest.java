@@ -1,21 +1,24 @@
 package com.example.demo.modules.manager_dashboard.controller;
 
-import com.example.demo.modules.manager_dashboard.dto.EquipmentUsageDTO;
-import com.example.demo.modules.manager_dashboard.dto.RequestStatsDTO;
-import com.example.demo.modules.manager_dashboard.dto.TestRecordLogDTO;
-import com.example.demo.modules.manager_dashboard.service.ManagerDashboardService;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import com.example.demo.modules.manager_dashboard.dto.EquipmentUsageDTO;
+import com.example.demo.modules.manager_dashboard.dto.RequestStatsDTO;
+import com.example.demo.modules.manager_dashboard.dto.TestRecordLogDTO;
+import com.example.demo.modules.manager_dashboard.service.ManagerDashboardService;
 
 @ExtendWith(MockitoExtension.class)
 class ManagerDashboardControllerTest {
@@ -42,7 +45,29 @@ class ManagerDashboardControllerTest {
     @Test
     @DisplayName("getEquipmentUsage() - should return equipment usage list")
     void getEquipmentUsage_shouldReturnList() {
-        EquipmentUsageDTO dto = new EquipmentUsageDTO(1L, "EQ-1", "TYPE", 3, 10, 30.0, 100L, 3, 0, 0.0, "FREE", null, null, null, null);
+        EquipmentUsageDTO dto = new EquipmentUsageDTO(
+            1L,        // equipmentId
+            "EQ-1",   // equipmentName
+            "TYPE",   // equipmentType
+
+            3L,        // runningMinutes
+            10L,       // totalMinutes
+            30.0,      // usageRate
+            "FREE",    // currentStatus
+
+            100L,      // usageCount
+            3L,        // totalUsageCount
+            0L,        // averageRunSeconds
+
+            0L,        // successCount
+            0L,        // failedCount
+            0.0,       // failureRate
+
+            null,      // activeBatchId
+            null,      // activeBatchStatus
+            0.0,       // activeProgressPercent
+            0L         // remainingSeconds
+        );
         when(managerDashboardService.getEquipmentUsage()).thenReturn(List.of(dto));
 
         List<EquipmentUsageDTO> res = controller.getEquipmentUsage();

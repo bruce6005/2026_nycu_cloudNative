@@ -1,111 +1,127 @@
 package com.example.demo.modules.manager_dashboard.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.example.demo.modules.equipment.model.Equipment;
 import com.example.demo.modules.equipment.model.EquipmentTypeSchema;
+import com.example.demo.modules.equipment.repository.EquipmentRepository;
 import com.example.demo.modules.manager_dashboard.dto.EquipmentUsageDTO;
 import com.example.demo.modules.manager_dashboard.dto.RequestStatsDTO;
 import com.example.demo.modules.manager_dashboard.dto.TestRecordLogDTO;
 import com.example.demo.modules.request.model.Request;
-import com.example.demo.modules.request.model.Sample;
+import com.example.demo.modules.request.repository.RequestRepository;
+import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
 import com.example.demo.modules.wip_builder.model.TestRecords;
 import com.example.demo.modules.wip_builder.model.WIPbatch;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
-import com.example.demo.modules.equipment.repository.EquipmentRepository;
-import com.example.demo.modules.request.repository.RequestRepository;
-import com.example.demo.modules.request.repository.SampleRepository;
-import com.example.demo.modules.notification.service.NotificationService;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-import java.lang.reflect.Method;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ManagerDashboardServiceTest {
 
     @Mock
     private RequestRepository requestRepository;
+
     @Mock
     private EquipmentRepository equipmentRepository;
+
     @Mock
     private EquipmentStatusLogsRepository equipmentStatusLogsRepository;
+
     @Mock
     private TestRecordsRepository testRecordsRepository;
+
     @Mock
     private WIPbatchRepository wipbatchRepository;
-    @Mock
-    private NotificationService notificationService;
-    @Mock
-    private SampleRepository sampleRepository;
 
     @InjectMocks
     private ManagerDashboardService managerDashboardService;
 
-    // helpers
     private EquipmentTypeSchema buildSchema(Long id, String type) {
-        EquipmentTypeSchema s = new EquipmentTypeSchema();
-        s.setId(id);
-        s.setEquipmentType(type);
-        s.setParameterSchema("{}");
-        return s;
+        EquipmentTypeSchema schema = new EquipmentTypeSchema();
+        schema.setId(id);
+        schema.setEquipmentType(type);
+        schema.setParameterSchema("{}");
+        return schema;
     }
 
     private Equipment buildEquipment(Long id, String name, Long schemaId) {
-        Equipment e = new Equipment();
-        e.setId(id);
-        e.setName(name);
-        e.setEquipmentTypeSchema(buildSchema(schemaId, "TYPE" + schemaId));
-        return e;
+        Equipment equipment = new Equipment();
+        equipment.setId(id);
+        equipment.setName(name);
+        equipment.setEquipmentTypeSchema(buildSchema(schemaId, "TYPE" + schemaId));
+        return equipment;
     }
 
     private Request buildRequest(Long id, String status) {
-        Request r = new Request();
-        r.setId(id);
-        r.setStatus(status);
-        return r;
+        Request request = new Request();
+        request.setId(id);
+        request.setStatus(status);
+        return request;
     }
 
-    private TestRecords buildTestRecord(Long id, WIPbatch batch, Equipment equipment, Long operatorId, String status) {
-        TestRecords t = new TestRecords();
-        t.setId(id);
-        t.setBatch(batch);
-        t.setEquipment(equipment);
+    private EquipmentStatusLogs buildStatusLog(
+            Equipment equipment,
+            String status,
+            LocalDateTime startTime,
+            LocalDateTime endTime) {
+        EquipmentStatusLogs log = new EquipmentStatusLogs();
+        log.setEquipment(equipment);
+        log.setStatus(status);
+        log.setStartTime(startTime);
+        log.setEndTime(endTime);
+        return log;
+    }
+
+    private WIPbatch buildBatch(Long id, Equipment equipment, String status) {
+        WIPbatch batch = new WIPbatch();
+        batch.setId(id);
+        batch.setEquipment(equipment);
+        batch.setStatus(status);
+        return batch;
+    }
+
+    private TestRecords buildTestRecord(
+            Long id,
+            WIPbatch batch,
+            Equipment equipment,
+            Long operatorId,
+            String status) {
+        TestRecords record = new TestRecords();
+        record.setId(id);
+        record.setBatch(batch);
+        record.setEquipment(equipment);
+
         if (operatorId != null) {
             var user = new com.example.demo.modules.auth.model.User();
             user.setId(operatorId);
             user.setName("op" + operatorId);
-            t.setOperator(user);
+            record.setOperator(user);
         }
-        t.setResultStatus(status);
-        t.setResultData("{}");
-        t.setStartTime(LocalDateTime.now());
-        t.setEndTime(null);
-        return t;
+
+        record.setResultStatus(status);
+        record.setResultData("{}");
+        record.setStartTime(LocalDateTime.now());
+        record.setEndTime(null);
+
+        return record;
     }
 
-    // -------------------------------------------------------
-    // getRequestStats()
-    // -------------------------------------------------------
-
     @Test
-    @DisplayName("getRequestStats() - 應正確計算各狀態數量")
+    @DisplayName("getRequestStats() should count request statuses correctly")
     void getRequestStats_countsCorrectly() {
         Request r1 = buildRequest(1L, "PENDING");
         Request r2 = buildRequest(2L, "SUBMITTED");
@@ -117,7 +133,9 @@ class ManagerDashboardServiceTest {
         Request r8 = buildRequest(8L, "COMPLETED");
         Request r9 = buildRequest(9L, "REJECTED");
 
-        when(requestRepository.findAll()).thenReturn(List.of(r1,r2,r3,r4,r5,r6,r7,r8,r9));
+        when(requestRepository.findAll()).thenReturn(List.of(
+                r1, r2, r3, r4, r5, r6, r7, r8, r9
+        ));
 
         RequestStatsDTO stats = managerDashboardService.getRequestStats();
 
@@ -129,224 +147,260 @@ class ManagerDashboardServiceTest {
         assertEquals(1, stats.getRejectedRequests());
     }
 
-    // -------------------------------------------------------
-    // getEquipmentUsage()
-    // -------------------------------------------------------
-
     @Test
-    @DisplayName("getEquipmentUsage() - 無批次時回傳設備使用率為 0")
-    void getEquipmentUsage_noBatches_shouldReturnZeroUsage() {
-        Equipment eq = buildEquipment(1L, "EQ-1", 100L);
+    @DisplayName("getEquipmentUsage() should return zero usage when there are no running logs")
+    void getEquipmentUsage_noRunningLogs_shouldReturnZeroUsage() {
+        Equipment equipment = buildEquipment(1L, "EQ-1", 100L);
 
-        when(wipbatchRepository.findAll()).thenReturn(List.of());
-        when(equipmentRepository.findAll()).thenReturn(List.of(eq));
+        EquipmentStatusLogs currentLog = buildStatusLog(
+                equipment,
+                "FREE",
+                LocalDateTime.now().minusHours(1),
+                null
+        );
 
-        // 模擬目前設備狀態
-        com.example.demo.modules.wip_builder.model.EquipmentStatusLogs log = new com.example.demo.modules.wip_builder.model.EquipmentStatusLogs();
-        log.setStatus("FREE");
-        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(eq.getId()))
-                .thenReturn(Optional.of(log));
+        when(equipmentRepository.findAll()).thenReturn(List.of(equipment));
+        when(equipmentStatusLogsRepository.findByEquipmentId(equipment.getId()))
+                .thenReturn(List.of());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.of(currentLog));
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+                .thenReturn(Optional.empty());
+        when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
+                .thenReturn(List.of());
 
         List<EquipmentUsageDTO> result = managerDashboardService.getEquipmentUsage();
 
         assertEquals(1, result.size());
+
         EquipmentUsageDTO dto = result.get(0);
-        assertEquals(0L, dto.getUsageCount());
-        assertEquals(0L, dto.getTotalUsageCount());
+
+        assertEquals(equipment.getId(), dto.getEquipmentId());
+        assertEquals("EQ-1", dto.getEquipmentName());
+        assertEquals("TYPE100", dto.getEquipmentType());
+        assertEquals(0L, dto.getRunningMinutes());
         assertEquals(0.0, dto.getUsageRate());
         assertEquals("FREE", dto.getCurrentStatus());
+        assertEquals(0L, dto.getUsageCount());
+        assertEquals(0L, dto.getTotalUsageCount());
+        assertEquals(0L, dto.getAverageRunSeconds());
+        assertEquals(0L, dto.getSuccessCount());
+        assertEquals(0L, dto.getFailedCount());
+        assertEquals(0.0, dto.getFailureRate());
+        assertEquals(null, dto.getActiveBatchId());
+        assertEquals(null, dto.getActiveBatchStatus());
+        assertEquals(0.0, dto.getActiveProgressPercent());
+        assertEquals(0L, dto.getRemainingSeconds());
     }
 
-    // -------------------------------------------------------
-    // getTestRecordLogs()
-    // -------------------------------------------------------
+    @Test
+    @DisplayName("getEquipmentUsage() should calculate usage rate from running status logs")
+    void getEquipmentUsage_usageRateCalculation() {
+        Equipment equipment = buildEquipment(1L, "EQ-A", 100L);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        EquipmentStatusLogs runningLog = buildStatusLog(
+                equipment,
+                "RUNNING",
+                now.minusMinutes(432),
+                now
+        );
+
+        EquipmentStatusLogs currentLog = buildStatusLog(
+                equipment,
+                "RUNNING",
+                now.minusMinutes(10),
+                null
+        );
+
+        when(equipmentRepository.findAll()).thenReturn(List.of(equipment));
+        when(equipmentStatusLogsRepository.findByEquipmentId(equipment.getId()))
+                .thenReturn(List.of(runningLog));
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.of(currentLog));
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+                .thenReturn(Optional.empty());
+        when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
+                .thenReturn(List.of());
+
+        List<EquipmentUsageDTO> result = managerDashboardService.getEquipmentUsage();
+
+        EquipmentUsageDTO dto = result.get(0);
+
+        assertEquals(432L, dto.getRunningMinutes());
+        assertEquals(1440L, dto.getTotalMinutes());
+        assertEquals(30.0, dto.getUsageRate());
+        assertEquals("RUNNING", dto.getCurrentStatus());
+    }
 
     @Test
-    @DisplayName("getTestRecordLogs() - 應回傳轉換後的 DTO 列表")
+    @DisplayName("getEquipmentUsage() should count BUSY logs as usage")
+    void getEquipmentUsage_busyLog_shouldCountAsUsage() {
+        Equipment equipment = buildEquipment(1L, "EQ-A", 100L);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        EquipmentStatusLogs busyLog = buildStatusLog(
+                equipment,
+                "BUSY",
+                now.minusMinutes(144),
+                now
+        );
+
+        EquipmentStatusLogs currentLog = buildStatusLog(
+                equipment,
+                "BUSY",
+                now.minusMinutes(5),
+                null
+        );
+
+        when(equipmentRepository.findAll()).thenReturn(List.of(equipment));
+        when(equipmentStatusLogsRepository.findByEquipmentId(equipment.getId()))
+                .thenReturn(List.of(busyLog));
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.of(currentLog));
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+                .thenReturn(Optional.empty());
+        when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
+                .thenReturn(List.of());
+
+        List<EquipmentUsageDTO> result = managerDashboardService.getEquipmentUsage();
+
+        EquipmentUsageDTO dto = result.get(0);
+
+        assertEquals(144L, dto.getRunningMinutes());
+        assertEquals(10.0, dto.getUsageRate());
+        assertEquals("BUSY", dto.getCurrentStatus());
+    }
+
+    @Test
+    @DisplayName("getEquipmentUsage() should calculate batch counts and failure rate")
+    void getEquipmentUsage_batchCountsAndFailureRate() {
+        Equipment equipment = buildEquipment(1L, "EQ-A", 100L);
+
+        WIPbatch finishedBatch = buildBatch(1L, equipment, "FINISHED");
+        WIPbatch failedBatch = buildBatch(2L, equipment, "FAILED");
+        WIPbatch queuedBatch = buildBatch(3L, equipment, "QUEUED");
+
+        when(equipmentRepository.findAll()).thenReturn(List.of(equipment));
+        when(equipmentStatusLogsRepository.findByEquipmentId(equipment.getId()))
+                .thenReturn(List.of());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.empty());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.empty());
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+                .thenReturn(Optional.empty());
+        when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
+                .thenReturn(List.of(finishedBatch, failedBatch, queuedBatch));
+
+        List<EquipmentUsageDTO> result = managerDashboardService.getEquipmentUsage();
+
+        EquipmentUsageDTO dto = result.get(0);
+
+        assertEquals(3L, dto.getTotalUsageCount());
+        assertEquals(2L, dto.getUsageCount());
+        assertEquals(1L, dto.getSuccessCount());
+        assertEquals(1L, dto.getFailedCount());
+        assertEquals(50.0, dto.getFailureRate());
+    }
+
+    @Test
+    @DisplayName("getEquipmentUsage() should calculate average run seconds")
+    void getEquipmentUsage_averageRunSeconds() {
+        Equipment equipment = buildEquipment(1L, "EQ-A", 100L);
+
+        LocalDateTime base = LocalDateTime.now();
+
+        WIPbatch batch1 = buildBatch(1L, equipment, "FINISHED");
+        batch1.setStartTime(base.minusMinutes(10));
+        batch1.setEndTime(base.minusMinutes(5));
+
+        WIPbatch batch2 = buildBatch(2L, equipment, "FINISHED");
+        batch2.setStartTime(base.minusMinutes(20));
+        batch2.setEndTime(base.minusMinutes(10));
+
+        when(equipmentRepository.findAll()).thenReturn(List.of(equipment));
+        when(equipmentStatusLogsRepository.findByEquipmentId(equipment.getId()))
+                .thenReturn(List.of());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.empty());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.empty());
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+                .thenReturn(Optional.empty());
+        when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
+                .thenReturn(List.of(batch1, batch2));
+
+        List<EquipmentUsageDTO> result = managerDashboardService.getEquipmentUsage();
+
+        EquipmentUsageDTO dto = result.get(0);
+
+        assertEquals(450L, dto.getAverageRunSeconds());
+    }
+
+    @Test
+    @DisplayName("getEquipmentUsage() should include active running batch information")
+    void getEquipmentUsage_activeBatchInfo() {
+        Equipment equipment = buildEquipment(1L, "EQ-A", 100L);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        WIPbatch runningBatch = buildBatch(99L, equipment, "RUNNING");
+        runningBatch.setStartTime(now.minusMinutes(30));
+        runningBatch.setEstimatedEndTime(now.plusMinutes(30));
+
+        when(equipmentRepository.findAll()).thenReturn(List.of(equipment));
+        when(equipmentStatusLogsRepository.findByEquipmentId(equipment.getId()))
+                .thenReturn(List.of());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.empty());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.empty());
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+                .thenReturn(Optional.of(runningBatch));
+        when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
+                .thenReturn(List.of(runningBatch));
+
+        List<EquipmentUsageDTO> result = managerDashboardService.getEquipmentUsage();
+
+        EquipmentUsageDTO dto = result.get(0);
+
+        assertEquals(99L, dto.getActiveBatchId());
+        assertEquals("RUNNING", dto.getActiveBatchStatus());
+        assertEquals(50.0, dto.getActiveProgressPercent());
+        assertEquals(1800L, dto.getRemainingSeconds());
+    }
+
+    @Test
+    @DisplayName("getTestRecordLogs() should return mapped DTO list")
     void getTestRecordLogs_returnsMappedDTO() {
-        Equipment eq = buildEquipment(1L, "EQ-1", 100L);
+        Equipment equipment = buildEquipment(1L, "EQ-1", 100L);
+
         WIPbatch batch = new WIPbatch();
         batch.setId(500L);
 
-        TestRecords tr1 = buildTestRecord(1L, batch, eq, 10L, "QUEUED");
+        TestRecords record = buildTestRecord(1L, batch, equipment, 10L, "QUEUED");
 
-        when(testRecordsRepository.findTop50ByOrderByStartTimeDesc()).thenReturn(List.of(tr1));
+        when(testRecordsRepository.findTop50ByOrderByStartTimeDesc())
+                .thenReturn(List.of(record));
 
         List<TestRecordLogDTO> logs = managerDashboardService.getTestRecordLogs();
 
         assertEquals(1, logs.size());
+
         TestRecordLogDTO dto = logs.get(0);
-        assertEquals(tr1.getId(), dto.getId());
+
+        assertEquals(record.getId(), dto.getId());
         assertEquals(batch.getId(), dto.getBatchId());
-        assertEquals(eq.getId(), dto.getEquipmentId());
+        assertEquals(equipment.getId(), dto.getEquipmentId());
+        assertEquals("EQ-1", dto.getEquipmentName());
+        assertEquals(10L, dto.getOperatorId());
+        assertEquals("op10", dto.getOperatorName());
         assertEquals("QUEUED", dto.getResultStatus());
-    }
-
-    // -------------------------------------------------------
-    // checkAndUpdateRequestStatus() - parameterized
-    // -------------------------------------------------------
-
-    @ParameterizedTest
-    @MethodSource("provideRequestStatusCases")
-    @DisplayName("checkAndUpdateRequestStatus() - 各種樣本狀態應對應到正確 Request 狀態")
-    void checkAndUpdateRequestStatus_variousScenarios(List<String> sampleStatuses, String expectedRequestStatus) throws Exception {
-        Request req = buildRequest(999L, "PENDING"); // initial status
-
-        List<Sample> samples = createSamplesForStatuses(req, sampleStatuses);
-
-        when(sampleRepository.findByRequest_Id(req.getId())).thenReturn(samples);
-
-        // invoke private method via reflection
-        Method m = ManagerDashboardService.class.getDeclaredMethod("checkAndUpdateRequestStatus", Request.class);
-        m.setAccessible(true);
-        m.invoke(managerDashboardService, req);
-
-        assertEquals(expectedRequestStatus, req.getStatus());
-        // should save when status changed from initial
-        if (!"PENDING".equals(expectedRequestStatus)) {
-            verify(requestRepository, times(1)).save(req);
-        }
-    }
-
-    private static Stream<Arguments> provideRequestStatusCases() {
-        return Stream.of(
-                // 1-1 Any Failed: 4 COMPLETED, 1 FAILED -> FAILED
-                Arguments.of(List.of("COMPLETED", "COMPLETED", "COMPLETED", "COMPLETED", "FAILED"), "FAILED"),
-                // 1-2 All Completed -> DONE
-                Arguments.of(List.of("COMPLETED", "COMPLETED", "COMPLETED"), "DONE"),
-                // 1-3 Processing: 1 COMPLETED, 1 RUNNING, 1 ASSIGNED -> PROCESSING
-                Arguments.of(List.of("COMPLETED", "RUNNING", "ASSIGNED"), "PROCESSING"),
-                // 1-4 Dispatched: all ASSIGNED -> DISPATCHED
-                Arguments.of(List.of("ASSIGNED", "ASSIGNED"), "DISPATCHED")
-        );
-    }
-
-    private List<Sample> createSamplesForStatuses(Request req, List<String> statuses) {
-        AtomicLong id = new AtomicLong(1000L);
-        return statuses.stream().map(s -> {
-            Sample samp = new Sample();
-            samp.setId(id.getAndIncrement());
-            samp.setRequest(req);
-            samp.setStatus(s);
-            return samp;
-        }).toList();
-    }
-
-    // -------------------------------------------------------
-    // Divide-by-zero defense: calculateBatchProgressPercent
-    // -------------------------------------------------------
-
-    @Test
-    @DisplayName("calculateBatchProgressPercent() - totalSeconds <= 0 should return 100")
-    void calculateBatchProgressPercent_divideByZero_returns100() throws Exception {
-        WIPbatch batch = new WIPbatch();
-        batch.setStatus("RUNNING");
-        LocalDateTime now = LocalDateTime.now();
-        batch.setStartTime(now);
-        // set estimatedEndTime equal to startTime -> totalSeconds == 0
-        batch.setEstimatedEndTime(now);
-
-        Method m = ManagerDashboardService.class.getDeclaredMethod("calculateBatchProgressPercent", WIPbatch.class);
-        m.setAccessible(true);
-        Integer percent = (Integer) m.invoke(managerDashboardService, batch);
-
-        assertEquals(100, percent.intValue());
-    }
-
-    // -------------------------------------------------------
-    // Exception tests for finishRunningBatch and failRunningBatch
-    // -------------------------------------------------------
-
-    @Test
-    @DisplayName("finishRunningBatch() - QUEUED batch should throw")
-    void finishRunningBatch_queued_shouldThrow() throws Exception {
-        WIPbatch batch = new WIPbatch();
-        batch.setStatus("QUEUED");
-
-        Method m = ManagerDashboardService.class.getDeclaredMethod("finishRunningBatch", WIPbatch.class);
-        m.setAccessible(true);
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
-            try {
-                m.invoke(managerDashboardService, batch);
-            } catch (java.lang.reflect.InvocationTargetException ite) {
-                throw (RuntimeException) ite.getTargetException();
-            }
-        });
-
-        assertTrue(ex.getMessage().contains("Only RUNNING batches can be finished"));
-    }
-
-    @Test
-    @DisplayName("failRunningBatch() - RUNNING batch should throw")
-    void failRunningBatch_running_shouldThrow() throws Exception {
-        WIPbatch batch = new WIPbatch();
-        batch.setStatus("RUNNING");
-
-        Method m = ManagerDashboardService.class.getDeclaredMethod("failRunningBatch", WIPbatch.class);
-        m.setAccessible(true);
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
-            try {
-                m.invoke(managerDashboardService, batch);
-            } catch (java.lang.reflect.InvocationTargetException ite) {
-                throw (RuntimeException) ite.getTargetException();
-            }
-        });
-
-        assertTrue(ex.getMessage().contains("Only RUNNING_CRASH batches can fail"));
-    }
-
-    // -------------------------------------------------------
-    // Aggregation tests: usage rate and failure rate
-    // -------------------------------------------------------
-
-    @Test
-    @DisplayName("getEquipmentUsage() - usage rate calculation is correct (30.0)")
-    void getEquipmentUsage_usageRateCalculation() {
-        Equipment eqA = buildEquipment(1L, "EQ-A", 100L);
-        Equipment eqB = buildEquipment(2L, "EQ-B", 100L);
-
-        // create 10 batches, first 3 belong to eqA
-        List<WIPbatch> allBatches = java.util.stream.IntStream.rangeClosed(1,10)
-                .mapToObj(i -> {
-                    WIPbatch b = new WIPbatch();
-                    b.setId((long) i);
-                    b.setEquipment(i <= 3 ? eqA : eqB);
-                    b.setStatus("FINISHED");
-                    return b;
-                }).toList();
-
-        when(wipbatchRepository.findAll()).thenReturn(allBatches);
-        when(equipmentRepository.findAll()).thenReturn(List.of(eqA, eqB));
-
-        com.example.demo.modules.wip_builder.model.EquipmentStatusLogs log = new com.example.demo.modules.wip_builder.model.EquipmentStatusLogs();
-        log.setStatus("FREE");
-        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(anyLong()))
-                .thenReturn(Optional.of(log));
-
-        List<EquipmentUsageDTO> dtos = managerDashboardService.getEquipmentUsage();
-
-        EquipmentUsageDTO aDto = dtos.stream().filter(d -> d.getEquipmentId().equals(eqA.getId())).findFirst().orElseThrow();
-        assertEquals(30.0, aDto.getUsageRate());
-    }
-
-    @Test
-    @DisplayName("getEquipmentUsage() - failure rate fallback when usageCount=0 returns 0.0")
-    void getEquipmentUsage_failureRateFallback_zeroUsage_shouldBeZero() {
-        Equipment newEq = buildEquipment(99L, "NEW-EQ", 500L);
-
-        // no batches at all
-        when(wipbatchRepository.findAll()).thenReturn(List.of());
-        when(equipmentRepository.findAll()).thenReturn(List.of(newEq));
-
-        com.example.demo.modules.wip_builder.model.EquipmentStatusLogs log = new com.example.demo.modules.wip_builder.model.EquipmentStatusLogs();
-        log.setStatus("FREE");
-        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(newEq.getId()))
-                .thenReturn(Optional.of(log));
-
-        List<EquipmentUsageDTO> dtos = managerDashboardService.getEquipmentUsage();
-        EquipmentUsageDTO dto = dtos.get(0);
-        assertEquals(0.0, dto.getFailureRate());
+        assertEquals("{}", dto.getResultData());
+        assertEquals(record.getStartTime(), dto.getStartTime());
+        assertEquals(record.getEndTime(), dto.getEndTime());
     }
 }

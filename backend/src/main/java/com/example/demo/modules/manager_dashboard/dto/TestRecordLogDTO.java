@@ -4,9 +4,11 @@ import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class TestRecordLogDTO {
     private Long id;
 
@@ -19,7 +21,7 @@ public class TestRecordLogDTO {
     private String operatorName;
 
     private String resultStatus;
-    private String resultData;
+    private Object resultData;
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;

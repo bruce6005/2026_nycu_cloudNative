@@ -1,7 +1,10 @@
 package com.example.demo.modules.wip_management.service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -9,19 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
-import com.example.demo.modules.request.repository.SampleRepository;
-import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
-import com.example.demo.modules.request.repository.RequestRepository;
 import com.example.demo.modules.equipment.model.Equipment;
-import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
 import com.example.demo.modules.request.model.Request;
 import com.example.demo.modules.request.model.Sample;
+import com.example.demo.modules.request.repository.RequestRepository;
+import com.example.demo.modules.request.repository.SampleRepository;
+import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
 import com.example.demo.modules.wip_builder.model.WIPbatch;
+import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
+import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
 import com.example.demo.modules.wip_management.dto.WIPBatchDTO;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class WIPManagementService {
@@ -64,7 +64,7 @@ public class WIPManagementService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        int randomSeconds = ThreadLocalRandom.current().nextInt(5, 10);
+        int randomSeconds = ThreadLocalRandom.current().nextInt(30, 60); // Random duration between 30 to 60 seconds
         boolean willCrash = ThreadLocalRandom.current().nextInt(100) < 25;//25 percent crash
 
         batch.setStatus(willCrash ? "RUNNING_CRASH" : "RUNNING");

@@ -18,7 +18,7 @@ function ManagerDashboardPage() {
       setError("");
 
       const data = await fetchManagerDashboard();
-
+      
       setDashboard(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Cannot load manager dashboard");
@@ -33,7 +33,7 @@ function ManagerDashboardPage() {
 
         const timer = window.setInterval(() => {
             loadDashboard();
-        }, 1000);
+        }, 5000);
 
         return () => window.clearInterval(timer);
     }, []);

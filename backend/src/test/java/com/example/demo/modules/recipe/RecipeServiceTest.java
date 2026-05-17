@@ -1,18 +1,22 @@
-package com.example.demo.modules.recipe.service;
+package com.example.demo.modules.recipe;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Collections;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.demo.modules.equipment.model.EquipmentTypeSchema;
@@ -20,6 +24,7 @@ import com.example.demo.modules.equipment.repository.EquipmentTypeSchemaReposito
 import com.example.demo.modules.recipe.dto.RecipeRequest;
 import com.example.demo.modules.recipe.model.Recipe;
 import com.example.demo.modules.recipe.repository.RecipeRepository;
+import com.example.demo.modules.recipe.service.RecipeService;
 
 @ExtendWith(MockitoExtension.class)
 public class RecipeServiceTest {

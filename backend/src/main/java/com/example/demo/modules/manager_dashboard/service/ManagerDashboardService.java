@@ -4,18 +4,11 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-
-
-import com.example.demo.modules.wip_builder.model.WIPbatch;
-import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
-
-import com.example.demo.modules.request.model.Sample;
-import com.example.demo.modules.request.repository.SampleRepository;
 
 import com.example.demo.modules.equipment.model.Equipment;
 import com.example.demo.modules.equipment.repository.EquipmentRepository;
@@ -26,9 +19,10 @@ import com.example.demo.modules.request.model.Request;
 import com.example.demo.modules.request.repository.RequestRepository;
 import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
 import com.example.demo.modules.wip_builder.model.TestRecords;
+import com.example.demo.modules.wip_builder.model.WIPbatch;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
-import com.example.demo.modules.notification.service.NotificationService;
+import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
 
 @Service
 public class ManagerDashboardService {
@@ -38,24 +32,18 @@ public class ManagerDashboardService {
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final TestRecordsRepository testRecordsRepository;
     private final WIPbatchRepository wipbatchRepository;
-    private final NotificationService notificationService;
-    private final SampleRepository sampleRepository;
 
     public ManagerDashboardService(
             RequestRepository requestRepository,
             EquipmentRepository equipmentRepository,
             EquipmentStatusLogsRepository equipmentStatusLogsRepository,
             TestRecordsRepository testRecordsRepository,
-            WIPbatchRepository wipbatchRepository,
-            NotificationService notificationService,
-            SampleRepository sampleRepository) {
+            WIPbatchRepository wipbatchRepository) {
         this.requestRepository = requestRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.testRecordsRepository = testRecordsRepository;
         this.wipbatchRepository = wipbatchRepository;
-        this.notificationService = notificationService;
-        this.sampleRepository = sampleRepository;
     }
 
     @Transactional(readOnly = true)
@@ -77,59 +65,19 @@ public class ManagerDashboardService {
                 completed,
                 rejected);
     }
-    private void autoResolveExpiredRunningBatches() {
-        LocalDateTime now = LocalDateTime.now();
-
-        List<WIPbatch> runningBatches = wipbatchRepository.findByStatusIn(
-                List.of("RUNNING", "RUNNING_CRASH")
-        );
-
-        for (WIPbatch batch : runningBatches) {
-            LocalDateTime estimatedEndTime = batch.getEstimatedEndTime();
-
-            if (estimatedEndTime != null && !estimatedEndTime.isAfter(now)) {
-                if ("RUNNING_CRASH".equals(batch.getStatus())) {
-                    failRunningBatch(batch);
-                    if (TransactionSynchronizationManager.isActualTransactionActive()) {
-                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                            @Override
-                            public void afterCommit() {
-                                notificationService.broadcast("REQUEST_UPDATED", "Batch failed: " + batch.getId());
-                            }
-                        });
-                    } else {
-                        notificationService.broadcast("REQUEST_UPDATED", "Batch failed: " + batch.getId());
-                    }
-                } else {
-                    finishRunningBatch(batch);
-                    if (TransactionSynchronizationManager.isActualTransactionActive()) {
-                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                            @Override
-                            public void afterCommit() {
-                                notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + batch.getId());
-                            }
-                        });
-                    } else {
-                        notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + batch.getId());
-                    }
-                }
-            }
-        }
-    }
-    @Transactional
+    
+    @Transactional(readOnly = true)
+    @Cacheable(value = "managerDashboardEquipmentUsage")
     public List<EquipmentUsageDTO> getEquipmentUsage() {
-        autoResolveExpiredRunningBatches();
-
-        List<WIPbatch> allBatches = wipbatchRepository.findAll();
-
-        long totalUsageCount = allBatches.stream()
-                .filter(batch -> batch.getEquipment() != null)
-                .count();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime windowStart = now.minusHours(24);
+        long totalMinutes = Duration.between(windowStart, now).toMinutes();
 
         return equipmentRepository.findAll().stream()
-                .map(equipment -> toEquipmentUsageDTO(equipment, allBatches, totalUsageCount))
+                .map(equipment -> toEquipmentUsageDTO(equipment, windowStart, now, totalMinutes))
                 .toList();
     }
+
     @Transactional(readOnly = true)
     public List<TestRecordLogDTO> getTestRecordLogs() {
         return testRecordsRepository.findTop50ByOrderByStartTimeDesc().stream()
@@ -159,77 +107,103 @@ public class ManagerDashboardService {
         return false;
     }
 
-    private boolean isBusyStatus(String status) {
-        if (status == null) {
-            return false;
-        }
-
-        String normalized = status.trim().toUpperCase();
-
-        return "BUSY".equals(normalized)
-                || "RUNNING".equals(normalized)
-                || "PROCESSING".equals(normalized);
-    }
-
     private EquipmentUsageDTO toEquipmentUsageDTO(
             Equipment equipment,
-            List<WIPbatch> allBatches,
-            long totalUsageCount) {
+            LocalDateTime windowStart,
+            LocalDateTime now,
+            long totalMinutes) {
+        List<EquipmentStatusLogs> logs = equipmentStatusLogsRepository.findByEquipmentId(equipment.getId());
 
-        List<WIPbatch> equipmentBatches = allBatches.stream()
-                .filter(batch -> batch.getEquipment() != null)
-                .filter(batch -> batch.getEquipment().getId().equals(equipment.getId()))
-                .toList();
+        long runningMinutes = logs.stream()
+                .filter(log -> matchesStatus(log.getStatus(), "RUNNING", "BUSY"))
+                .mapToLong(log -> calculateOverlapMinutes(log, windowStart, now))
+                .sum();
 
-        long usageCount = equipmentBatches.size();
-
-        double usageRate = totalUsageCount == 0
+        double usageRate = totalMinutes == 0
                 ? 0.0
-                : Math.round(usageCount * 10000.0 / totalUsageCount) / 100.0;
+                : Math.round((runningMinutes * 10000.0 / totalMinutes)) / 100.0;
 
-        long successCount = equipmentBatches.stream()
-                .filter(batch -> "FINISHED".equalsIgnoreCase(batch.getStatus()))
-                .count();
-
-        long failedCount = equipmentBatches.stream()
-                .filter(batch -> "FAILED".equalsIgnoreCase(batch.getStatus()))
-                .count();
-
-        double failureRate = usageCount == 0
-                ? 0.0
-                : Math.round(failedCount * 10000.0 / usageCount) / 100.0;
-
-        long averageRunSeconds = calculateAverageRunSeconds(equipmentBatches);
-
-        WIPbatch activeBatch = equipmentBatches.stream()
-                .filter(batch -> "RUNNING".equals(batch.getStatus())
-                        || "RUNNING_CRASH".equals(batch.getStatus()))
-                .findFirst()
+        String currentStatus = equipmentStatusLogsRepository
+                .findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId())
+                .or(() -> equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipment.getId()))
+                .map(EquipmentStatusLogs::getStatus)
                 .orElse(null);
-
-        Long activeBatchId = activeBatch == null ? null : activeBatch.getId();
-        String activeBatchStatus = activeBatch == null ? null : activeBatch.getStatus();
-        Integer activeProgressPercent = activeBatch == null ? null : calculateBatchProgressPercent(activeBatch);
-        Long remainingSeconds = activeBatch == null ? null : calculateBatchRemainingSeconds(activeBatch);
-
-        String currentStatus = resolveCurrentEquipmentStatus(equipment.getId());
 
         String equipmentType = equipment.getEquipmentTypeSchema() == null
                 ? "-"
                 : equipment.getEquipmentTypeSchema().getEquipmentType();
 
+        WIPbatch activeBatch = wipbatchRepository
+                .findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING")
+                .orElse(null);
+
+        Long activeBatchId = null;
+        String activeBatchStatus = null;
+        double activeProgressPercent = 0.0;
+        long remainingSeconds = 0L;
+
+        if (activeBatch != null) {
+            activeBatchId = activeBatch.getId();
+            activeBatchStatus = activeBatch.getStatus();
+
+            LocalDateTime startTime = activeBatch.getStartTime();
+            LocalDateTime endTime = activeBatch.getEstimatedEndTime();
+
+            if (startTime != null && endTime != null) {
+                long elapsedSeconds = Math.max(0L, Duration.between(startTime, now).toSeconds());
+                long estimatedTotalSeconds = Duration.between(startTime, endTime).toSeconds();
+
+                if (estimatedTotalSeconds > 0) {
+                    activeProgressPercent = Math.min(100.0, elapsedSeconds * 100.0 / estimatedTotalSeconds);
+                    activeProgressPercent = Math.round(activeProgressPercent * 10.0) / 10.0;
+                    remainingSeconds = Math.max(0L, estimatedTotalSeconds - elapsedSeconds);
+                }
+            }
+        }
+
+        List<WIPbatch> batches = wipbatchRepository.findByEquipment_Id(equipment.getId());
+
+        long totalUsageCount = batches.size();
+
+        long usageCount = batches.stream()
+                .filter(batch -> matchesStatus(batch.getStatus(), "RUNNING", "FINISHED", "FAILED"))
+                .count();
+
+        long successCount = batches.stream()
+                .filter(batch -> matchesStatus(batch.getStatus(), "FINISHED", "COMPLETED", "DONE"))
+                .count();
+
+        long failedCount = batches.stream()
+                .filter(batch -> matchesStatus(batch.getStatus(), "FAILED", "FAIL"))
+                .count();
+
+        long totalFinishedOrFailed = successCount + failedCount;
+
+        double failureRate = totalFinishedOrFailed == 0
+                ? 0.0
+                : Math.round(failedCount * 10000.0 / totalFinishedOrFailed) / 100.0;
+
+        long averageRunSeconds = (long) batches.stream()
+                .filter(batch -> batch.getStartTime() != null && batch.getEndTime() != null)
+                .mapToLong(batch -> Duration.between(batch.getStartTime(), batch.getEndTime()).toSeconds())
+                .filter(seconds -> seconds > 0)
+                .average()
+                .orElse(0.0);
+
         return new EquipmentUsageDTO(
                 equipment.getId(),
                 equipment.getName(),
                 equipmentType,
+                runningMinutes,
+                totalMinutes,
+                usageRate,
+                currentStatus,
                 usageCount,
                 totalUsageCount,
-                usageRate,
                 averageRunSeconds,
                 successCount,
                 failedCount,
                 failureRate,
-                currentStatus,
                 activeBatchId,
                 activeBatchStatus,
                 activeProgressPercent,
@@ -274,193 +248,5 @@ public class ManagerDashboardService {
                 record.getResultData(),
                 record.getStartTime(),
                 record.getEndTime());
-    }
-    // helper
-    private long calculateAverageRunSeconds(List<WIPbatch> batches) {
-        List<WIPbatch> completedBatches = batches.stream()
-                .filter(batch -> batch.getStartTime() != null && batch.getEndTime() != null)
-                .toList();
-
-        if (completedBatches.isEmpty()) {
-            return 0L;
-        }
-
-        long totalSeconds = completedBatches.stream()
-                .mapToLong(batch -> Duration.between(batch.getStartTime(), batch.getEndTime()).toSeconds())
-                .sum();
-
-        return totalSeconds / completedBatches.size();
-    }
-
-    private Integer calculateBatchProgressPercent(WIPbatch batch) {
-        if ("FINISHED".equals(batch.getStatus()) || "FAILED".equals(batch.getStatus())) {
-            return 100;
-        }
-
-        if (!isRunningBatchStatus(batch.getStatus())
-                || batch.getStartTime() == null
-                || batch.getEstimatedEndTime() == null) {
-            return 0;
-        }
-
-        long totalSeconds = Duration.between(batch.getStartTime(), batch.getEstimatedEndTime()).toSeconds();
-        long elapsedSeconds = Duration.between(batch.getStartTime(), LocalDateTime.now()).toSeconds();
-
-        if (totalSeconds <= 0) {
-            return 100;
-        }
-
-        int progress = (int) Math.floor(elapsedSeconds * 100.0 / totalSeconds);
-
-        if (progress < 0) {
-            return 0;
-        }
-
-        if (progress > 100) {
-            return 100;
-        }
-
-        return progress;
-    }
-
-    private Long calculateBatchRemainingSeconds(WIPbatch batch) {
-        if (!isRunningBatchStatus(batch.getStatus()) || batch.getEstimatedEndTime() == null) {
-            return 0L;
-        }
-
-        long remaining = Duration.between(LocalDateTime.now(), batch.getEstimatedEndTime()).toSeconds();
-
-        return Math.max(remaining, 0L);
-    }
-
-    private boolean isRunningBatchStatus(String status) {
-        return "RUNNING".equals(status) || "RUNNING_CRASH".equals(status);
-    }
-
-    private String resolveCurrentEquipmentStatus(Long equipmentId) {
-        return equipmentStatusLogsRepository
-                .findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipmentId)
-                .or(() -> equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipmentId))
-                .map(log -> log.getStatus())
-                .orElse("UNKNOWN");
-    }
-
-    private WIPbatch finishRunningBatch(WIPbatch batch) {
-        if (!"RUNNING".equals(batch.getStatus())) {
-            throw new RuntimeException("Only RUNNING batches can be finished. Current status: " + batch.getStatus());
-        }
-
-        batch.setStatus("FINISHED");
-        batch.setEndTime(LocalDateTime.now());
-
-        WIPbatch savedBatch = wipbatchRepository.save(batch);
-
-        updateEquipmentStatus(savedBatch.getEquipment(), "READY");
-
-        List<Sample> samples = sampleRepository.findByBatch_Id(savedBatch.getId());
-
-        for (Sample sample : samples) {
-            sample.setStatus("COMPLETED");
-        }
-
-        sampleRepository.saveAll(samples);
-
-        samples.stream()
-                .map(Sample::getRequest)
-                .distinct()
-                .forEach(this::checkAndUpdateRequestStatus);
-
-        return savedBatch;
-    }
-
-    private WIPbatch failRunningBatch(WIPbatch batch) {
-        if (!"RUNNING_CRASH".equals(batch.getStatus())) {
-            throw new RuntimeException("Only RUNNING_CRASH batches can fail. Current status: " + batch.getStatus());
-        }
-
-        batch.setStatus("FAILED");
-        batch.setEndTime(LocalDateTime.now());
-
-        WIPbatch savedBatch = wipbatchRepository.save(batch);
-
-        updateEquipmentStatus(savedBatch.getEquipment(), "ERROR");
-
-        List<Sample> samples = sampleRepository.findByBatch_Id(savedBatch.getId());
-
-        for (Sample sample : samples) {
-            sample.setStatus("FAILED");
-        }
-
-        sampleRepository.saveAll(samples);
-
-        samples.stream()
-                .map(Sample::getRequest)
-                .distinct()
-                .forEach(this::checkAndUpdateRequestStatus);
-
-        createAlarmForBatchFailure(savedBatch);
-
-        return savedBatch;
-    }
-    private void checkAndUpdateRequestStatus(Request request) {
-        List<Sample> allSamples = sampleRepository.findByRequest_Id(request.getId());
-
-        boolean anyFailed = allSamples.stream()
-                .anyMatch(s -> "FAILED".equals(s.getStatus()));
-
-        boolean anyRunning = allSamples.stream()
-                .anyMatch(s -> "RUNNING".equals(s.getStatus())
-                        || "RUNNING_CRASH".equals(s.getStatus()));
-
-        boolean allCompleted = allSamples.stream()
-                .allMatch(s -> "COMPLETED".equals(s.getStatus()));
-
-        boolean allAssignedOrMore = allSamples.stream()
-                .allMatch(s -> "ASSIGNED".equals(s.getStatus())
-                        || "RUNNING".equals(s.getStatus())
-                        || "RUNNING_CRASH".equals(s.getStatus())
-                        || "COMPLETED".equals(s.getStatus())
-                        || "FAILED".equals(s.getStatus()));
-
-        String newStatus = request.getStatus();
-
-        if (anyFailed) {
-            newStatus = "FAILED";
-        } else if (allCompleted) {
-            newStatus = "DONE";
-        } else if (anyRunning) {
-            newStatus = "PROCESSING";
-        } else if (allAssignedOrMore) {
-            newStatus = "DISPATCHED";
-        }
-
-        if (!newStatus.equals(request.getStatus())) {
-            request.setStatus(newStatus);
-            requestRepository.save(request);
-        }
-    }
-
-    private void updateEquipmentStatus(Equipment equipment, String status) {
-        equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId())
-                .ifPresent(log -> {
-                    log.setEndTime(LocalDateTime.now());
-                    equipmentStatusLogsRepository.save(log);
-                });
-
-        EquipmentStatusLogs newLog = new EquipmentStatusLogs();
-        newLog.setEquipment(equipment);
-        newLog.setStatus(status);
-        newLog.setStartTime(LocalDateTime.now());
-
-        equipmentStatusLogsRepository.save(newLog);
-    }
-
-    private void createAlarmForBatchFailure(WIPbatch batch) {
-        System.out.println("[ALARM] Batch failed. batchId="
-                + batch.getId()
-                + ", equipmentId="
-                + batch.getEquipment().getId()
-                + ", equipmentName="
-                + batch.getEquipment().getName());
     }
 }

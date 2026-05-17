@@ -1,6 +1,7 @@
-package com.example.demo.modules.auth.service;
+package com.example.demo.modules.auth;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
@@ -14,8 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.demo.modules.auth.dto.UserSetupRequest;
 import com.example.demo.modules.auth.model.User;
-import com.example.demo.modules.auth.model.UserRole;
+import com.example.demo.modules.auth.model.UserRole ;
 import com.example.demo.modules.auth.repository.UserRepository;
+import com.example.demo.modules.auth.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
