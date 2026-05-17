@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +17,10 @@ import com.example.demo.modules.request.model.Request;
 import com.example.demo.modules.request.repository.RequestRepository;
 import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
 import com.example.demo.modules.wip_builder.model.TestRecords;
+import com.example.demo.modules.wip_builder.model.WIPbatch;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
+import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
 
 @Service
 public class ManagerDashboardService {
@@ -26,16 +29,19 @@ public class ManagerDashboardService {
     private final EquipmentRepository equipmentRepository;
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final TestRecordsRepository testRecordsRepository;
+    private final WIPbatchRepository wipbatchRepository;
 
     public ManagerDashboardService(
             RequestRepository requestRepository,
             EquipmentRepository equipmentRepository,
             EquipmentStatusLogsRepository equipmentStatusLogsRepository,
-            TestRecordsRepository testRecordsRepository) {
+            TestRecordsRepository testRecordsRepository,
+            WIPbatchRepository wipbatchRepository) {
         this.requestRepository = requestRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.testRecordsRepository = testRecordsRepository;
+        this.wipbatchRepository = wipbatchRepository;
     }
 
     @Transactional(readOnly = true)
@@ -59,6 +65,7 @@ public class ManagerDashboardService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "managerDashboardEquipmentUsage")
     public List<EquipmentUsageDTO> getEquipmentUsage() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime windowStart = now.minusHours(24);
@@ -106,7 +113,7 @@ public class ManagerDashboardService {
         List<EquipmentStatusLogs> logs = equipmentStatusLogsRepository.findByEquipmentId(equipment.getId());
 
         long runningMinutes = logs.stream()
-                .filter(log -> "RUNNING".equalsIgnoreCase(log.getStatus()))
+                .filter(log -> matchesStatus(log.getStatus(), "RUNNING", "BUSY"))
                 .mapToLong(log -> calculateOverlapMinutes(log, windowStart, now))
                 .sum();
 
@@ -124,6 +131,63 @@ public class ManagerDashboardService {
                 ? "-"
                 : equipment.getEquipmentTypeSchema().getEquipmentType();
 
+        WIPbatch activeBatch = wipbatchRepository
+                .findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING")
+                .orElse(null);
+
+        Long activeBatchId = null;
+        String activeBatchStatus = null;
+        double activeProgressPercent = 0.0;
+        long remainingSeconds = 0L;
+
+        if (activeBatch != null) {
+            activeBatchId = activeBatch.getId();
+            activeBatchStatus = activeBatch.getStatus();
+
+            LocalDateTime startTime = activeBatch.getStartTime();
+            LocalDateTime endTime = activeBatch.getEstimatedEndTime();
+
+            if (startTime != null && endTime != null) {
+                long elapsedSeconds = Math.max(0L, Duration.between(startTime, now).toSeconds());
+                long estimatedTotalSeconds = Duration.between(startTime, endTime).toSeconds();
+
+                if (estimatedTotalSeconds > 0) {
+                    activeProgressPercent = Math.min(100.0, elapsedSeconds * 100.0 / estimatedTotalSeconds);
+                    activeProgressPercent = Math.round(activeProgressPercent * 10.0) / 10.0;
+                    remainingSeconds = Math.max(0L, estimatedTotalSeconds - elapsedSeconds);
+                }
+            }
+        }
+
+        List<WIPbatch> batches = wipbatchRepository.findByEquipment_Id(equipment.getId());
+
+        long totalUsageCount = batches.size();
+
+        long usageCount = batches.stream()
+                .filter(batch -> matchesStatus(batch.getStatus(), "RUNNING", "FINISHED", "FAILED"))
+                .count();
+
+        long successCount = batches.stream()
+                .filter(batch -> matchesStatus(batch.getStatus(), "FINISHED", "COMPLETED", "DONE"))
+                .count();
+
+        long failedCount = batches.stream()
+                .filter(batch -> matchesStatus(batch.getStatus(), "FAILED", "FAIL"))
+                .count();
+
+        long totalFinishedOrFailed = successCount + failedCount;
+
+        double failureRate = totalFinishedOrFailed == 0
+                ? 0.0
+                : Math.round(failedCount * 10000.0 / totalFinishedOrFailed) / 100.0;
+
+        long averageRunSeconds = (long) batches.stream()
+                .filter(batch -> batch.getStartTime() != null && batch.getEndTime() != null)
+                .mapToLong(batch -> Duration.between(batch.getStartTime(), batch.getEndTime()).toSeconds())
+                .filter(seconds -> seconds > 0)
+                .average()
+                .orElse(0.0);
+
         return new EquipmentUsageDTO(
                 equipment.getId(),
                 equipment.getName(),
@@ -131,7 +195,18 @@ public class ManagerDashboardService {
                 runningMinutes,
                 totalMinutes,
                 usageRate,
-                currentStatus);
+                currentStatus,
+                usageCount,
+                totalUsageCount,
+                averageRunSeconds,
+                successCount,
+                failedCount,
+                failureRate,
+                activeBatchId,
+                activeBatchStatus,
+                activeProgressPercent,
+                remainingSeconds
+        );
     }
 
     private long calculateOverlapMinutes(

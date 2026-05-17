@@ -19,7 +19,7 @@ public class TestRecordLogDTO {
     private String operatorName;
 
     private String resultStatus;
-    private String resultData;
+    private Object resultData;
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
