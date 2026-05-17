@@ -4,6 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,8 +23,6 @@ import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsReposi
 import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 
 @Component
 @Transactional
@@ -37,6 +39,7 @@ public class DataInitializer implements CommandLineRunner {
     private final SampleRepository sampleRepository;
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final WIPbatchRepository wipbatchRepository;
+    private final boolean resetDataOnStartup;
     private final TestRecordsRepository testRecordsRepository;
 
     public DataInitializer(UserRepository userRepository,
@@ -47,7 +50,8 @@ public class DataInitializer implements CommandLineRunner {
                            SampleRepository sampleRepository,
                            EquipmentStatusLogsRepository equipmentStatusLogsRepository,
                            WIPbatchRepository wipbatchRepository,
-                           TestRecordsRepository testRecordsRepository) {
+                           TestRecordsRepository testRecordsRepository,
+                           @Value("${app.reset-data-on-startup:true}") boolean resetDataOnStartup) {
         this.userRepository = userRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentTypeSchemaRepository = equipmentTypeSchemaRepository;
@@ -57,18 +61,23 @@ public class DataInitializer implements CommandLineRunner {
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.wipbatchRepository = wipbatchRepository;
         this.testRecordsRepository = testRecordsRepository;
+        this.resetDataOnStartup = resetDataOnStartup;
     }
 
     @Override
     public void run(String... args) {
+        if (!resetDataOnStartup) {
+            return;
+        }
+
         clearSeedTables();
         seedUsers();
         seedEquipmentTypeSchemas();
         seedEquipments();
+        seedEquipmentStatusLogs();
         seedRecipes();
         seedRequestsAndSamples();
         seedWIPBatches();
-        seedEquipmentStatusLogs();
     }
 
     private void clearSeedTables() {
@@ -93,13 +102,11 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedUsers() {
         execute(
-            "INSERT INTO users (id, google_id, email, name, avatar_url, role, manager_id) VALUES (?, ?, ?, ?, NULL, ?, ?)",
-            1L, "seed-google-1", "allan@example.com", "Factory User", UserRole.REQUESTER.name(), 2L
-        );
+                "INSERT INTO users (id, google_id, email, name, avatar_url, role, manager_id) VALUES (?, ?, ?, ?, NULL, ?, ?)",
+                1L, "seed-google-1", "allan@example.com", "Factory User", UserRole.REQUESTER.name(), 2L);
         execute(
-            "INSERT INTO users (id, google_id, email, name, avatar_url, role, manager_id) VALUES (?, ?, ?, ?, NULL, ?, ?)",
-            2L, "seed-google-2", "manager@example.com", "Manager1", UserRole.MANAGER.name(), null
-        );
+                "INSERT INTO users (id, google_id, email, name, avatar_url, role, manager_id) VALUES (?, ?, ?, ?, NULL, ?, ?)",
+                2L, "seed-google-2", "manager@example.com", "Manager1", UserRole.MANAGER.name(), null);
     }
 
     private void seedEquipmentTypeSchemas() {
@@ -109,18 +116,17 @@ public class DataInitializer implements CommandLineRunner {
                 {3L, "ETCHING", "{\"type\": \"object\", \"properties\": {\"gas_flow_sccm\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 500}, \"rf_power_w\": {\"type\": \"integer\", \"minimum\": 10, \"maximum\": 2000}}, \"required\": [\"gas_flow_sccm\", \"rf_power_w\"]}"},
                 {4L, "INSPECT", "{\"type\": \"object\", \"properties\": {\"magnification\": {\"type\": \"string\", \"enum\": [\"10x\", \"20x\", \"50x\"]}, \"threshold\": {\"type\": \"number\", \"minimum\": 0, \"maximum\": 1}}, \"required\": [\"magnification\", \"threshold\"]}"},
                 {5L, "UV_CURE", "{\"type\": \"object\", \"properties\": {\"temperature\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 100}, \"time_minutes\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 60}}, \"required\": [\"temperature\", \"time_minutes\"]}"},
-        };      
+        };
 
         for (Object[] row : schemaRows) {
             execute(
                     "INSERT INTO equipment_type_schema (id, equipment_type, parameter_schema) VALUES (?, ?, ?)",
-                    row[0], row[1], row[2]
-            );
+                    row[0], row[1], row[2]);
         }
     }
 
     private void seedEquipments() {
-    Object[][] equipmentRows = new Object[][] {
+        Object[][] equipmentRows = new Object[][] {
             {1L, 2L, "High-Temp Oven 1 (高溫烤箱)", "THERMAL", 1L, 10},
             {2L, 2L, "Spin Coater 1 (光阻塗佈機)", "COATING", 2L, 1},
             {3L, 2L, "Plasma Etcher 1 (電漿蝕刻機)", "ETCHING", 3L, 4},
@@ -135,27 +141,25 @@ public class DataInitializer implements CommandLineRunner {
 
         for (Object[] row : equipmentRows) {
             execute(
-                    "INSERT INTO equipment (id, handler_id, name, type, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?, ?)",
-                    row[0], row[1], row[2], row[3], row[4], row[5]
-            );
+                    "INSERT INTO equipment (id, handler_id, name, equipment_type_schema_id, max_capacity) VALUES (?, ?, ?, ?, ?)",
+                    row[0], row[1], row[2], row[4], row[5]);
         }
     }
 
     private void seedRecipes() {
         Object[][] recipeRows = new Object[][] {
-                {1L, 1L, "BAKE_180C_30M", "{\"temperature\": 180, \"time_minutes\": 30}"},
-                {2L, 1L, "BAKE_120C_10M", "{\"temperature\": 120, \"time_minutes\": 10}"},
-                {3L, 2L, "COAT_SU8_500RPM", "{\"spin_speed_rpm\": 500, \"thickness_nm\": 100}"},
-                {4L, 3L, "ETCH_OXIDE_CF4", "{\"gas_flow_sccm\": 100, \"rf_power_w\": 500}"},
-                {5L, 4L, "INSPECT_10NM_RES", "{\"magnification\": \"50x\", \"threshold\": 0.5}"},
-                {6L, 1L, "UV_CURE_STANDARD", "{\"temperature\": 25, \"time_minutes\": 5}"},
+                { 1L, 1L, "BAKE_180C_30M", "{\"temperature\": 180, \"time_minutes\": 30}" },
+                { 2L, 1L, "BAKE_120C_10M", "{\"temperature\": 120, \"time_minutes\": 10}" },
+                { 3L, 2L, "COAT_SU8_500RPM", "{\"spin_speed_rpm\": 500, \"thickness_nm\": 100}" },
+                { 4L, 3L, "ETCH_OXIDE_CF4", "{\"gas_flow_sccm\": 100, \"rf_power_w\": 500}" },
+                { 5L, 4L, "INSPECT_10NM_RES", "{\"magnification\": \"50x\", \"threshold\": 0.5}" },
+                { 6L, 5L, "UV_CURE_STANDARD", "{\"temperature\": 25, \"time_minutes\": 5}" },
         };
 
         for (Object[] row : recipeRows) {
             execute(
                     "INSERT INTO recipe (id, equipment_type_schema_id, name, parameters, is_active) VALUES (?, ?, ?, ?, true)",
-                    row[0], row[1], row[2], row[3]
-            );
+                    row[0], row[1], row[2], row[3]);
         }
     }
 
@@ -171,26 +175,26 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         RequestSeed[] seeds = new RequestSeed[] {
-            new RequestSeed(1L, "URGENT", 4),
-            new RequestSeed(2L, "NORMAL", 5),
-            new RequestSeed(3L, "NORMAL", 3),
-            new RequestSeed(4L, "NORMAL", 8),
-            new RequestSeed(5L, "URGENT", 2),
-            new RequestSeed(6L, "NORMAL", 2),
-            new RequestSeed(7L, "NORMAL", 2),
-            new RequestSeed(8L, "URGENT", 2),
-            new RequestSeed(9L, "NORMAL", 2),
-            new RequestSeed(10L, "NORMAL", 1),
-            new RequestSeed(11L, "URGENT", 1),
-            new RequestSeed(12L, "NORMAL", 1),
-            new RequestSeed(13L, "NORMAL", 1),
-            new RequestSeed(14L, "URGENT", 1),
-            new RequestSeed(15L, "NORMAL", 1),
-            new RequestSeed(16L, "NORMAL", 1),
-            new RequestSeed(17L, "NORMAL", 1),
-            new RequestSeed(18L, "URGENT", 2),
-            new RequestSeed(19L, "NORMAL", 2),
-            new RequestSeed(20L, "NORMAL", 3),
+                new RequestSeed(1L, "URGENT", 4),
+                new RequestSeed(2L, "NORMAL", 5),
+                new RequestSeed(3L, "NORMAL", 3),
+                new RequestSeed(4L, "NORMAL", 8),
+                new RequestSeed(5L, "URGENT", 2),
+                new RequestSeed(6L, "NORMAL", 2),
+                new RequestSeed(7L, "NORMAL", 2),
+                new RequestSeed(8L, "URGENT", 2),
+                new RequestSeed(9L, "NORMAL", 2),
+                new RequestSeed(10L, "NORMAL", 1),
+                new RequestSeed(11L, "URGENT", 1),
+                new RequestSeed(12L, "NORMAL", 1),
+                new RequestSeed(13L, "NORMAL", 1),
+                new RequestSeed(14L, "URGENT", 1),
+                new RequestSeed(15L, "NORMAL", 1),
+                new RequestSeed(16L, "NORMAL", 1),
+                new RequestSeed(17L, "NORMAL", 1),
+                new RequestSeed(18L, "URGENT", 2),
+                new RequestSeed(19L, "NORMAL", 2),
+                new RequestSeed(20L, "NORMAL", 3),
         };
 
         for (RequestSeed seed : seeds) {
@@ -205,18 +209,16 @@ public class DataInitializer implements CommandLineRunner {
                     seed.priority,
                     "APPROVED",
                     baseTime.plusMinutes(seed.id * 7L),
-                    "Semiconductor lab seed request " + seed.id
-            );
+                    "Semiconductor lab seed request " + seed.id);
 
             for (int sampleNo = 1; sampleNo <= seed.sampleCount; sampleNo++) {
                 execute(
-                    "INSERT INTO sample (id, request_id, batch_id, barcode, recipe_id, status) VALUES (?, ?, NULL, ?, ?, ?)",
+                        "INSERT INTO sample (id, request_id, batch_id, barcode, recipe_id, status) VALUES (?, ?, NULL, ?, ?, ?)",
                         (long) barcodeIndex,
                         seed.id,
                         String.format("WAFER-%03d", barcodeIndex),
                         recipeId,
-                        "PENDING"
-                );
+                        "PENDING");
                 barcodeIndex++;
             }
         }
@@ -224,18 +226,22 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedEquipmentStatusLogs() {
         Object[][] logs = new Object[][] {
-                {1L, 1L, "READY", LocalDateTime.of(2026, 4, 1, 8, 0)},
-                {2L, 2L, "READY", LocalDateTime.of(2026, 4, 1, 8, 5)},
-                {3L, 3L, "BUSY", LocalDateTime.of(2026, 4, 1, 8, 10)},
-                {4L, 4L, "IDLE", LocalDateTime.of(2026, 4, 1, 8, 15)},
-                {5L, 5L, "MAINTENANCE", LocalDateTime.of(2026, 4, 1, 8, 20)},
+                { 1L, 1L, "READY", LocalDateTime.of(2026, 4, 1, 8, 0) },
+                { 2L, 2L, "READY", LocalDateTime.of(2026, 4, 1, 8, 5) },
+                { 3L, 3L, "BUSY", LocalDateTime.of(2026, 4, 1, 8, 10) },
+                { 4L, 4L, "IDLE", LocalDateTime.of(2026, 4, 1, 8, 15) },
+                { 5L, 5L, "MAINTENANCE", LocalDateTime.of(2026, 4, 1, 8, 20) },
+                { 6L, 6L, "READY", LocalDateTime.now() },
+                { 7L, 7L, "READY", LocalDateTime.now() },
+                { 8L, 8L, "READY", LocalDateTime.now() },
+                { 9L, 9L, "READY", LocalDateTime.now() },
+                { 10L, 10L, "READY", LocalDateTime.now() },
         };
 
         for (Object[] row : logs) {
             execute(
                     "INSERT INTO equipment_status_logs (id, equipment_id, status, start_time, end_time) VALUES (?, ?, ?, ?, NULL)",
-                    row[0], row[1], row[2], row[3]
-            );
+                    row[0], row[1], row[2], row[3]);
         }
     }
 
@@ -253,8 +259,7 @@ public class DataInitializer implements CommandLineRunner {
         // Batch 1: QUEUED - waiting to start
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, NULL, NULL)",
-                1L, 1L, 1L, "QUEUED", baseTime
-        );
+                1L, 1L, 1L, "QUEUED", baseTime);
         // Assign first 4 samples to batch 1
         updateSampleBatch(1L, 4L, 1L);
 
@@ -262,15 +267,21 @@ public class DataInitializer implements CommandLineRunner {
         LocalDateTime runStartTime = baseTime.plusHours(1);
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, NULL)",
-                2L, 2L, 2L, "RUNNING", baseTime.plusMinutes(15), runStartTime
-        );
+                2L, 2L, 2L, "RUNNING", baseTime.plusMinutes(15), runStartTime);
+        
+        // Update Equipment 2 status to BUSY when batch starts
+        execute(
+                "UPDATE equipment_status_logs SET end_time = ? WHERE equipment_id = ? AND end_time IS NULL",
+                runStartTime, 2L);
+        execute(
+                "INSERT INTO equipment_status_logs (equipment_id, status, start_time) VALUES (?, 'BUSY', ?)",
+                2L, runStartTime);
         // Assign samples 5-9 to batch 2, mark as PROCESSING
         for (long i = 5; i <= 9; i++) {
             if (i <= sampleIds.size()) {
                 execute(
                         "UPDATE sample SET batch_id = ?, status = ? WHERE id = ?",
-                        2L, "PROCESSING", i
-                );
+                        2L, "PROCESSING", i);
             }
         }
 
@@ -278,15 +289,24 @@ public class DataInitializer implements CommandLineRunner {
         LocalDateTime finishTime = baseTime.minusHours(2);
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                3L, 3L, 3L, "FINISHED", finishTime.minusHours(1), finishTime.minusMinutes(30), finishTime
-        );
+                3L, 3L, 3L, "FINISHED", finishTime.minusHours(1), finishTime.minusMinutes(45), finishTime);
+        
+        // Equipment 3 was BUSY during the batch, then back to READY
+        execute(
+                "UPDATE equipment_status_logs SET end_time = ? WHERE equipment_id = ? AND end_time IS NULL",
+                finishTime.minusMinutes(45), 3L);
+        execute(
+                "INSERT INTO equipment_status_logs (equipment_id, status, start_time, end_time) VALUES (?, 'BUSY', ?, ?)",
+                3L, finishTime.minusMinutes(45), finishTime);
+        execute(
+                "INSERT INTO equipment_status_logs (equipment_id, status, start_time) VALUES (?, 'READY', ?)",
+                3L, finishTime);
         // Assign samples 10-12 to batch 3, mark as COMPLETED
         for (long i = 10; i <= 12; i++) {
             if (i <= sampleIds.size()) {
                 execute(
                         "UPDATE sample SET batch_id = ?, status = ? WHERE id = ?",
-                        3L, "COMPLETED", i
-                );
+                        3L, "COMPLETED", i);
             }
         }
 
@@ -294,30 +314,26 @@ public class DataInitializer implements CommandLineRunner {
         LocalDateTime finishTime2 = baseTime.minusHours(3);
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                4L, 4L, 4L, "FINISHED", finishTime2.minusHours(1), finishTime2.minusMinutes(45), finishTime2
-        );
+                4L, 4L, 4L, "FINISHED", finishTime2.minusHours(1), finishTime2.minusMinutes(45), finishTime2);
         // Assign samples 13-15 to batch 4
         for (long i = 13; i <= 15; i++) {
             if (i <= sampleIds.size()) {
                 execute(
                         "UPDATE sample SET batch_id = ?, status = ? WHERE id = ?",
-                        4L, "COMPLETED", i
-                );
+                        4L, "COMPLETED", i);
             }
         }
 
         // Batch 5: QUEUED - another waiting batch
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, NULL, NULL)",
-                5L, 5L, 5L, "QUEUED", baseTime.plusHours(2)
-        );
+                5L, 5L, 5L, "QUEUED", baseTime.plusHours(2));
         // Assign samples 16-18 to batch 5
         for (long i = 16; i <= 18; i++) {
             if (i <= sampleIds.size()) {
                 execute(
                         "UPDATE sample SET batch_id = ? WHERE id = ?",
-                        5L, i
-                );
+                        5L, i);
             }
         }
     }
@@ -327,8 +343,7 @@ public class DataInitializer implements CommandLineRunner {
             if (i <= sampleRepository.findAll().size()) {
                 execute(
                         "UPDATE sample SET batch_id = ? WHERE id = ?",
-                        batchId, i
-                );
+                        batchId, i);
             }
         }
     }

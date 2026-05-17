@@ -3,6 +3,8 @@ package com.example.demo.modules.request.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import org.springframework.stereotype.Service;
 
@@ -29,7 +31,7 @@ public class RequestService {
     private final RecipeRepository recipeRepository;
     private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
-    public RequestService(RequestRepository requestRepository, 
+    public RequestService(RequestRepository requestRepository,
                          UserRepository userRepository,
                          SampleRepository sampleRepository,
                          RecipeRepository recipeRepository,
@@ -47,7 +49,7 @@ public class RequestService {
     @org.springframework.transaction.annotation.Transactional
     public RequestDTO createRequest(RequestDTO dto) {
         System.out.println("[DEBUG] createRequest for user: " + dto.getFactoryUserId());
-        
+
         User factoryUser = userRepository.findById(dto.getFactoryUserId())
                 .orElseThrow(() -> new RuntimeException("Factory user not found"));
 
@@ -65,6 +67,10 @@ public class RequestService {
             throw new RuntimeException("Assigned manager is not valid");
         }
 
+        if (dto.getTitle() == null || dto.getTitle().trim().isEmpty()) {
+            throw new RuntimeException("Request title is required");
+        }
+
         Request request = new Request();
 
         request.setTitle(dto.getTitle());
@@ -80,7 +86,17 @@ public class RequestService {
         System.out.println("[DEBUG] Saved Request ID: " + saved.getId());
 
         // 發送更新信號，通知經理有新單
-        notificationService.broadcast("REQUEST_UPDATED", "New request created: " + saved.getId());
+        // 在交易提交後才廣播
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    notificationService.broadcast("REQUEST_UPDATED", "New request created: " + saved.getId());
+                }
+            });
+        } else {
+            notificationService.broadcast("REQUEST_UPDATED", "New request created: " + saved.getId());
+        }
 
         // 如果有傳入 samples，則建立它們
         if (dto.getSamples() != null && !dto.getSamples().isEmpty()) {
@@ -90,13 +106,13 @@ public class RequestService {
                 sample.setRequest(saved);
                 sample.setBarcode(sDto.getBarcode());
                 sample.setStatus("PENDING");
-                
+
                 if (sDto.getRecipeId() != null) {
                     Recipe recipe = recipeRepository.findById(sDto.getRecipeId())
                             .orElseThrow(() -> new RuntimeException("Recipe not found: " + sDto.getRecipeId()));
                     sample.setRecipe(recipe);
                 }
-                
+
                 sampleRepository.save(sample);
             }
         } else {

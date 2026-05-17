@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { googleLogout } from "@react-oauth/google";
 
 import Layout from "./layouts/Layout";
@@ -12,7 +12,6 @@ import EquipmentPage from "./features/equipment/page/EquipmentPage";
 import EquipmentTypeManagementPage from "./features/equipment/page/EquipmentTypeManagementPage";
 import RecipeManagementPage from "./features/recipe/page/RecipeManagementPage";
 import ManagerDashboardPage from "./features/managerLog/page/ManagerDashboardPage";
-
 import type { AuthUser } from "./features/auth/model/AuthUser";
 import { getNavItems, type Page } from "./features/utils/getNavItems";
 
@@ -31,8 +30,26 @@ const pageMap: Record<Page, React.ComponentType<any>> = {
 };
 
 function App() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [page, setPage] = useState<Page>("request");
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    const saved = localStorage.getItem("auth_user");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [page, setPage] = useState<Page>(() => {
+    return (localStorage.getItem("current_page") as Page) || "request";
+  });
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("auth_user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("auth_user");
+    }
+  }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem("current_page", page);
+  }, [page]);
 
   const navItems = useMemo(() => {
     return user ? getNavItems(user) : [];

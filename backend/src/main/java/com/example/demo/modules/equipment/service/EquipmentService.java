@@ -10,8 +10,11 @@ import com.example.demo.modules.equipment.model.Equipment;
 import com.example.demo.modules.equipment.model.EquipmentTypeSchema;
 import com.example.demo.modules.equipment.repository.EquipmentRepository;
 import com.example.demo.modules.equipment.repository.EquipmentTypeSchemaRepository;
+import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
+import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 public class EquipmentService {
@@ -19,14 +22,17 @@ public class EquipmentService {
     private final EquipmentRepository equipmentRepository;
     private final EquipmentTypeSchemaRepository schemaRepository;
     private final UserRepository userRepository;
+    private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
 
     public EquipmentService(
             EquipmentRepository equipmentRepository,
             EquipmentTypeSchemaRepository schemaRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            EquipmentStatusLogsRepository equipmentStatusLogsRepository) {
         this.equipmentRepository = equipmentRepository;
         this.schemaRepository = schemaRepository;
         this.userRepository = userRepository;
+        this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
     }
 
     public List<Equipment> getAllEquipments() {
@@ -51,7 +57,9 @@ public class EquipmentService {
             equipment.setHandler(handler);
         }
 
-        return equipmentRepository.save(equipment);
+        Equipment savedEquipment = equipmentRepository.save(equipment);
+        updateEquipmentStatus(savedEquipment, "READY");
+        return savedEquipment;
     }
 
     @Transactional
@@ -74,7 +82,42 @@ public class EquipmentService {
 
     @Transactional
     public void deleteEquipment(Long id) {
-        equipmentRepository.deleteById(id);
+        Equipment equipment = getEquipmentById(id);
+        String currentStatus = resolveCurrentEquipmentStatus(id);
+        
+        if (currentStatus != null && !(currentStatus.equalsIgnoreCase("IDLE") || currentStatus.equalsIgnoreCase("READY") || currentStatus.equalsIgnoreCase("STANDBY"))) {
+            throw new RuntimeException("Equipment is currently " + currentStatus + " and cannot be soft deleted");
+        }
+        
+        updateEquipmentStatus(equipment, "OFFLINE");
+    }
+
+    @Transactional
+    public void recoverEquipment(Long id) {
+        Equipment equipment = getEquipmentById(id);
+        updateEquipmentStatus(equipment, "READY");
+    }
+
+    private String resolveCurrentEquipmentStatus(Long equipmentId) {
+        return equipmentStatusLogsRepository
+                .findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipmentId)
+                .or(() -> equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipmentId))
+                .map(EquipmentStatusLogs::getStatus)
+                .orElse(null);
+    }
+
+    private void updateEquipmentStatus(Equipment equipment, String status) {
+        equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId())
+                .ifPresent(log -> {
+                    log.setEndTime(LocalDateTime.now());
+                    equipmentStatusLogsRepository.save(log);
+                });
+
+        EquipmentStatusLogs newLog = new EquipmentStatusLogs();
+        newLog.setEquipment(equipment);
+        newLog.setStatus(status);
+        newLog.setStartTime(LocalDateTime.now());
+        equipmentStatusLogsRepository.save(newLog);
     }
 
     private EquipmentTypeSchema resolveSchema(EquipmentRequest request) {

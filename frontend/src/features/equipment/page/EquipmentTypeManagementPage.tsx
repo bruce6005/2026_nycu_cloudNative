@@ -192,7 +192,12 @@ export default function EquipmentTypeManagementPage() {
             await loadSchemas();
         } catch (error: any) {
             console.error("Failed to delete equipment type", error);
-            alert(error.response?.data?.message || "Failed to delete equipment type. It may still be used by equipment or recipes.");
+            const message = error.response?.data?.message;
+            if (message && message.includes("foreign key constraint fails")) {
+                alert("Cannot delete this equipment type because it is being used by existing equipment or recipes.");
+            } else {
+                alert(message || "Failed to delete equipment type. It may still be used by equipment or recipes.");
+            }
         }
     };
 

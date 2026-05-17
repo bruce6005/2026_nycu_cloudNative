@@ -19,9 +19,10 @@ export const RequestForm: React.FC<RequestFormProps> = ({ userId, onSuccess }) =
         const loadRecipes = async () => {
             try {
                 const data = await fetchAllRecipes();
-                setAllRecipes(data);
-                if (data.length > 0) {
-                    setSamples([{ barcode: '', recipeId: data[0].id }]);
+                const activeRecipes = data.filter(r => r.isActive !== false);
+                setAllRecipes(activeRecipes);
+                if (activeRecipes.length > 0) {
+                    setSamples([{ barcode: '', recipeId: activeRecipes[0].id }]);
                 }
             } catch (err) {
                 console.error("Failed to load recipes", err);
@@ -48,7 +49,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({ userId, onSuccess }) =
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (samples.some(s => !s.barcode || !s.recipeId)) {
             alert('請填寫所有樣本代碼與選擇配方');
             return;
@@ -131,13 +132,13 @@ export const RequestForm: React.FC<RequestFormProps> = ({ userId, onSuccess }) =
                             + 新增樣本
                         </button>
                     </div>
-                    
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {samples.map((sample, index) => (
-                            <div key={index} style={{ 
-                                display: 'grid', 
-                                gridTemplateColumns: '1fr 1fr auto', 
-                                gap: '8px', 
+                            <div key={index} style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr auto',
+                                gap: '8px',
                                 alignItems: 'center',
                                 padding: '8px',
                                 border: '1px solid #eee',
@@ -158,8 +159,8 @@ export const RequestForm: React.FC<RequestFormProps> = ({ userId, onSuccess }) =
                                         <option key={r.id} value={r.id}>{r.name}</option>
                                     ))}
                                 </select>
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={() => handleRemoveSample(index)}
                                     style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}
                                     title="移除"

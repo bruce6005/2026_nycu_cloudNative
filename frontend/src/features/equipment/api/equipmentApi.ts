@@ -1,6 +1,7 @@
 import axios from "axios";
 import { CONFIG } from "../../../config/config";
 import type { Equipment, EquipmentRequest, EquipmentTypeSchema } from "../model/Equipment";
+import type { EquipmentWithRecipesDTO } from "../../wip_builder/model/WIPBuilderData";
 
 export async function fetchEquipments(): Promise<Equipment[]> {
     const res = await axios.get(`${CONFIG.API_BASE}/api/equipments`);
@@ -14,6 +15,15 @@ export async function createEquipment(data: EquipmentRequest): Promise<Equipment
 
 export async function deleteEquipment(equipmentId: number): Promise<void> {
     await axios.delete(`${CONFIG.API_BASE}/api/equipments/${equipmentId}`);
+}
+
+export async function recoverEquipment(equipmentId: number): Promise<void> {
+    await axios.put(`${CONFIG.API_BASE}/api/equipments/${equipmentId}/recover`);
+}
+
+export async function fetchEquipmentsWithStatus(): Promise<EquipmentWithRecipesDTO[]> {
+    const res = await axios.get(`${CONFIG.API_BASE}/api/wip_builder/equipments`);
+    return res.data;
 }
 
 export async function fetchEquipmentSchemas(): Promise<EquipmentTypeSchema[]> {

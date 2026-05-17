@@ -18,8 +18,7 @@ function ManagerDashboardPage() {
       setError("");
 
       const data = await fetchManagerDashboard();
-      console.log("ManagerDashboard API data:", data);
-      console.log("equipmentUsage:", data.equipmentUsage);
+      
       setDashboard(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Cannot load manager dashboard");
@@ -28,7 +27,7 @@ function ManagerDashboardPage() {
     }
   };
 
-   // polling 
+   // polling
     useEffect(() => {
         loadDashboard();
 

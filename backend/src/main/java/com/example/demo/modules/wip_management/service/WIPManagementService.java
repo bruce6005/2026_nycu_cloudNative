@@ -9,6 +9,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.example.demo.modules.equipment.model.Equipment;
 import com.example.demo.modules.request.model.Request;
@@ -87,23 +89,18 @@ public class WIPManagementService {
                 .distinct()
                 .forEach(this::checkAndUpdateRequestStatus);
 
-        notificationService.broadcast("REQUEST_UPDATED", "Batch started: " + id);
-        return toWIPBatchDTO(savedBatch);
-    }
-
-    @Transactional
-    public WIPBatchDTO finishBatch(Long id) {
-        WIPbatch batch = wipbatchRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
-
-        if (!"RUNNING".equals(batch.getStatus())) {
-            throw new RuntimeException("Only RUNNING batches can be manually finished. Current status: " + batch.getStatus());
+        // 在交易提交後才廣播信號，確保前端抓到的是最新資料
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    notificationService.broadcast("REQUEST_UPDATED", "Batch started: " + id);
+                }
+            });
+        } else {
+            notificationService.broadcast("REQUEST_UPDATED", "Batch started: " + id);
         }
-
-        WIPbatch savedBatch = finishRunningBatch(batch);
-
-        notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + id);
-
+        
         return toWIPBatchDTO(savedBatch);
     }
 
@@ -303,10 +300,28 @@ public class WIPManagementService {
             if (estimatedEndTime != null && !estimatedEndTime.isAfter(now)) {
                 if ("RUNNING_CRASH".equals(batch.getStatus())) {
                     failRunningBatch(batch);
-                    notificationService.broadcast("REQUEST_UPDATED", "Batch failed: " + batch.getId());
+                    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                notificationService.broadcast("REQUEST_UPDATED", "Batch failed: " + batch.getId());
+                            }
+                        });
+                    } else {
+                        notificationService.broadcast("REQUEST_UPDATED", "Batch failed: " + batch.getId());
+                    }
                 } else {
                     finishRunningBatch(batch);
-                    notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + batch.getId());
+                    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + batch.getId());
+                            }
+                        });
+                    } else {
+                        notificationService.broadcast("REQUEST_UPDATED", "Batch finished: " + batch.getId());
+                    }
                 }
             }
         }

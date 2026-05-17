@@ -51,12 +51,12 @@ export const createRequest = async (data: RequestDTO) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  
+
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.message || "建立失敗");
   }
-  
+
   return res.json();
 };
 

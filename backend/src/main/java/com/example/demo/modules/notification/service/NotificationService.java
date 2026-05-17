@@ -1,13 +1,13 @@
 package com.example.demo.modules.notification.service;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+ 
 @Service
 public class NotificationService {
 
@@ -23,7 +23,7 @@ public class NotificationService {
     public SseEmitter subscribe() {
         // 設定 30 分鐘超時
         SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
-        
+
         this.emitters.add(emitter);
 
         // 連線結束、超時或錯誤時移除

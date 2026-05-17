@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.example.demo.modules.approval.dto.ApprovalActionRequest;
 import com.example.demo.modules.approval.dto.ApprovalResponse;
@@ -17,7 +19,7 @@ public class ApprovalService {
     private final com.example.demo.modules.request.repository.SampleRepository sampleRepository;
     private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
-    public ApprovalService(RequestRepository requestRepository, 
+    public ApprovalService(RequestRepository requestRepository,
                          com.example.demo.modules.request.repository.SampleRepository sampleRepository,
                          com.example.demo.modules.notification.service.NotificationService notificationService) {
         this.requestRepository = requestRepository;
@@ -54,6 +56,9 @@ public class ApprovalService {
                 break;
 
             case "REJECT":
+                if (request.getReason() == null || request.getReason().trim().isEmpty()) {
+                    throw new RuntimeException("Reject reason is required");
+                }
                 req.setStatus("REJECTED");
                 req.setRejectReason(request.getReason());
                 break;
@@ -66,8 +71,17 @@ public class ApprovalService {
 
         requestRepository.save(req);
 
-        // 發送更新信號
-        notificationService.broadcast("REQUEST_UPDATED", "Request " + id + " state changed to " + req.getStatus());
+        // 在交易提交後才廣播
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    notificationService.broadcast("REQUEST_UPDATED", "Request " + id + " state changed to " + req.getStatus());
+                }
+            });
+        } else {
+            notificationService.broadcast("REQUEST_UPDATED", "Request " + id + " state changed to " + req.getStatus());
+        }
 
     }
 
@@ -96,7 +110,7 @@ public class ApprovalService {
                 }
                 return sDto;
             }).collect(java.util.stream.Collectors.toList());
-        
+
         res.setSamples(sampleDTOs);
 
         return res;

@@ -7,6 +7,8 @@ import java.util.List;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.example.demo.modules.equipment.model.Equipment;
 import com.example.demo.modules.equipment.repository.EquipmentRepository;
@@ -63,7 +65,7 @@ public class ManagerDashboardService {
                 completed,
                 rejected);
     }
-
+    
     @Transactional(readOnly = true)
     @Cacheable(value = "managerDashboardEquipmentUsage")
     public List<EquipmentUsageDTO> getEquipmentUsage() {

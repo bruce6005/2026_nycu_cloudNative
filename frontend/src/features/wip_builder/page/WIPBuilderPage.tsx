@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 
 import { createWIPBatch, fetchEquipments, fetchPendingSamples } from "../api/wipBuilderApi";
 import PendingRequestList from "../components/PendingRequestList";
@@ -91,7 +91,7 @@ function WIPBuilderPage({ user }: Props) {
     });
   }, [pendingSamples, filterRecipeId, filterEquipmentId, equipments]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setError("");
 
@@ -109,20 +109,23 @@ function WIPBuilderPage({ user }: Props) {
         )
       );
 
-      if (
-        equipmentList.length > 0 &&
-        !equipmentList.some((item) => item.id === selectedEquipmentId)
-      ) {
-        setSelectedEquipmentId(equipmentList[0].id);
-      }
+      setSelectedEquipmentId((currentId) => {
+        if (
+          equipmentList.length > 0 &&
+          !equipmentList.some((item) => item.id === currentId)
+        ) {
+          return equipmentList[0].id;
+        }
+        return currentId;
+      });
     } catch {
       setError("Cannot load dispatch data from backend");
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   useSse("REQUEST_UPDATED", loadData);
 

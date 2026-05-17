@@ -13,10 +13,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "equipment")
 public class Equipment {
     @Id
@@ -37,8 +41,6 @@ public class Equipment {
 
     @Column(name = "max_capacity", nullable = false)
     private Integer maxCapacity;
-    @Column(name = "type", nullable = false)
-    private String type;
 
     @Transient
     public String getType() {

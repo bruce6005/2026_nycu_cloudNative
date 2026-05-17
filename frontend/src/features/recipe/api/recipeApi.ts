@@ -25,3 +25,7 @@ export async function updateRecipe(recipeId: number, data: RecipeRequest): Promi
 export async function deleteRecipe(recipeId: number): Promise<void> {
     await axios.delete(`${CONFIG.API_BASE}/api/recipes/${recipeId}`);
 }
+
+export async function recoverRecipe(recipeId: number): Promise<void> {
+    await axios.put(`${CONFIG.API_BASE}/api/recipes/${recipeId}/recover`);
+}
