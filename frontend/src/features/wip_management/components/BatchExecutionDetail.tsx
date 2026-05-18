@@ -4,6 +4,7 @@ import type { WIPBatchDTO } from "../model/WipManagementData";
 interface Props {
   batch: WIPBatchDTO | null;
   loading: boolean;
+  error?: string | null;
   onStart: (id: number) => void;
   onFinish: (id: number) => void;
 }
@@ -15,6 +16,7 @@ const isRunningStatus = (status: string) => {
 const BatchExecutionDetail: React.FC<Props> = ({
   batch,
   loading,
+  error,
   onStart,
 }) => {
   if (!batch) {
@@ -139,6 +141,12 @@ const BatchExecutionDetail: React.FC<Props> = ({
           >
             {loading ? "Processing..." : "START SCANNING & RUN"}
           </button>
+        )}
+
+        {error && (
+          <div style={{ marginTop: "12px", color: "#b91c1c", fontSize: "14px", textAlign: "center" }}>
+            {error}
+          </div>
         )}
 
         {isRunningStatus(batch.status) && (
