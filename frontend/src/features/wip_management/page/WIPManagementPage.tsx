@@ -50,7 +50,7 @@ const WIPManagementPage: React.FC<Props> = ({ user }) => {
       // 操作完成後，SSE 會自動觸發 loadBatches，但為了更好的體驗，手動觸發一次
       await loadBatches();
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ const WIPManagementPage: React.FC<Props> = ({ user }) => {
       // 同上
       await loadBatches();
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -103,12 +103,12 @@ const WIPManagementPage: React.FC<Props> = ({ user }) => {
         <BatchExecutionDetail 
           batch={selectedBatch}
           loading={loading}
+          error={error}
           onStart={handleStart}
           onFinish={handleFinish}
         />
       </div>
 
-      {error && <div style={{ position: "absolute", bottom: 20, right: 20, background: "#fef2f2", color: "#b91c1c", padding: "12px", borderRadius: "8px", border: "1px solid #fee2e2" }}>{error}</div>}
     </div>
   );
 };

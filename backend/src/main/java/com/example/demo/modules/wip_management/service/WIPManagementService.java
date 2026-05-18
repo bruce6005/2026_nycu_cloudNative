@@ -62,6 +62,13 @@ public class WIPManagementService {
             throw new RuntimeException("Only QUEUED batches can be started. Current status: " + batch.getStatus());
         }
 
+        equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(batch.getEquipment().getId())
+                .ifPresent(log -> {
+                    if ("BUSY".equals(log.getStatus())) {
+                        throw new RuntimeException("Equipment is currently BUSY and cannot process a new batch.");
+                    }
+                });
+
         LocalDateTime now = LocalDateTime.now();
 
         int randomSeconds = ThreadLocalRandom.current().nextInt(30, 60); // Random duration between 30 to 60 seconds
