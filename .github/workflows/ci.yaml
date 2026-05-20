@@ -1,0 +1,207 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+permissions:
+  contents: read
+  checks: write
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-ci:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Start MySQL Database
+        run: docker compose up -d db
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: |
+          ./mvnw test 2>&1 | tee ../backend-test.txt
+          echo "TEST_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Backend Test Summary
+        if: always()
+        run: |
+          if [ "$TEST_EXIT" = "0" ]; then TEST_STATUS="Passed"; else TEST_STATUS="Failed"; fi
+          echo "# Backend CI Result" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Maven Tests | $TEST_STATUS |" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$TEST_EXIT" != "0" ]; then
+            echo "## Backend Test Failed Output" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 50 backend-test.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+  frontend-ci:
+    name: Frontend CI (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['22', '24']
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Setup Java for Backend E2E Dependency
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Start MySQL and Build/Run Backend Server
+        run: |
+          docker compose up -d db
+          cd backend
+          ./mvnw spring-boot:run &
+          
+          # Wait a little bit for backend to start up so E2E tests don't immediately fail
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/ > /dev/null || curl -s http://localhost:8080/api/ > /dev/null || curl -s http://localhost:8080/v3/api-docs > /dev/null; then
+              echo "Backend is likely up!"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install chromium
+
+      - name: TypeScript Typecheck (Build)
+        working-directory: ./frontend
+        run: |
+          npm run build 2>&1 | tee ../type.txt
+          echo "TYPE_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Run Unit Tests (Vitest)
+        working-directory: ./frontend
+        run: |
+          npx vitest run 2>&1 | tee ../unit-test.txt
+          echo "UNIT_TEST_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Run Playwright E2E Tests
+        working-directory: ./frontend
+        run: |
+          npm test 2>&1 | tee ../e2e-test.txt
+          echo "TEST_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Frontend Test Summary
+        if: always()
+        run: |
+          [ "$TYPE_EXIT" = "0" ] && TYPE_STATUS="Passed" || TYPE_STATUS="Failed"
+          [ "$UNIT_TEST_EXIT" = "0" ] && UNIT_TEST_STATUS="Passed" || UNIT_TEST_STATUS="Failed"
+          [ "$TEST_EXIT" = "0" ] && TEST_STATUS="Passed" || TEST_STATUS="Failed"
+          
+          echo "# Frontend CI Result (Node.js ${{ matrix.node-version }})" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Build (Typecheck) | $TYPE_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | $UNIT_TEST_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Playwright Tests | $TEST_STATUS |" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$TYPE_EXIT" != "0" ]; then
+            echo "## Build Error" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 30 type.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "$UNIT_TEST_EXIT" != "0" ]; then
+            echo "## Vitest Error" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 30 unit-test.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "$TEST_EXIT" != "0" ]; then
+            echo "## Playwright Error" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 30 e2e-test.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "$TYPE_EXIT" != "0" ] || [ "$UNIT_TEST_EXIT" != "0" ] || [ "$TEST_EXIT" != "0" ]; then
+            exit 1
+          fi
+
+  docker-build:
+    name: Build Docker Images
+    if: ${{ startsWith(github.ref, 'refs/heads/release/') }}
+    runs-on: ubuntu-latest
+    needs: [backend-ci, frontend-ci]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+
+          if [[ "$BRANCH_NAME" == release/* ]]; then
+            VERSION="${BRANCH_NAME#release/}"
+            IMAGE_TAG="release-${VERSION}"
+          else
+            IMAGE_TAG="sha-${GITHUB_SHA::7}"
+          fi
+
+          echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
+          echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Print image metadata
+        run: |
+          echo "Branch: ${{ steps.meta.outputs.branch_name }}"
+          echo "Image tag: ${{ steps.meta.outputs.image_tag }}"
+
+      - name: Build Backend Docker image
+        run: docker build -t lab-system-backend:${{ steps.meta.outputs.image_tag }} ./backend
+
+      - name: Build Frontend Docker image
+        run: |
+          docker build \
+            --build-arg VITE_API_BASE=http://localhost:8080 \
+            --build-arg VITE_GOOGLE_CLIENT_ID=placeholder \
+            -t lab-system-frontend:${{ steps.meta.outputs.image_tag }} ./frontend
+
+  cd:
+    if: ${{ startsWith(github.ref, 'refs/heads/release/') }}
+    needs: docker-build
+    uses: ./.github/workflows/cd.yaml
