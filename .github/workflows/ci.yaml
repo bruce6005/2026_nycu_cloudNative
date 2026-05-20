@@ -163,8 +163,8 @@ jobs:
           fi
 
   docker-build:
-    name: Build Docker Images
-    if: ${{ startsWith(github.ref, 'refs/heads/release/') }}
+    name: Build and Push Docker Images
+    if: ${{ startsWith(github.ref, 'refs/heads/release') }}
     runs-on: ubuntu-latest
     needs: [backend-ci, frontend-ci]
     steps:
@@ -178,7 +178,10 @@ jobs:
 
           if [[ "$BRANCH_NAME" == release/* ]]; then
             VERSION="${BRANCH_NAME#release/}"
-            IMAGE_TAG="release-${VERSION}"
+            IMAGE_TAG="$VERSION"
+          elif [[ "$BRANCH_NAME" == release* ]]; then
+            VERSION="${BRANCH_NAME#release}"
+            IMAGE_TAG="$VERSION"
           else
             IMAGE_TAG="sha-${GITHUB_SHA::7}"
           fi
@@ -191,15 +194,31 @@ jobs:
           echo "Branch: ${{ steps.meta.outputs.branch_name }}"
           echo "Image tag: ${{ steps.meta.outputs.image_tag }}"
 
-      - name: Build Backend Docker image
-        run: docker build -t lab-system-backend:${{ steps.meta.outputs.image_tag }} ./backend
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
-      - name: Build Frontend Docker image
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker authentication
+        run: gcloud auth configure-docker asia-east1-docker.pkg.dev
+
+      - name: Build and Push Backend Docker image
         run: |
+          IMAGE_PATH="asia-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/lab-system/backend:${{ steps.meta.outputs.image_tag }}"
+          docker build -t $IMAGE_PATH ./backend
+          docker push $IMAGE_PATH
+
+      - name: Build and Push Frontend Docker image
+        run: |
+          IMAGE_PATH="asia-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/lab-system/frontend:${{ steps.meta.outputs.image_tag }}"
           docker build \
-            --build-arg VITE_API_BASE=http://localhost:8080 \
-            --build-arg VITE_GOOGLE_CLIENT_ID=placeholder \
-            -t lab-system-frontend:${{ steps.meta.outputs.image_tag }} ./frontend
+            --build-arg VITE_API_BASE=${{ secrets.VITE_API_BASE }} \
+            --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }} \
+            -t $IMAGE_PATH ./frontend
+          docker push $IMAGE_PATH
 
   cd:
     if: ${{ startsWith(github.ref, 'refs/heads/release/') }}
