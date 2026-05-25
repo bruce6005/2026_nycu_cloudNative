@@ -42,11 +42,27 @@ jobs:
       - name: Backend Test Summary
         if: always()
         run: |
-          if [ "$TEST_EXIT" = "0" ]; then TEST_STATUS="Passed"; else TEST_STATUS="Failed"; fi
+          if [ "$TEST_EXIT" = "0" ]; then TEST_STATUS="Passed 🟢"; else TEST_STATUS="Failed 🔴"; fi
+          
+          # 解析 Maven 測試結果
+          TEST_LINE=$(grep "Tests run: " backend-test.txt | grep -v "Time elapsed" | tail -n 1 || true)
+          if [ -n "$TEST_LINE" ]; then
+            RUN=$(echo "$TEST_LINE" | sed -E 's/.*Tests run: ([0-9]+).*/\1/')
+            FAILURES=$(echo "$TEST_LINE" | sed -E 's/.*Failures: ([0-9]+).*/\1/')
+            ERRORS=$(echo "$TEST_LINE" | sed -E 's/.*Errors: ([0-9]+).*/\1/')
+            SKIPPED=$(echo "$TEST_LINE" | sed -E 's/.*Skipped: ([0-9]+).*/\1/')
+            PASSED=$((RUN - FAILURES - ERRORS - SKIPPED))
+            FAILED=$((FAILURES + ERRORS))
+            
+            TEST_DETAILS="總數: **$RUN** \| 通過: **$PASSED** 🟢 \| 失敗: **$FAILED** 🔴 \| 跳過: **$SKIPPED** 🟡"
+          else
+            TEST_DETAILS="無法解析測試數據（可能編譯失敗）"
+          fi
+          
           echo "# Backend CI Result" >> $GITHUB_STEP_SUMMARY
-          echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| Maven Tests | $TEST_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| 檢查項目 | 測試狀態 | 測試數據詳情 |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Maven 測試 | $TEST_STATUS | $TEST_DETAILS |" >> $GITHUB_STEP_SUMMARY
           
           if [ "$TEST_EXIT" != "0" ]; then
             echo "## Backend Test Failed Output" >> $GITHUB_STEP_SUMMARY
