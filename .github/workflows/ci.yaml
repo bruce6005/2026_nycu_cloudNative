@@ -156,12 +156,17 @@ jobs:
           if [ "$TEST_EXIT" = "0" ]; then TEST_STATUS="Passed 🟢"; else TEST_STATUS="Failed 🔴"; fi
           
           # 1. 解析 Vitest 單元測試結果
-          VITEST_FILES_LINE=$(grep -E "Test Files[[:space:]]+" unit-test.txt | tail -n 1 || true)
-          VITEST_TESTS_LINE=$(grep -E "^[[:space:]]*Tests[[:space:]]+" unit-test.txt | tail -n 1 || true)
-          if [ -n "$VITEST_TESTS_LINE" ]; then
+          VITEST_FILES_LINE=$(grep -i "Test Files" unit-test.txt | tail -n 1 || true)
+          if grep -qi "Test Results" unit-test.txt; then
+            VITEST_TESTS_LINE=$(grep -i "Test Results" unit-test.txt | tail -n 1 || true)
+          else
+            VITEST_TESTS_LINE=$(grep -E "^[[:space:]]*Tests[[:space:]]+" unit-test.txt | tail -n 1 || true)
+          fi
+          
+          if [ -n "$VITEST_TESTS_LINE" ] && [ -n "$VITEST_FILES_LINE" ]; then
             VITEST_CLEAN_FILES=$(echo "$VITEST_FILES_LINE" | xargs)
             VITEST_CLEAN_TESTS=$(echo "$VITEST_TESTS_LINE" | xargs)
-            UNIT_TEST_DETAILS="檔案: **$VITEST_CLEAN_FILES** \| 測試: **$VITEST_CLEAN_TESTS**"
+            UNIT_TEST_DETAILS="**$VITEST_CLEAN_FILES** \| **$VITEST_CLEAN_TESTS**"
           else
             UNIT_TEST_DETAILS="無法解析 Vitest 測試數據"
           fi
