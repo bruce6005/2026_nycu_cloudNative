@@ -152,26 +152,21 @@ jobs:
             TYPE_DETAILS="專案編譯或類型檢查失敗"
           fi
           
-          if [ "$UNIT_TEST_EXIT" = "0" ]; then UNIT_TEST_STATUS="Passed 🟢"; else UNIT_TEST_STATUS="Failed 🔴"; fi
-          if [ "$TEST_EXIT" = "0" ]; then TEST_STATUS="Passed 🟢"; else TEST_STATUS="Failed 🔴"; fi
-          
-          # 1. 解析 Vitest 單元測試結果
-          VITEST_FILES_LINE=$(grep -i "Test Files" unit-test.txt | tail -n 1 || true)
-          if grep -qi "Test Results" unit-test.txt; then
-            VITEST_TESTS_LINE=$(grep -i "Test Results" unit-test.txt | tail -n 1 || true)
-          else
-            VITEST_TESTS_LINE=$(grep -E "^[[:space:]]*Tests[[:space:]]+" unit-test.txt | tail -n 1 || true)
+          if [ "$UNIT_TEST_EXIT" = "0" ]; then 
+            UNIT_TEST_STATUS="Passed 🟢"
+            UNIT_TEST_DETAILS="單元測試已全部通過！測試數據請參閱下方自動產生的 **Vitest Test Report**。"
+          else 
+            UNIT_TEST_STATUS="Failed 🔴"
+            UNIT_TEST_DETAILS="單元測試有部分失敗，詳情請參閱下方 **Vitest Test Report** 或本步驟最底部的錯誤輸出。"
           fi
           
-          if [ -n "$VITEST_TESTS_LINE" ] && [ -n "$VITEST_FILES_LINE" ]; then
-            VITEST_CLEAN_FILES=$(echo "$VITEST_FILES_LINE" | xargs)
-            VITEST_CLEAN_TESTS=$(echo "$VITEST_TESTS_LINE" | xargs)
-            UNIT_TEST_DETAILS="**$VITEST_CLEAN_FILES** \| **$VITEST_CLEAN_TESTS**"
-          else
-            UNIT_TEST_DETAILS="無法解析 Vitest 測試數據"
+          if [ "$TEST_EXIT" = "0" ]; then 
+            TEST_STATUS="Passed 🟢"
+          else 
+            TEST_STATUS="Failed 🔴"
           fi
           
-          # 2. 解析 Playwright E2E 測試結果
+          # 解析 Playwright E2E 測試結果
           PLAYWRIGHT_LINE=$(grep -E "passed \([0-9\.]+[a-zA-Z]+\)" e2e-test.txt | tail -n 1 || true)
           if [ -n "$PLAYWRIGHT_LINE" ]; then
             PLAYWRIGHT_CLEAN=$(echo "$PLAYWRIGHT_LINE" | xargs)
@@ -181,11 +176,18 @@ jobs:
           fi
           
           echo "# Frontend CI Result (Node.js ${{ matrix.node-version }})" >> $GITHUB_STEP_SUMMARY
-          echo "| 檢查項目 | 測試狀態 | 測試數據詳情 |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| Typecheck | $TYPE_STATUS | $TYPE_DETAILS |" >> $GITHUB_STEP_SUMMARY
-          echo "| Vitest | $UNIT_TEST_STATUS | $UNIT_TEST_DETAILS |" >> $GITHUB_STEP_SUMMARY
-          echo "| Playwright | $TEST_STATUS | $TEST_DETAILS |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## 📦 1. Typecheck: $TYPE_STATUS" >> $GITHUB_STEP_SUMMARY
+          echo "$TYPE_DETAILS" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## 🧪 2. Vitest: $UNIT_TEST_STATUS" >> $GITHUB_STEP_SUMMARY
+          echo "$UNIT_TEST_DETAILS" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## 🎭 3. Playwright: $TEST_STATUS" >> $GITHUB_STEP_SUMMARY
+          echo "$TEST_DETAILS" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "$TYPE_EXIT" != "0" ]; then
             echo "## Build Error" >> $GITHUB_STEP_SUMMARY
