@@ -1,6 +1,6 @@
 import axios from "axios";
 import { CONFIG } from "../../../config/config";
-import type { AuthUser, UserRole } from "../model/AuthUser";
+import type { AuthUser, ManagerOption, UserRole } from "../model/AuthUser";
 
 
 export async function loginWithGoogle(credential: string): Promise<AuthUser> {
@@ -22,4 +22,10 @@ export async function setupUserProfile(params: {
   });
 
   return res.data.user;
+}
+
+export async function fetchManagerOptions(): Promise<ManagerOption[]> {
+  const res = await axios.get(`${CONFIG.API_BASE}/api/users/managers`);
+
+  return res.data;
 }

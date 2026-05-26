@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
-import { loginWithGoogle, setupUserProfile } from '../src/features/auth/api/authApi';
+import { fetchManagerOptions, loginWithGoogle, setupUserProfile } from '../src/features/auth/api/authApi';
 import { CONFIG } from '../src/config/config';
 
 vi.mock('axios');
@@ -50,6 +50,20 @@ describe('authApi', () => {
         managerId: null,
       });
       expect(result).toEqual(mockUser);
+    });
+  });
+
+  describe('fetchManagerOptions', () => {
+    it('should call axios.get and return manager options', async () => {
+      const mockManagers = [
+        { id: 2, name: 'Manager1', email: 'manager@example.com', role: 'MANAGER' },
+      ];
+      vi.mocked(axios.get).mockResolvedValueOnce({ data: mockManagers });
+
+      const result = await fetchManagerOptions();
+
+      expect(axios.get).toHaveBeenCalledWith(`${CONFIG.API_BASE}/api/users/managers`);
+      expect(result).toEqual(mockManagers);
     });
   });
 });

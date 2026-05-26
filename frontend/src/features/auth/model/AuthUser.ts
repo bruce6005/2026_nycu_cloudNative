@@ -8,3 +8,10 @@ export type AuthUser = {
   role?: UserRole | null;
   managerId?: number | null;
 };
+
+export type ManagerOption = {
+  id: number;
+  name: string;
+  email: string;
+  role: Extract<UserRole, "MANAGER" | "ADMIN">;
+};

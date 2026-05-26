@@ -1,6 +1,6 @@
-import { useState } from "react";
-import type { AuthUser, UserRole } from "../model/AuthUser";
-import { setupUserProfile } from "../api/authApi";
+import { useEffect, useState } from "react";
+import type { AuthUser, ManagerOption, UserRole } from "../model/AuthUser";
+import { fetchManagerOptions, setupUserProfile } from "../api/authApi";
 
 type Props = {
   user: AuthUser;
@@ -10,7 +10,59 @@ type Props = {
 export default function ProfileSetupPage({ user, setUser }: Props) {
   const [role, setRole] = useState<UserRole>("REQUESTER");
   const [managerId, setManagerId] = useState("");
+  const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
+  const [isLoadingManagers, setIsLoadingManagers] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (role !== "REQUESTER") {
+      setManagerId("");
+      setManagerOptions([]);
+      return;
+    }
+
+    let isCurrent = true;
+
+    const loadManagers = async () => {
+      setIsLoadingManagers(true);
+      setErrorMessage("");
+
+      try {
+        const managers = await fetchManagerOptions();
+
+        if (!isCurrent) {
+          return;
+        }
+
+        setManagerOptions(managers);
+
+        if (managers.length > 0) {
+          setManagerId(String(managers[0].id));
+        }
+      } catch (err: any) {
+        if (!isCurrent) {
+          return;
+        }
+
+        const message =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Unable to load manager list";
+
+        setErrorMessage(message);
+      } finally {
+        if (isCurrent) {
+          setIsLoadingManagers(false);
+        }
+      }
+    };
+
+    loadManagers();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [role]);
 
   const handleSubmit = async () => {
     setErrorMessage("");
@@ -18,7 +70,7 @@ export default function ProfileSetupPage({ user, setUser }: Props) {
     const parsedManagerId = role === "REQUESTER" ? Number(managerId) : null;
 
     if (role === "REQUESTER" && !parsedManagerId) {
-      setErrorMessage("Please enter manager ID");
+      setErrorMessage("Please select a manager");
       return;
     }
 
@@ -68,12 +120,23 @@ export default function ProfileSetupPage({ user, setUser }: Props) {
 
       {role === "REQUESTER" && (
         <label>
-          Manager ID{" "}
-          <input
+          Manager{" "}
+          <select
             value={managerId}
             onChange={(e) => setManagerId(e.target.value)}
-            placeholder="Enter approver user ID"
-          />
+            disabled={isLoadingManagers || managerOptions.length === 0}
+          >
+            {managerOptions.length === 0 && (
+              <option value="">
+                {isLoadingManagers ? "Loading managers..." : "No managers available"}
+              </option>
+            )}
+            {managerOptions.map((manager) => (
+              <option key={manager.id} value={manager.id}>
+                {manager.name || manager.email} ({manager.email})
+              </option>
+            ))}
+          </select>
         </label>
       )}
 
