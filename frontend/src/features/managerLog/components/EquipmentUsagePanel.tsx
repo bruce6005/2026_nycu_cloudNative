@@ -2,6 +2,8 @@ import type { EquipmentUsageDTO } from "../model/ManagerDashboardData";
 
 type Props = {
   items: EquipmentUsageDTO[];
+  fixingEquipmentId?: number | null;
+  onFixEquipment?: (equipmentId: number) => void;
 };
 
 function getUsageClass(usageRate: number) {
@@ -14,6 +16,10 @@ function getUsageClass(usageRate: number) {
   }
 
   return "usage-low";
+}
+
+function isErrorStatus(status?: string | null) {
+  return status?.trim().toUpperCase() === "ERROR";
 }
 
 function formatSeconds(seconds: number) {
@@ -31,7 +37,11 @@ function formatSeconds(seconds: number) {
   return `${minutes}m ${remainSeconds}s`;
 }
 
-function EquipmentUsagePanel({ items }: Props) {
+function EquipmentUsagePanel({
+  items,
+  fixingEquipmentId,
+  onFixEquipment,
+}: Props) {
   const totalUsageCount =
     items.length === 0
       ? 0
@@ -66,6 +76,8 @@ function EquipmentUsagePanel({ items }: Props) {
           {items.map((item) => {
             const usageRate = item.usageRate ?? 0;
             const usageClass = getUsageClass(usageRate);
+            const currentStatus = item.currentStatus ?? "UNKNOWN";
+            const hasError = isErrorStatus(item.currentStatus);
 
             const usageCount = item.usageCount ?? 0;
             const itemTotalUsageCount = item.totalUsageCount ?? 0;
@@ -75,11 +87,14 @@ function EquipmentUsagePanel({ items }: Props) {
             const failureRate = item.failureRate ?? 0;
             const activeProgress = item.activeProgressPercent ?? 0;
             const remainingSeconds = item.remainingSeconds ?? 0;
+            const isFixing = fixingEquipmentId === item.equipmentId;
 
             return (
               <div
                 key={item.equipmentId}
-                className="card dashboard-equipment-card"
+                className={`card dashboard-equipment-card ${
+                  hasError ? "dashboard-equipment-card-error" : ""
+                }`}
               >
                 <div className="dashboard-equipment-header">
                   <div>
@@ -89,8 +104,21 @@ function EquipmentUsagePanel({ items }: Props) {
                     <div className="text-muted">{item.equipmentType}</div>
                   </div>
 
-                  <div className={`dashboard-usage-rate ${usageClass}`}>
-                    {usageRate.toFixed(1)}%
+                  <div className="dashboard-equipment-actions">
+                    <div className={`dashboard-usage-rate ${usageClass}`}>
+                      {usageRate.toFixed(1)}%
+                    </div>
+
+                    {hasError && onFixEquipment && (
+                      <button
+                        type="button"
+                        className="dashboard-fix-button"
+                        onClick={() => onFixEquipment(item.equipmentId)}
+                        disabled={isFixing}
+                      >
+                        {isFixing ? "Fixing..." : "Fix"}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -114,8 +142,15 @@ function EquipmentUsagePanel({ items }: Props) {
                   Rate: {failureRate.toFixed(1)}%
                 </div>
 
-                <div className="dashboard-equipment-meta">
-                  Status: {item.currentStatus ?? "UNKNOWN"}
+                <div className="dashboard-equipment-meta dashboard-status-row">
+                  <span>Status:</span>
+                  <span
+                    className={`dashboard-equipment-status ${
+                      hasError ? "dashboard-equipment-status-error" : ""
+                    }`}
+                  >
+                    {currentStatus}
+                  </span>
                 </div>
 
                 {item.activeBatchId ? (
