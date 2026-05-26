@@ -94,8 +94,14 @@ export default function EquipmentPage() {
         ? equipments.filter((eq) => eq.equipmentType === selectedEquipmentType)
         : [];
 
+    const isRecoverable = (status: string | null | undefined) => {
+        const normalized = (status ?? "").toUpperCase();
+        return normalized === "OFFLINE" || normalized === "ERROR";
+    };
+
     return (
-        <div style={{ padding: "20px" }}>
+        <div className="standard-page">
+            <div className="standard-page-content">
             <h1 style={{ marginBottom: "20px" }}>Equipment Management</h1>
             <div className="card" style={{ marginBottom: "20px" }}>
                 <label style={{ marginRight: "10px", fontWeight: "bold" }}>Select Equipment Type:</label>
@@ -120,7 +126,7 @@ export default function EquipmentPage() {
                         {!showForm && (
                             <button
                                 className="login-btn"
-                                style={{ background: "#2c2c2c", color: "white" }}
+                                style={{ background: "#2563eb", color: "white" }}
                                 onClick={() => {
                                     const schema = schemas.find(s => s.equipmentType === selectedEquipmentType);
                                     if (schema) {
@@ -169,7 +175,7 @@ export default function EquipmentPage() {
                                     />
                                 </div>
                                 <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
-                                    <button type="submit" className="login-btn" style={{ background: "#2c2c2c", color: "white" }}>
+                                    <button type="submit" className="login-btn" style={{ background: "#2563eb", color: "white" }}>
                                         Save Equipment
                                     </button>
                                     <button
@@ -190,22 +196,22 @@ export default function EquipmentPage() {
 
                     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                         {filteredEquipments.map((eq) => (
-                            <div key={eq.id} className="order-card" style={{ opacity: eq.currentStatus === 'OFFLINE' ? 0.6 : 1 }}>
+                            <div key={eq.id} className="order-card" style={{ opacity: isRecoverable(eq.currentStatus) ? 0.6 : 1 }}>
                                 <div className="order-card-header">
                                     <div className="order-title">
                                         {eq.name}
-                                        {eq.currentStatus === 'OFFLINE' && <span style={{ marginLeft: '10px', fontSize: '12px', color: '#e5484d', fontWeight: 'bold' }}>(OFFLINE)</span>}
+                                        {isRecoverable(eq.currentStatus) && <span style={{ marginLeft: '10px', fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>({eq.currentStatus})</span>}
                                     </div>
                                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                                         <div className="order-tag">{eq.equipmentType}</div>
-                                        {eq.currentStatus === 'OFFLINE' ? (
+                                        {isRecoverable(eq.currentStatus) ? (
                                             <button
                                                 type="button"
                                                 onClick={(event) => {
                                                     event.stopPropagation();
                                                     handleRecover(eq.id);
                                                 }}
-                                                style={{ background: "transparent", color: "#4caf50", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}
+                                                style={{ background: "transparent", color: "#16a34a", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}
                                             >
                                                 Recover
                                             </button>
@@ -216,7 +222,7 @@ export default function EquipmentPage() {
                                                     event.stopPropagation();
                                                     handleDelete(eq.id);
                                                 }}
-                                                style={{ background: "transparent", color: "#e5484d", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}
+                                                style={{ background: "transparent", color: "#dc2626", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}
                                             >
                                                 Delete
                                             </button>
@@ -232,6 +238,7 @@ export default function EquipmentPage() {
                     </div>
                 </>
             )}
+            </div>
         </div>
     );
 }

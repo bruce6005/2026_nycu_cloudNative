@@ -10,6 +10,11 @@ type Props = {
 };
 
 function EquipmentList({ items, selectedEquipmentId, onSelect, filterEquipmentId, filterEquipmentName, onClearFilter }: Props) {
+  const isDispatchable = (status: string | null | undefined) => {
+    const normalized = (status ?? "UNKNOWN").toUpperCase();
+    return normalized === "IDLE" || normalized === "READY" || normalized === "STANDBY";
+  };
+
   const getStatusClass = (status: string | null | undefined) => {
     const normalized = (status ?? "UNKNOWN").toUpperCase();
 
@@ -61,7 +66,7 @@ function EquipmentList({ items, selectedEquipmentId, onSelect, filterEquipmentId
               className={`dispatch-card ${selectedEquipmentId === item.id ? "selected" : ""
                 }`}
               onClick={() => onSelect(item)}
-              disabled={item.currentStatus?.toUpperCase() === "OFFLINE"}
+              disabled={!isDispatchable(item.currentStatus)}
             >
               <div className="dispatch-card-header">
                 <span className="dispatch-card-title">{item.name}</span>

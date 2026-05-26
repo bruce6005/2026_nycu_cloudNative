@@ -46,7 +46,8 @@ function OrderPage() {
   }, []);
 
   return (
-    <div className="content">
+    <div className="standard-page">
+      <div className="standard-page-content">
       {error && <p style={{ color: 'red' }}>{error}</p>}
       
       <div className="card">
@@ -57,6 +58,7 @@ function OrderPage() {
       <div className="card">
         <h2>Recent Orders</h2>
         <OrderList orders={orders} />
+      </div>
       </div>
     </div>
   );

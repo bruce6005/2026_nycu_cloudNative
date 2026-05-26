@@ -109,6 +109,13 @@ class WIPBuilderServiceTest {
         return s;
     }
 
+    private void stubCurrentEquipmentStatus(Long equipmentId, String status) {
+        EquipmentStatusLogs log = new EquipmentStatusLogs();
+        log.setStatus(status);
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipmentId))
+                .thenReturn(Optional.of(log));
+    }
+
     // -------------------------------------------------------
     // getPendingSamples()
     // -------------------------------------------------------
@@ -183,6 +190,7 @@ class WIPBuilderServiceTest {
         Sample s2 = buildSample(101L, request, recipe, "NEW", null);
 
         when(equipmentRepository.findById(1L)).thenReturn(Optional.of(eq));
+        stubCurrentEquipmentStatus(1L, "READY");
         when(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe));
         when(sampleRepository.findAllById(List.of(100L, 101L))).thenReturn(List.of(s1, s2));
 
@@ -232,6 +240,7 @@ class WIPBuilderServiceTest {
         Recipe recipe = buildRecipe(2L, 200L);  // 不同的 schema
 
         when(equipmentRepository.findById(1L)).thenReturn(Optional.of(eq));
+        stubCurrentEquipmentStatus(1L, "READY");
         when(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe));
 
         assertThrows(RuntimeException.class, () -> wipBuilderService.createWIPBatch(req),
@@ -252,6 +261,7 @@ class WIPBuilderServiceTest {
         Recipe recipe = buildRecipe(2L, 500L);
 
         when(equipmentRepository.findById(1L)).thenReturn(Optional.of(eq));
+        stubCurrentEquipmentStatus(1L, "READY");
         when(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe));
 
         assertThrows(RuntimeException.class, () -> wipBuilderService.createWIPBatch(req),
@@ -279,6 +289,23 @@ class WIPBuilderServiceTest {
     }
 
     @Test
+    @DisplayName("createWIPBatch() - equipment ERROR should throw")
+    void createWIPBatch_equipmentError_shouldThrow() {
+        CreateWIPBatchRequest req = new CreateWIPBatchRequest();
+        req.setOperatorId(1L);
+        req.setEquipmentId(1L);
+        req.setRecipeId(1L);
+        req.setSampleIds(List.of(1L));
+
+        Equipment eq = buildEquipment(1L, 5, 10L);
+        when(equipmentRepository.findById(1L)).thenReturn(Optional.of(eq));
+        stubCurrentEquipmentStatus(1L, "ERROR");
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> wipBuilderService.createWIPBatch(req));
+        assertTrue(ex.getMessage().contains("ERROR"));
+    }
+
+    @Test
     @DisplayName("createWIPBatch() - 樣品已經在其他批次中應拋例外")
     void createWIPBatch_sampleAlreadyHasBatch_shouldThrow() {
         CreateWIPBatchRequest req = new CreateWIPBatchRequest();
@@ -296,6 +323,7 @@ class WIPBuilderServiceTest {
         Sample sampleWithBatch = buildSample(100L, request, recipe, "ASSIGNED", existingBatch);
 
         when(equipmentRepository.findById(1L)).thenReturn(Optional.of(eq));
+        stubCurrentEquipmentStatus(1L, "READY");
         when(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe));
         when(sampleRepository.findAllById(List.of(100L))).thenReturn(List.of(sampleWithBatch));
 
@@ -320,6 +348,7 @@ class WIPBuilderServiceTest {
         Sample s2 = buildSample(101L, request, wrongRecipe, "NEW", null);
 
         when(equipmentRepository.findById(1L)).thenReturn(Optional.of(eq));
+        stubCurrentEquipmentStatus(1L, "READY");
         when(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe2));
         when(sampleRepository.findAllById(List.of(100L, 101L))).thenReturn(List.of(s1, s2));
 
@@ -343,6 +372,7 @@ class WIPBuilderServiceTest {
         Sample s2 = buildSample(101L, request, recipe, "NEW", null);
 
         when(equipmentRepository.findById(1L)).thenReturn(Optional.of(eq));
+        stubCurrentEquipmentStatus(1L, "READY");
         when(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe));
         when(sampleRepository.findAllById(List.of(100L, 101L))).thenReturn(List.of(s1, s2));
 
