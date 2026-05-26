@@ -266,8 +266,8 @@ public class DataInitializer implements CommandLineRunner {
         // Batch 2: RUNNING - currently processing
         LocalDateTime runStartTime = baseTime.plusHours(1);
         execute(
-                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, NULL)",
-                2L, 2L, 2L, "RUNNING", baseTime.plusMinutes(15), runStartTime);
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time, estimated_end_time) VALUES (?, ?, ?, ?, ?, ?, NULL, ?)",
+                2L, 2L, 2L, "RUNNING", baseTime.plusMinutes(15), runStartTime, runStartTime.plusSeconds(45));
         
         // Update Equipment 2 status to BUSY when batch starts
         execute(
