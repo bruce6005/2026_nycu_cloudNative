@@ -52,6 +52,16 @@ export async function fetchTestRecordLogs(): Promise<TestRecordLogDTO[]> {
   return res.json();
 }
 
+export async function recoverEquipment(equipmentId: number): Promise<void> {
+  const res = await fetch(`${CONFIG.API_BASE}/api/equipments/${equipmentId}/recover`, {
+    method: "PUT",
+  });
+
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res));
+  }
+}
+
 export async function fetchManagerDashboard(): Promise<ManagerDashboardDTO> {
   const [requestStats, equipmentUsage, logs] = await Promise.all([
     fetchRequestStats(),

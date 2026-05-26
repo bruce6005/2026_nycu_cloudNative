@@ -260,14 +260,18 @@ public class DataInitializer implements CommandLineRunner {
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, NULL, NULL)",
                 1L, 1L, 1L, "QUEUED", baseTime);
+        insertTestRecord(1L, 1L, 1L, 2L, "QUEUED", baseTime, null,
+                "{\"action\":\"SEED_WIP_BATCH\",\"sampleIds\":\"[1, 2, 3, 4]\"}");
         // Assign first 4 samples to batch 1
         updateSampleBatch(1L, 4L, 1L);
 
         // Batch 2: RUNNING - currently processing
         LocalDateTime runStartTime = baseTime.plusHours(1);
         execute(
-                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, NULL)",
-                2L, 2L, 2L, "RUNNING", baseTime.plusMinutes(15), runStartTime);
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time, estimated_end_time) VALUES (?, ?, ?, ?, ?, ?, NULL, ?)",
+                2L, 2L, 2L, "RUNNING", baseTime.plusMinutes(15), runStartTime, runStartTime.plusSeconds(45));
+        insertTestRecord(2L, 2L, 2L, 2L, "RUNNING", runStartTime, null,
+                "{\"action\":\"SEED_WIP_BATCH\",\"sampleIds\":\"[5, 6, 7, 8, 9]\"}");
         
         // Update Equipment 2 status to BUSY when batch starts
         execute(
@@ -290,6 +294,8 @@ public class DataInitializer implements CommandLineRunner {
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 3L, 3L, 3L, "FINISHED", finishTime.minusHours(1), finishTime.minusMinutes(45), finishTime);
+        insertTestRecord(3L, 3L, 3L, 2L, "FINISHED", finishTime.minusMinutes(45), finishTime,
+                "{\"action\":\"SEED_WIP_BATCH\",\"sampleIds\":\"[10, 11, 12]\"}");
         
         // Equipment 3 was BUSY during the batch, then back to READY
         execute(
@@ -315,6 +321,8 @@ public class DataInitializer implements CommandLineRunner {
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 4L, 4L, 4L, "FINISHED", finishTime2.minusHours(1), finishTime2.minusMinutes(45), finishTime2);
+        insertTestRecord(4L, 4L, 4L, 2L, "FINISHED", finishTime2.minusMinutes(45), finishTime2,
+                "{\"action\":\"SEED_WIP_BATCH\",\"sampleIds\":\"[13, 14, 15]\"}");
         // Assign samples 13-15 to batch 4
         for (long i = 13; i <= 15; i++) {
             if (i <= sampleIds.size()) {
@@ -328,6 +336,8 @@ public class DataInitializer implements CommandLineRunner {
         execute(
                 "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, NULL, NULL)",
                 5L, 5L, 5L, "QUEUED", baseTime.plusHours(2));
+        insertTestRecord(5L, 5L, 5L, 2L, "QUEUED", baseTime.plusHours(2), null,
+                "{\"action\":\"SEED_WIP_BATCH\",\"sampleIds\":\"[16, 17, 18]\"}");
         // Assign samples 16-18 to batch 5
         for (long i = 16; i <= 18; i++) {
             if (i <= sampleIds.size()) {
@@ -346,6 +356,20 @@ public class DataInitializer implements CommandLineRunner {
                         batchId, i);
             }
         }
+    }
+
+    private void insertTestRecord(
+            Long id,
+            Long batchId,
+            Long equipmentId,
+            Long operatorId,
+            String resultStatus,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            String resultData) {
+        execute(
+                "INSERT INTO test_records (id, batch_id, equipment_id, operator_id, result_status, start_time, end_time, result_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                id, batchId, equipmentId, operatorId, resultStatus, startTime, endTime, resultData);
     }
 
     private void execute(String sql, Object... params) {

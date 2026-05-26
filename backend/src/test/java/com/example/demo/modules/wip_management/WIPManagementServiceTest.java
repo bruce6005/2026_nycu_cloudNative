@@ -8,8 +8,10 @@ import com.example.demo.modules.request.model.Sample;
 import com.example.demo.modules.request.repository.RequestRepository;
 import com.example.demo.modules.request.repository.SampleRepository;
 import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
+import com.example.demo.modules.wip_builder.model.TestRecords;
 import com.example.demo.modules.wip_builder.model.WIPbatch;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
+import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
 import com.example.demo.modules.wip_management.dto.WIPBatchDTO;
 import com.example.demo.modules.wip_management.service.WIPManagementService;
@@ -66,6 +68,8 @@ class WIPManagementServiceTest {
     private EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     @Mock
     private RequestRepository requestRepository;
+    @Mock
+    private TestRecordsRepository testRecordsRepository;
     @Mock
     private NotificationService notificationService;
 
@@ -156,6 +160,7 @@ class WIPManagementServiceTest {
         when(wipbatchRepository.findAll(any(Sort.class))).thenReturn(List.of(expiredBatch));
         when(sampleRepository.findByBatch_Id(1L)).thenReturn(Collections.emptyList());
         when(wipbatchRepository.save(any(WIPbatch.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(testRecordsRepository.findFirstByBatch_IdOrderByStartTimeDesc(1L)).thenReturn(Optional.empty());
 
         // When
         List<WIPBatchDTO> result = wipManagementService.getWIPBatches();
@@ -179,6 +184,7 @@ class WIPManagementServiceTest {
         when(wipbatchRepository.findAll(any(Sort.class))).thenReturn(List.of(expiredCrashBatch));
         when(sampleRepository.findByBatch_Id(2L)).thenReturn(Collections.emptyList());
         when(wipbatchRepository.save(any(WIPbatch.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(testRecordsRepository.findFirstByBatch_IdOrderByStartTimeDesc(2L)).thenReturn(Optional.empty());
 
         // When
         List<WIPBatchDTO> result = wipManagementService.getWIPBatches();
@@ -225,6 +231,7 @@ class WIPManagementServiceTest {
         when(sampleRepository.findByBatch_Id(10L)).thenReturn(Collections.emptyList());
         when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.empty());
+        when(testRecordsRepository.findFirstByBatch_IdOrderByStartTimeDesc(10L)).thenReturn(Optional.empty());
 
         WIPBatchDTO result = wipManagementService.startBatch(10L);
 
@@ -232,6 +239,87 @@ class WIPManagementServiceTest {
         // status 會是 RUNNING 或 RUNNING_CRASH（有 25% crash 機率）
         assertTrue("RUNNING".equals(result.getStatus()) || "RUNNING_CRASH".equals(result.getStatus()));
         verify(notificationService, times(1)).broadcast(eq("REQUEST_UPDATED"), anyString());
+    }
+
+    @Test
+    @DisplayName("startBatch() - 啟動批次時應同步更新 test record 狀態")
+    void startBatch_shouldUpdateTestRecord() {
+        Equipment eq = buildEquipment(1L);
+        Recipe recipe = buildRecipe(1L);
+        WIPbatch batch = buildBatch(10L, "QUEUED", eq, recipe);
+        TestRecords record = new TestRecords();
+        record.setResultStatus("QUEUED");
+
+        when(wipbatchRepository.findById(10L)).thenReturn(Optional.of(batch));
+        when(wipbatchRepository.save(any(WIPbatch.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(sampleRepository.findByBatch_Id(10L)).thenReturn(Collections.emptyList());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
+                .thenReturn(Optional.empty());
+        when(testRecordsRepository.findFirstByBatch_IdOrderByStartTimeDesc(10L)).thenReturn(Optional.of(record));
+        when(testRecordsRepository.save(any(TestRecords.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        WIPBatchDTO result = wipManagementService.startBatch(10L);
+
+        assertTrue("RUNNING".equals(record.getResultStatus()) || "RUNNING_CRASH".equals(record.getResultStatus()));
+        assertNotNull(record.getStartTime());
+        assertNull(record.getEndTime());
+        assertTrue(record.getResultData().contains(record.getResultStatus()));
+        assertEquals(result.getStatus(), record.getResultStatus());
+        verify(testRecordsRepository).save(record);
+    }
+
+    @Test
+    @DisplayName("Auto-Resolve - 完成 RUNNING 批次時應同步更新 test record")
+    void getWIPBatches_expiredRunning_shouldUpdateTestRecordFinished() {
+        Equipment eq = buildEquipment(1L);
+        Recipe recipe = buildRecipe(1L);
+        WIPbatch expiredBatch = buildBatch(1L, "RUNNING", eq, recipe);
+        expiredBatch.setStartTime(LocalDateTime.now().minusMinutes(10));
+        expiredBatch.setEstimatedEndTime(LocalDateTime.now().minusMinutes(5));
+        TestRecords record = new TestRecords();
+        record.setResultStatus("RUNNING");
+
+        when(wipbatchRepository.findByStatusIn(anyList())).thenReturn(List.of(expiredBatch));
+        when(wipbatchRepository.findAll(any(Sort.class))).thenReturn(List.of(expiredBatch));
+        when(sampleRepository.findByBatch_Id(1L)).thenReturn(Collections.emptyList());
+        when(wipbatchRepository.save(any(WIPbatch.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(testRecordsRepository.findFirstByBatch_IdOrderByStartTimeDesc(1L)).thenReturn(Optional.of(record));
+        when(testRecordsRepository.save(any(TestRecords.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        wipManagementService.getWIPBatches();
+
+        assertEquals("FINISHED", record.getResultStatus());
+        assertEquals(expiredBatch.getStartTime(), record.getStartTime());
+        assertNotNull(record.getEndTime());
+        assertTrue(record.getResultData().contains("FINISHED"));
+        verify(testRecordsRepository).save(record);
+    }
+
+    @Test
+    @DisplayName("Auto-Resolve - 失敗 RUNNING_CRASH 批次時應同步更新 test record")
+    void getWIPBatches_expiredCrash_shouldUpdateTestRecordFailed() {
+        Equipment eq = buildEquipment(1L);
+        Recipe recipe = buildRecipe(1L);
+        WIPbatch expiredBatch = buildBatch(2L, "RUNNING_CRASH", eq, recipe);
+        expiredBatch.setStartTime(LocalDateTime.now().minusMinutes(10));
+        expiredBatch.setEstimatedEndTime(LocalDateTime.now().minusMinutes(5));
+        TestRecords record = new TestRecords();
+        record.setResultStatus("RUNNING_CRASH");
+
+        when(wipbatchRepository.findByStatusIn(anyList())).thenReturn(List.of(expiredBatch));
+        when(wipbatchRepository.findAll(any(Sort.class))).thenReturn(List.of(expiredBatch));
+        when(sampleRepository.findByBatch_Id(2L)).thenReturn(Collections.emptyList());
+        when(wipbatchRepository.save(any(WIPbatch.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(testRecordsRepository.findFirstByBatch_IdOrderByStartTimeDesc(2L)).thenReturn(Optional.of(record));
+        when(testRecordsRepository.save(any(TestRecords.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        wipManagementService.getWIPBatches();
+
+        assertEquals("FAILED", record.getResultStatus());
+        assertEquals(expiredBatch.getStartTime(), record.getStartTime());
+        assertNotNull(record.getEndTime());
+        assertTrue(record.getResultData().contains("FAILED"));
+        verify(testRecordsRepository).save(record);
     }
 
     @Test
@@ -287,8 +375,8 @@ class WIPManagementServiceTest {
     }
 
     @Test
-    @DisplayName("checkAndUpdateRequestStatus() - 有 sample FAILED 時 request 應變為 FAILED")
-    void checkAndUpdateRequestStatus_anyFailed_shouldSetFailed() {
+    @DisplayName("checkAndUpdateRequestStatus() - 有 FAILED 且全部 sample 都結束時 request 應變為 FAILED")
+    void checkAndUpdateRequestStatus_anyFailedAndAllTerminal_shouldSetFailed() {
         Request request = new Request();
         request.setId(2L);
         request.setStatus("PROCESSING");
@@ -306,6 +394,28 @@ class WIPManagementServiceTest {
         ArgumentCaptor<Request> captor = ArgumentCaptor.forClass(Request.class);
         verify(requestRepository).save(captor.capture());
         assertEquals("FAILED", captor.getValue().getStatus());
+    }
+
+    @Test
+    @DisplayName("checkAndUpdateRequestStatus() - 有 FAILED 但仍有未完成 sample 時 request 應變為 PARTIAL_FAILED")
+    void checkAndUpdateRequestStatus_partialFailed_shouldSetPartialFailed() {
+        Request request = new Request();
+        request.setId(5L);
+        request.setStatus("PROCESSING");
+
+        Sample s1 = new Sample();
+        s1.setStatus("FAILED");
+        Sample s2 = new Sample();
+        s2.setStatus("PENDING");
+
+        when(sampleRepository.findByRequest_Id(5L)).thenReturn(List.of(s1, s2));
+        when(requestRepository.save(any(Request.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        wipManagementService.checkAndUpdateRequestStatus(request);
+
+        ArgumentCaptor<Request> captor = ArgumentCaptor.forClass(Request.class);
+        verify(requestRepository).save(captor.capture());
+        assertEquals("PARTIAL_FAILED", captor.getValue().getStatus());
     }
 
     @Test

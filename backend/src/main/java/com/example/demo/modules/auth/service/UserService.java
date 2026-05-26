@@ -1,7 +1,10 @@
 package com.example.demo.modules.auth.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
+import com.example.demo.modules.auth.dto.ManagerOptionResponse;
 import com.example.demo.modules.auth.dto.UserSetupRequest;
 import com.example.demo.modules.auth.model.User;
 import com.example.demo.modules.auth.model.UserRole;
@@ -60,5 +63,16 @@ public class UserService {
         }
 
         return userRepository.save(user);
+    }
+
+    public List<ManagerOptionResponse> listManagerOptions() {
+        return userRepository.findByRoleInOrderByNameAsc(List.of(UserRole.MANAGER, UserRole.ADMIN))
+                .stream()
+                .map(user -> new ManagerOptionResponse(
+                        user.getId(),
+                        user.getName(),
+                        user.getEmail(),
+                        user.getRole()))
+                .toList();
     }
 }

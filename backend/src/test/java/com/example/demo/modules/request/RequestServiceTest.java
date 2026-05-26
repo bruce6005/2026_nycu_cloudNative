@@ -343,6 +343,23 @@ class RequestServiceTest {
     }
 
     @Test
+    @DisplayName("archiveRequest() - FAILED 狀態應成功封存")
+    void archiveRequest_failedStatus_shouldArchive() {
+        Request r = new Request();
+        r.setId(5L);
+        r.setStatus("FAILED");
+
+        when(requestRepository.findById(5L)).thenReturn(Optional.of(r));
+        when(requestRepository.save(any(Request.class))).thenReturn(r);
+
+        assertDoesNotThrow(() -> requestService.archiveRequest(5L));
+
+        ArgumentCaptor<Request> captor = ArgumentCaptor.forClass(Request.class);
+        verify(requestRepository).save(captor.capture());
+        assertEquals("ARCHIVED", captor.getValue().getStatus());
+    }
+
+    @Test
     @DisplayName("archiveRequest() - PENDING 狀態應拋 RuntimeException")
     void archiveRequest_pendingStatus_shouldThrow() {
         Request r = new Request();

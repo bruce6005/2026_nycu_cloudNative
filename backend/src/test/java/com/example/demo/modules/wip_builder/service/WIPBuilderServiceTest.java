@@ -155,6 +155,22 @@ class WIPBuilderServiceTest {
         // Assert
         assertEquals(0, result.size(), "不合法的 Request 狀態應該被過濾掉");
     }
+
+    @Test
+    @DisplayName("getPendingSamples() - PARTIAL_FAILED request 的剩餘 sample 仍可派工")
+    void getPendingSamples_includesPartialFailedRequests() {
+        Request request = buildRequest(3L, "PARTIAL_FAILED");
+        Recipe recipe = buildRecipe(1L, 100L);
+        Sample sample = buildSample(22L, request, recipe, "PENDING", null);
+
+        when(sampleRepository.findByBatchIsNull()).thenReturn(List.of(sample));
+
+        List<PendingSampleDTO> result = wipBuilderService.getPendingSamples();
+
+        assertEquals(1, result.size());
+        assertEquals(22L, result.get(0).getSampleId());
+        assertEquals(recipe.getId(), result.get(0).getRecipeId());
+    }
     // -------------------------------------------------------
     // createWIPBatch()
     // -------------------------------------------------------

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchManagerDashboard } from "../api/ManagerDashboardApi";
+import { fetchManagerDashboard, recoverEquipment } from "../api/ManagerDashboardApi";
 import type { ManagerDashboardDTO } from "../model/ManagerDashboardData";
 import RequestStatsPanel from "../components/RequestStatsPanel";
 import EquipmentUsagePanel from "../components/EquipmentUsagePanel";
@@ -10,6 +10,7 @@ import "../styles/style.css";
 function ManagerDashboardPage() {
   const [dashboard, setDashboard] = useState<ManagerDashboardDTO | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fixingEquipmentId, setFixingEquipmentId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   const loadDashboard = async () => {
@@ -24,6 +25,20 @@ function ManagerDashboardPage() {
       setError(err instanceof Error ? err.message : "Cannot load manager dashboard");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFixEquipment = async (equipmentId: number) => {
+    try {
+      setFixingEquipmentId(equipmentId);
+      setError("");
+
+      await recoverEquipment(equipmentId);
+      await loadDashboard();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Cannot fix equipment");
+    } finally {
+      setFixingEquipmentId(null);
     }
   };
 
@@ -69,7 +84,11 @@ function ManagerDashboardPage() {
             </div>
 
             <div className="dashboard-grid-right">
-            <EquipmentUsagePanel items={dashboard?.equipmentUsage ?? []} />
+            <EquipmentUsagePanel
+                items={dashboard?.equipmentUsage ?? []}
+                fixingEquipmentId={fixingEquipmentId}
+                onFixEquipment={handleFixEquipment}
+            />
             </div>
         </div>
 

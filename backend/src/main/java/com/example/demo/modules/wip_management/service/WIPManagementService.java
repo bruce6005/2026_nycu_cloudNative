@@ -18,8 +18,10 @@ import com.example.demo.modules.request.model.Sample;
 import com.example.demo.modules.request.repository.RequestRepository;
 import com.example.demo.modules.request.repository.SampleRepository;
 import com.example.demo.modules.wip_builder.model.EquipmentStatusLogs;
+import com.example.demo.modules.wip_builder.model.TestRecords;
 import com.example.demo.modules.wip_builder.model.WIPbatch;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
+import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
 import com.example.demo.modules.wip_management.dto.WIPBatchDTO;
 
@@ -30,17 +32,20 @@ public class WIPManagementService {
     private final WIPbatchRepository wipbatchRepository;
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final RequestRepository requestRepository;
+    private final TestRecordsRepository testRecordsRepository;
     private final com.example.demo.modules.notification.service.NotificationService notificationService;
 
     public WIPManagementService(SampleRepository sampleRepository,
                       WIPbatchRepository wipbatchRepository,
                       EquipmentStatusLogsRepository equipmentStatusLogsRepository,
                       RequestRepository requestRepository,
+                      TestRecordsRepository testRecordsRepository,
                       com.example.demo.modules.notification.service.NotificationService notificationService) {
         this.sampleRepository = sampleRepository;
         this.wipbatchRepository = wipbatchRepository;
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.requestRepository = requestRepository;
+        this.testRecordsRepository = testRecordsRepository;
         this.notificationService = notificationService;
     }
 
@@ -79,6 +84,7 @@ public class WIPManagementService {
         batch.setEstimatedEndTime(now.plusSeconds(randomSeconds));
 
         WIPbatch savedBatch = wipbatchRepository.save(batch);
+        updateTestRecord(savedBatch, savedBatch.getStatus(), now, null);
 
         // Update equipment status to BUSY
         updateEquipmentStatus(batch.getEquipment(), "BUSY");
@@ -132,12 +138,16 @@ public class WIPManagementService {
         boolean anyFailed = allSamples.stream()
                 .anyMatch(s -> "FAILED".equals(s.getStatus()));
 
-        boolean anyRunning = allSamples.stream()
+        boolean anyInProgress = allSamples.stream()
                 .anyMatch(s -> "RUNNING".equals(s.getStatus())
                         || "RUNNING_CRASH".equals(s.getStatus()));
 
         boolean allCompleted = allSamples.stream()
                 .allMatch(s -> "COMPLETED".equals(s.getStatus()));
+
+        boolean allTerminal = allSamples.stream()
+                .allMatch(s -> "COMPLETED".equals(s.getStatus())
+                        || "FAILED".equals(s.getStatus()));
 
         boolean allAssignedOrMore = allSamples.stream()
                 .allMatch(s -> "ASSIGNED".equals(s.getStatus())
@@ -148,11 +158,13 @@ public class WIPManagementService {
 
         String newStatus = request.getStatus();
 
-        if (anyFailed) {
+        if (anyFailed && allTerminal) {
             newStatus = "FAILED";
         } else if (allCompleted) {
             newStatus = "DONE";
-        } else if (anyRunning) {
+        } else if (anyFailed) {
+            newStatus = "PARTIAL_FAILED";
+        } else if (anyInProgress) {
             newStatus = "PROCESSING";
         } else if (allAssignedOrMore) {
             newStatus = "DISPATCHED";
@@ -236,9 +248,11 @@ public class WIPManagementService {
         }
 
         batch.setStatus("FINISHED");
-        batch.setEndTime(LocalDateTime.now());
+        LocalDateTime endTime = LocalDateTime.now();
+        batch.setEndTime(endTime);
 
         WIPbatch savedBatch = wipbatchRepository.save(batch);
+        updateTestRecord(savedBatch, "FINISHED", savedBatch.getStartTime(), endTime);
 
         updateEquipmentStatus(savedBatch.getEquipment(), "READY");
 
@@ -272,9 +286,11 @@ public class WIPManagementService {
         }
 
         batch.setStatus("FAILED");
-        batch.setEndTime(LocalDateTime.now());
+        LocalDateTime endTime = LocalDateTime.now();
+        batch.setEndTime(endTime);
 
         WIPbatch savedBatch = wipbatchRepository.save(batch);
+        updateTestRecord(savedBatch, "FAILED", savedBatch.getStartTime(), endTime);
 
         updateEquipmentStatus(savedBatch.getEquipment(), "ERROR");
 
@@ -295,6 +311,28 @@ public class WIPManagementService {
 
         return savedBatch;
     }
+
+    private void updateTestRecord(
+            WIPbatch batch,
+            String resultStatus,
+            LocalDateTime startTime,
+            LocalDateTime endTime) {
+        testRecordsRepository.findFirstByBatch_IdOrderByStartTimeDesc(batch.getId())
+                .ifPresent(record -> {
+                    record.setResultStatus(resultStatus);
+
+                    if (startTime != null) {
+                        record.setStartTime(startTime);
+                    }
+
+                    record.setEndTime(endTime);
+                    record.setResultData("{\"action\":\"UPDATE_WIP_BATCH_STATUS\",\"status\":\""
+                            + resultStatus
+                            + "\"}");
+                    testRecordsRepository.save(record);
+                });
+    }
+
     private void autoResolveExpiredRunningBatches() {
         LocalDateTime now = LocalDateTime.now();
 

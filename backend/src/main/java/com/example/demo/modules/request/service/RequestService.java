@@ -181,8 +181,11 @@ public class RequestService {
 
         String status = request.getStatus() == null ? "" : request.getStatus().trim().toUpperCase();
 
-        if (!"DONE".equals(status) && !"COMPLETED".equals(status)) {
-            throw new RuntimeException("Only completed requests can be archived");
+        if (!"DONE".equals(status)
+                && !"COMPLETED".equals(status)
+                && !"FAILED".equals(status)
+                && !"FAIL".equals(status)) {
+            throw new RuntimeException("Only completed or failed requests can be archived");
         }
 
         request.setStatus("ARCHIVED");

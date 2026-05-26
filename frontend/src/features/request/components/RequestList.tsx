@@ -19,7 +19,10 @@ export const RequestList: React.FC<RequestListProps> = ({ requests, onArchived }
 
   const canArchive = (status: string) => {
     const normalized = status.toUpperCase();
-    return normalized === "DONE" || normalized === "COMPLETED";
+    return normalized === "DONE"
+      || normalized === "COMPLETED"
+      || normalized === "FAILED"
+      || normalized === "FAIL";
   };
 
   const handleArchive = async (id: number) => {

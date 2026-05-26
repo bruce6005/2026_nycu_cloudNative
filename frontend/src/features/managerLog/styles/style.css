@@ -83,6 +83,12 @@
   min-height: 150px;
 }
 
+.dashboard-equipment-card-error {
+  background: #fff1f2;
+  border-color: #fb7185;
+  box-shadow: 0 0 0 1px #fecdd3 inset;
+}
+
 .dashboard-equipment-header {
   display: flex;
   justify-content: space-between;
@@ -101,6 +107,37 @@
 .dashboard-usage-rate {
   font-size: 22px;
   font-weight: 800;
+}
+
+.dashboard-equipment-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.dashboard-fix-button {
+  min-width: 72px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid #16a34a;
+  border-radius: 6px;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dashboard-fix-button:hover:not(:disabled) {
+  background: #15803d;
+  border-color: #15803d;
+}
+
+.dashboard-fix-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .dashboard-usage-rate.usage-high {
@@ -147,6 +184,30 @@
   margin-top: 4px;
 }
 
+.dashboard-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-equipment-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dashboard-equipment-status-error {
+  background: #dc2626;
+  color: #ffffff;
+}
+
 .dashboard-table-card {
   overflow-x: auto;
   padding: 0;
@@ -166,6 +227,38 @@
 .dashboard-log-table td {
   color: #4b5563;
   font-size: 13px;
+}
+
+.dashboard-status-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dashboard-status-tag.status-queued {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.dashboard-status-tag.status-running {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.dashboard-status-tag.status-finished {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.dashboard-status-tag.status-failed {
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
 .dashboard-log-detail {

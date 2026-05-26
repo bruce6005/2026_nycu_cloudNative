@@ -87,6 +87,17 @@ body {
   color: #166534;
 }
 
+.tag.failed,
+.tag.fail {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.tag.partial_failed {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
 .container {
   display: flex;
   height: calc(100vh - 60px);

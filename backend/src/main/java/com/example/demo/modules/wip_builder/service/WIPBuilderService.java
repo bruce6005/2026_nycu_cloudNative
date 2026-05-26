@@ -330,6 +330,9 @@ public class WIPBuilderService {
         }
 
         String status = request.getStatus().trim().toUpperCase();
-        return "APPROVED".equals(status) || "ACCEPTED".equals(status) || "PROCESSING".equals(status);
+        return "APPROVED".equals(status)
+                || "ACCEPTED".equals(status)
+                || "PROCESSING".equals(status)
+                || "PARTIAL_FAILED".equals(status);
     }
 }

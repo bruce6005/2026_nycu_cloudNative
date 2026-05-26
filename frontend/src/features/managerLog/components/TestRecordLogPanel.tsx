@@ -16,18 +16,22 @@ function getStatusClass(status: string) {
   const normalized = status.toUpperCase();
 
   if (normalized === "QUEUED" || normalized === "ASSIGNED") {
-    return "pending";
+    return "status-queued";
   }
 
-  if (normalized === "COMPLETED" || normalized === "PASS") {
-    return "approved";
+  if (normalized === "RUNNING" || normalized === "RUNNING_CRASH") {
+    return "status-running";
+  }
+
+  if (normalized === "FINISHED" || normalized === "COMPLETED" || normalized === "PASS") {
+    return "status-finished";
   }
 
   if (normalized === "FAILED" || normalized === "ERROR") {
-    return "rejected";
+    return "status-failed";
   }
 
-  return "pending";
+  return "status-queued";
 }
 
 function TestRecordLogPanel({ logs }: Props) {
@@ -68,7 +72,7 @@ function TestRecordLogPanel({ logs }: Props) {
                     {log.operatorName} #{log.operatorId}
                   </td>
                   <td>
-                    <span className={`tag ${getStatusClass(log.resultStatus)}`}>
+                    <span className={`dashboard-status-tag ${getStatusClass(log.resultStatus)}`}>
                       {log.resultStatus}
                     </span>
                   </td>

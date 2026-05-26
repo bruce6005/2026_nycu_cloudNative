@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { fetchWIPBatches, startWIPBatch, finishWIPBatch } from "../api/wipManagementApi";
+import { fetchWIPBatches, startWIPBatch } from "../api/wipManagementApi";
 import type { WIPBatchDTO } from "../model/WipManagementData";
 import QueuedBatchList from "../components/QueuedBatchList";
 import InProgressDashboard from "../components/InProgressDashboard";
@@ -40,6 +40,24 @@ const WIPManagementPage: React.FC<Props> = ({ user }) => {
     loadBatches();
   }, [loadBatches]);
 
+  const hasActiveBatch = batches.some(
+    (batch) => batch.status === "RUNNING" || batch.status === "RUNNING_CRASH"
+  );
+
+  useEffect(() => {
+    if (!hasActiveBatch) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      loadBatches();
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [hasActiveBatch, loadBatches]);
+
   // 收到後端 REQUEST_UPDATED 事件時自動重新載入（修復 WIP 階段狀態不即時問題）
   useSse("REQUEST_UPDATED", loadBatches);
 
@@ -56,22 +74,9 @@ const WIPManagementPage: React.FC<Props> = ({ user }) => {
     }
   };
 
-  const handleFinish = async (id: number) => {
-    try {
-      setLoading(true);
-      await finishWIPBatch(id);
-      // 同上
-      await loadBatches();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const queuedBatches = batches.filter(b => b.status === "QUEUED");
-  const runningBatches = batches.filter(b => b.status === "RUNNING");
-  const finishedBatches = batches.filter(b => b.status === "FINISHED");
+  const runningBatches = batches.filter(b => b.status === "RUNNING" || b.status === "RUNNING_CRASH");
+  const finishedBatches = batches.filter(b => b.status === "FINISHED" || b.status === "FAILED");
 
   return (
     <div className="wip-layout">
@@ -105,7 +110,6 @@ const WIPManagementPage: React.FC<Props> = ({ user }) => {
           loading={loading}
           error={error}
           onStart={handleStart}
-          onFinish={handleFinish}
         />
       </div>
 

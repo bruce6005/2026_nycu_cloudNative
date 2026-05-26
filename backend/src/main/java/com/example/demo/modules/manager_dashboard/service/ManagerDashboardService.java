@@ -54,7 +54,9 @@ public class ManagerDashboardService {
         long pending = countByStatus(requests, "PENDING", "SUBMITTED");
         long approved = countByStatus(requests, "APPROVED", "ACCEPTED");
         long dispatched = countByStatus(requests, "DISPATCHED", "PROCESSING");
+        long partialFailed = countByStatus(requests, "PARTIAL_FAILED");
         long completed = countByStatus(requests, "DONE", "COMPLETED");
+        long failed = countByStatus(requests, "FAILED", "FAIL");
         long rejected = countByStatus(requests, "REJECTED");
 
         return new RequestStatsDTO(
@@ -62,7 +64,9 @@ public class ManagerDashboardService {
                 pending,
                 approved,
                 dispatched,
+                partialFailed,
                 completed,
+                failed,
                 rejected);
     }
     

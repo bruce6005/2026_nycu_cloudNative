@@ -132,18 +132,22 @@ class ManagerDashboardServiceTest {
         Request r7 = buildRequest(7L, "DONE");
         Request r8 = buildRequest(8L, "COMPLETED");
         Request r9 = buildRequest(9L, "REJECTED");
+        Request r10 = buildRequest(10L, "PARTIAL_FAILED");
+        Request r11 = buildRequest(11L, "FAILED");
 
         when(requestRepository.findAll()).thenReturn(List.of(
-                r1, r2, r3, r4, r5, r6, r7, r8, r9
+                r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11
         ));
 
         RequestStatsDTO stats = managerDashboardService.getRequestStats();
 
-        assertEquals(9, stats.getTotalRequests());
+        assertEquals(11, stats.getTotalRequests());
         assertEquals(2, stats.getPendingRequests());
         assertEquals(2, stats.getApprovedRequests());
         assertEquals(2, stats.getDispatchedRequests());
+        assertEquals(1, stats.getPartialFailedRequests());
         assertEquals(2, stats.getCompletedRequests());
+        assertEquals(1, stats.getFailedRequests());
         assertEquals(1, stats.getRejectedRequests());
     }
 
