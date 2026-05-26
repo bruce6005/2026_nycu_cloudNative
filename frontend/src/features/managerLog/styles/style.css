@@ -168,6 +168,38 @@
   font-size: 13px;
 }
 
+.dashboard-status-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dashboard-status-tag.status-queued {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.dashboard-status-tag.status-running {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.dashboard-status-tag.status-finished {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.dashboard-status-tag.status-failed {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 .dashboard-log-detail {
   max-width: 360px;
   white-space: nowrap;
