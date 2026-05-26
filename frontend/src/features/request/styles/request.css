@@ -71,6 +71,11 @@
   color: #991b1b;
 }
 
+.request-sample-status.partial-failed {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
 .request-sample-meta {
   margin-top: 10px;
   display: grid;

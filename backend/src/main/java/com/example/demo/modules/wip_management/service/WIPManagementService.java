@@ -138,12 +138,16 @@ public class WIPManagementService {
         boolean anyFailed = allSamples.stream()
                 .anyMatch(s -> "FAILED".equals(s.getStatus()));
 
-        boolean anyRunning = allSamples.stream()
+        boolean anyInProgress = allSamples.stream()
                 .anyMatch(s -> "RUNNING".equals(s.getStatus())
                         || "RUNNING_CRASH".equals(s.getStatus()));
 
         boolean allCompleted = allSamples.stream()
                 .allMatch(s -> "COMPLETED".equals(s.getStatus()));
+
+        boolean allTerminal = allSamples.stream()
+                .allMatch(s -> "COMPLETED".equals(s.getStatus())
+                        || "FAILED".equals(s.getStatus()));
 
         boolean allAssignedOrMore = allSamples.stream()
                 .allMatch(s -> "ASSIGNED".equals(s.getStatus())
@@ -154,11 +158,13 @@ public class WIPManagementService {
 
         String newStatus = request.getStatus();
 
-        if (anyFailed) {
+        if (anyFailed && allTerminal) {
             newStatus = "FAILED";
         } else if (allCompleted) {
             newStatus = "DONE";
-        } else if (anyRunning) {
+        } else if (anyFailed) {
+            newStatus = "PARTIAL_FAILED";
+        } else if (anyInProgress) {
             newStatus = "PROCESSING";
         } else if (allAssignedOrMore) {
             newStatus = "DISPATCHED";

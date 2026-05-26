@@ -32,7 +32,7 @@ class ManagerDashboardControllerTest {
     @Test
     @DisplayName("getRequestStats() - should return stats DTO")
     void getRequestStats_shouldReturnDto() {
-        RequestStatsDTO dto = new RequestStatsDTO(10, 1,2,3,4,0);
+        RequestStatsDTO dto = new RequestStatsDTO(10, 1,2,3,1,4,0,0);
         when(managerDashboardService.getRequestStats()).thenReturn(dto);
 
         RequestStatsDTO res = controller.getRequestStats();

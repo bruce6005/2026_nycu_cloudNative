@@ -3,7 +3,9 @@ export type RequestStatsDTO = {
   pendingRequests: number;
   approvedRequests: number;
   dispatchedRequests: number;
+  partialFailedRequests: number;
   completedRequests: number;
+  failedRequests: number;
   rejectedRequests: number;
 };
 

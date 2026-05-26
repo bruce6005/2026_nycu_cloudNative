@@ -15,7 +15,9 @@ function RequestStatsPanel({ stats }: Props) {
         <StatCard title="Pending" value={stats?.pendingRequests ?? 0} />
         <StatCard title="Approved" value={stats?.approvedRequests ?? 0} />
         <StatCard title="Dispatched" value={stats?.dispatchedRequests ?? 0} />
+        <StatCard title="Partial Failed" value={stats?.partialFailedRequests ?? 0} />
         <StatCard title="Completed" value={stats?.completedRequests ?? 0} />
+        <StatCard title="Failed" value={stats?.failedRequests ?? 0} />
         <StatCard title="Rejected" value={stats?.rejectedRequests ?? 0} />
       </div>
     </section>

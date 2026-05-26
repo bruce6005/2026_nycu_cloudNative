@@ -16,6 +16,10 @@ function getSampleStatusClass(status?: string | null) {
     return 'failed';
   }
 
+  if (normalized === 'PARTIAL_FAILED') {
+    return 'partial-failed';
+  }
+
   return '';
 }
 

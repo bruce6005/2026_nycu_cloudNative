@@ -12,6 +12,8 @@ public class RequestStatsDTO {
     private long pendingRequests;
     private long approvedRequests;
     private long dispatchedRequests;
+    private long partialFailedRequests;
     private long completedRequests;
+    private long failedRequests;
     private long rejectedRequests;
 }

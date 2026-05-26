@@ -375,8 +375,8 @@ class WIPManagementServiceTest {
     }
 
     @Test
-    @DisplayName("checkAndUpdateRequestStatus() - 有 sample FAILED 時 request 應變為 FAILED")
-    void checkAndUpdateRequestStatus_anyFailed_shouldSetFailed() {
+    @DisplayName("checkAndUpdateRequestStatus() - 有 FAILED 且全部 sample 都結束時 request 應變為 FAILED")
+    void checkAndUpdateRequestStatus_anyFailedAndAllTerminal_shouldSetFailed() {
         Request request = new Request();
         request.setId(2L);
         request.setStatus("PROCESSING");
@@ -394,6 +394,28 @@ class WIPManagementServiceTest {
         ArgumentCaptor<Request> captor = ArgumentCaptor.forClass(Request.class);
         verify(requestRepository).save(captor.capture());
         assertEquals("FAILED", captor.getValue().getStatus());
+    }
+
+    @Test
+    @DisplayName("checkAndUpdateRequestStatus() - 有 FAILED 但仍有未完成 sample 時 request 應變為 PARTIAL_FAILED")
+    void checkAndUpdateRequestStatus_partialFailed_shouldSetPartialFailed() {
+        Request request = new Request();
+        request.setId(5L);
+        request.setStatus("PROCESSING");
+
+        Sample s1 = new Sample();
+        s1.setStatus("FAILED");
+        Sample s2 = new Sample();
+        s2.setStatus("PENDING");
+
+        when(sampleRepository.findByRequest_Id(5L)).thenReturn(List.of(s1, s2));
+        when(requestRepository.save(any(Request.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        wipManagementService.checkAndUpdateRequestStatus(request);
+
+        ArgumentCaptor<Request> captor = ArgumentCaptor.forClass(Request.class);
+        verify(requestRepository).save(captor.capture());
+        assertEquals("PARTIAL_FAILED", captor.getValue().getStatus());
     }
 
     @Test
