@@ -8,6 +8,18 @@ interface Props {
   onSelect: (batch: WIPBatchDTO) => void;
 }
 
+const getStatusTagClass = (status: string) => {
+  if (status === "FAILED") {
+    return "tag-failed";
+  }
+
+  if (status === "FINISHED") {
+    return "tag-finished";
+  }
+
+  return "tag-running";
+};
+
 const InProgressDashboard: React.FC<Props> = ({ 
   runningBatches, 
   finishedBatches, 
@@ -29,7 +41,9 @@ const InProgressDashboard: React.FC<Props> = ({
             >
               <div className="wip-card-header">
                 <span className="wip-id">Batch #{batch.id}</span>
-                <span className="batch-tag tag-running">RUNNING</span>
+                <span className={`batch-tag ${getStatusTagClass(batch.status)}`}>
+                  {batch.status}
+                </span>
               </div>
               <div style={{ marginTop: "8px" }}>
                 <strong>{batch.equipmentName}</strong>
@@ -57,7 +71,9 @@ const InProgressDashboard: React.FC<Props> = ({
             >
               <div className="wip-card-header">
                 <span className="wip-id">Batch #{batch.id}</span>
-                <span className="batch-tag tag-finished">FINISHED</span>
+                <span className={`batch-tag ${getStatusTagClass(batch.status)}`}>
+                  {batch.status}
+                </span>
               </div>
               <div style={{ fontSize: "12px", marginTop: "4px" }}>
                 Ended At: {new Date(batch.endTime!).toLocaleTimeString()}

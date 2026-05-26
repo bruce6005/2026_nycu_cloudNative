@@ -89,6 +89,7 @@
 .tag-queued { background: #fffbeb; color: #b45309; }
 .tag-running { background: #eff6ff; color: #1d4ed8; }
 .tag-finished { background: #ecfdf5; color: #047857; }
+.tag-failed { background: #fef2f2; color: #b91c1c; }
 
 .detail-panel {
   background: white;

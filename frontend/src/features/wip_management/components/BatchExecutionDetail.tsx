@@ -6,7 +6,6 @@ interface Props {
   loading: boolean;
   error?: string | null;
   onStart: (id: number) => void;
-  onFinish: (id: number) => void;
 }
 
 const isRunningStatus = (status: string) => {
