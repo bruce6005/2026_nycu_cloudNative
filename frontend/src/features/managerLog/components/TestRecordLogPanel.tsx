@@ -1,8 +1,11 @@
+import { useState } from "react";
 import type { TestRecordLogDTO } from "../model/ManagerDashboardData";
 
 type Props = {
   logs: TestRecordLogDTO[];
 };
+
+const DETAIL_PREVIEW_LENGTH = 96;
 
 function formatDateTime(value?: string | null) {
   if (!value) {
@@ -32,6 +35,37 @@ function getStatusClass(status: string) {
   }
 
   return "status-queued";
+}
+
+function LogDetailCell({ detail }: { detail?: string | null }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const value = detail || "-";
+  const canExpand = value.length > DETAIL_PREVIEW_LENGTH;
+  const displayValue =
+    canExpand && !isExpanded
+      ? `${value.slice(0, DETAIL_PREVIEW_LENGTH).trimEnd()}...`
+      : value;
+
+  return (
+    <div
+      className={`dashboard-log-detail-content ${canExpand ? "has-toggle" : ""} ${
+        isExpanded ? "is-expanded" : ""
+      }`}
+    >
+      {canExpand && (
+        <button
+          type="button"
+          className="dashboard-log-detail-toggle"
+          aria-label={isExpanded ? "Collapse detail" : "Expand detail"}
+          aria-expanded={isExpanded}
+          onClick={() => setIsExpanded((current) => !current)}
+        >
+          <span aria-hidden="true">{isExpanded ? "▼" : "▶"}</span>
+        </button>
+      )}
+      <span className="dashboard-log-detail-text">{displayValue}</span>
+    </div>
+  );
 }
 
 function TestRecordLogPanel({ logs }: Props) {
@@ -79,7 +113,7 @@ function TestRecordLogPanel({ logs }: Props) {
                   <td>{formatDateTime(log.startTime)}</td>
                   <td>{formatDateTime(log.endTime)}</td>
                   <td className="dashboard-log-detail">
-                    {log.resultData || "-"}
+                    <LogDetailCell detail={log.resultData} />
                   </td>
                 </tr>
               ))}

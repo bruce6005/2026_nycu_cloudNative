@@ -263,9 +263,44 @@
 
 .dashboard-log-detail {
   max-width: 360px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 280px;
+  vertical-align: top;
+}
+
+.dashboard-log-detail-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: 6px;
+  max-width: 360px;
+}
+
+.dashboard-log-detail-content.has-toggle {
+  grid-template-columns: 20px minmax(0, 1fr);
+}
+
+.dashboard-log-detail-toggle {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #374151;
+  font-size: 12px;
+  line-height: 20px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dashboard-log-detail-toggle:hover {
+  background: #f3f4f6;
+}
+
+.dashboard-log-detail-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  line-height: 1.45;
 }
 
 @media (max-width: 1200px) {
