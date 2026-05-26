@@ -9,6 +9,16 @@ interface RequestDetailProps {
   inline?: boolean;
 }
 
+function getSampleStatusClass(status?: string | null) {
+  const normalized = status?.trim().toUpperCase();
+
+  if (normalized === 'FAILED' || normalized === 'FAIL') {
+    return 'failed';
+  }
+
+  return '';
+}
+
 export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack, inline = false }) => {
   const [request, setRequest] = useState<RequestDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,7 +114,7 @@ export const RequestDetail: React.FC<RequestDetailProps> = ({ id, onBack, inline
                     <span className="request-sample-recipe">
                       Recipe: {sample.recipeName || 'Unassigned'}
                     </span>
-                    <span className="tag request-sample-status">
+                    <span className={`tag request-sample-status ${getSampleStatusClass(sample.status)}`}>
                       {sample.status || 'UNKNOWN'}
                     </span>
                   </div>

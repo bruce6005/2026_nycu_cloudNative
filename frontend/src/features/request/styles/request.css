@@ -65,6 +65,12 @@
   white-space: nowrap;
 }
 
+.request-sample-status.failed,
+.request-sample-status.fail {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .request-sample-meta {
   margin-top: 10px;
   display: grid;
