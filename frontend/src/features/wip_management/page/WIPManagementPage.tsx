@@ -40,6 +40,24 @@ const WIPManagementPage: React.FC<Props> = ({ user }) => {
     loadBatches();
   }, [loadBatches]);
 
+  const hasActiveBatch = batches.some(
+    (batch) => batch.status === "RUNNING" || batch.status === "RUNNING_CRASH"
+  );
+
+  useEffect(() => {
+    if (!hasActiveBatch) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      loadBatches();
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [hasActiveBatch, loadBatches]);
+
   // 收到後端 REQUEST_UPDATED 事件時自動重新載入（修復 WIP 階段狀態不即時問題）
   useSse("REQUEST_UPDATED", loadBatches);
 
