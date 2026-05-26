@@ -102,7 +102,7 @@ function EquipmentUsagePanel({ items }: Props) {
                 </div>
 
                 <div className="dashboard-equipment-meta">
-                  Usage Count: {usageCount} / {itemTotalUsageCount} batches
+                  Executed / Assigned: {usageCount} / {itemTotalUsageCount} batches
                 </div>
 
                 <div className="dashboard-equipment-meta">
