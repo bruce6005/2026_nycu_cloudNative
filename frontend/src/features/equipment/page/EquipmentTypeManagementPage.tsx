@@ -253,13 +253,14 @@ export default function EquipmentTypeManagementPage() {
     };
 
     return (
-        <div style={{ padding: "20px" }}>
+        <div className="standard-page">
+            <div className="standard-page-content">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                 <h1 style={{ margin: 0 }}>Equipment Type Management</h1>
                 {!showForm && (
                     <button
                         className="login-btn"
-                        style={{ background: "#2c2c2c", color: "white" }}
+                        style={{ background: "#2563eb", color: "white" }}
                         onClick={() => setShowForm(true)}
                     >
                         + New Type
@@ -361,7 +362,7 @@ export default function EquipmentTypeManagementPage() {
                         </div>
 
                         <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
-                            <button type="submit" className="login-btn" style={{ background: "#2c2c2c", color: "white" }}>
+                            <button type="submit" className="login-btn" style={{ background: "#2563eb", color: "white" }}>
                                 Save Type
                             </button>
                             <button
@@ -394,7 +395,7 @@ export default function EquipmentTypeManagementPage() {
                                     event.stopPropagation();
                                     handleDelete(schema.id);
                                 }}
-                                style={{ background: "transparent", color: "#e5484d", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}
+                                style={{ background: "transparent", color: "#dc2626", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}
                             >
                                 Delete
                             </button>
@@ -405,6 +406,7 @@ export default function EquipmentTypeManagementPage() {
                 {schemas.length === 0 && (
                     <div className="card">No equipment types available.</div>
                 )}
+            </div>
             </div>
         </div>
     );

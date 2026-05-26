@@ -159,8 +159,10 @@ public class WIPBuilderService {
                 .orElseThrow(() -> new RuntimeException("Equipment not found"));
 
         String currentStatus = resolveCurrentEquipmentStatus(equipment.getId());
-        if ("BUSY".equalsIgnoreCase(currentStatus) || "RUNNING".equalsIgnoreCase(currentStatus)) {
-            throw new RuntimeException("Equipment " + equipment.getName() + " is currently BUSY and cannot accept new batches.");
+        if (!isEquipmentDispatchable(currentStatus)) {
+            String status = currentStatus == null ? "UNKNOWN" : currentStatus;
+            throw new RuntimeException("Equipment " + equipment.getName()
+                    + " is currently " + status + " and cannot accept new batches.");
         }
 
         Recipe recipe = recipeRepository.findById(request.getRecipeId())
@@ -296,6 +298,17 @@ public class WIPBuilderService {
                 .or(() -> equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipmentId))
                 .map(EquipmentStatusLogs::getStatus)
                 .orElse(null);
+    }
+
+    private boolean isEquipmentDispatchable(String status) {
+        if (status == null || status.isBlank()) {
+            return false;
+        }
+
+        String normalized = status.trim().toUpperCase();
+        return "READY".equals(normalized)
+                || "IDLE".equals(normalized)
+                || "STANDBY".equals(normalized);
     }
 
     private void checkAndUpdateRequestStatus(Request request) {

@@ -203,7 +203,7 @@
   }
 }
 .manager-dashboard-page {
-  height: calc(100vh - 60px);
+  height: 100%;
   padding: 24px;
   width: 100%;
   box-sizing: border-box;

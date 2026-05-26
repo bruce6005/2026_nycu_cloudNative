@@ -36,7 +36,9 @@ function RequestPage({ user }: Props) {
   useSse("REQUEST_UPDATED", loadRequest);
 
   return (
-    <div className="flex" style={{ padding: '24px', alignItems: 'flex-start' }}>
+    <div className="standard-page">
+      <div className="standard-page-content">
+        <div className="flex" style={{ alignItems: 'flex-start' }}>
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {/* 左側：表單操作區 */}
@@ -58,6 +60,8 @@ function RequestPage({ user }: Props) {
           </button>
         </div>
         <RequestList requests={requests} onArchived={loadRequest} />
+      </div>
+        </div>
       </div>
     </div>
   );
