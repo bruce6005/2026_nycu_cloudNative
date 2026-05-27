@@ -1,4 +1,4 @@
-import { CONFIG } from "../../../config/config";
+import { authFetch } from "../../utils/apiClient";
 import type { WIPBatchDTO } from "../../wip_management/model/WipManagementData";
 
 async function parseErrorMessage(res: Response): Promise<string> {
@@ -17,12 +17,12 @@ async function parseErrorMessage(res: Response): Promise<string> {
 }
 
 export async function fetchWIPBatches(): Promise<WIPBatchDTO[]> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/wip_management`);
+  const res = await authFetch("/api/wip_management");
   return res.json();
 }
 
 export async function startWIPBatch(id: number): Promise<WIPBatchDTO> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/wip_management/${id}/start`, {
+  const res = await authFetch(`/api/wip_management/${id}/start`, {
     method: "PATCH",
   });
 
@@ -33,7 +33,7 @@ export async function startWIPBatch(id: number): Promise<WIPBatchDTO> {
 }
 
 export async function finishWIPBatch(id: number): Promise<WIPBatchDTO> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/wip_management/${id}/finish`, {
+  const res = await authFetch(`/api/wip_management/${id}/finish`, {
     method: "PATCH",
   });
 

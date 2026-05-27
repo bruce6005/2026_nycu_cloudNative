@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.config.security.JwtUtil;
 import com.example.demo.modules.auth.model.User;
 import com.example.demo.modules.auth.service.AuthService;
 
@@ -16,9 +17,11 @@ import com.example.demo.modules.auth.service.AuthService;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, JwtUtil jwtUtil) {
         this.authService = authService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/google")
@@ -30,13 +33,9 @@ public class AuthController {
             }
 
             User user = authService.verifyGoogleToken(credential);
+            String token = jwtUtil.generateToken(user);
 
-            // To be secure, here you usually create your own JWT or set an HTTP-only
-            // session cookie
-            // For this initial setup, we respond with the user data directly.
-            // DO NOT use this plain setup for production without issuing your own local
-            // session.
-            return ResponseEntity.ok(Map.of("user", user, "token", "mock-jwt-token-replace-later"));
+            return ResponseEntity.ok(Map.of("user", user, "token", token));
         } catch (Exception e) {
             return ResponseEntity.status(401).body(Map.of("error", "Authentication failed: " + e.getMessage()));
         }

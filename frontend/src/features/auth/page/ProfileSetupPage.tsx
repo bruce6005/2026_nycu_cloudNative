@@ -81,7 +81,7 @@ export default function ProfileSetupPage({ user, setUser }: Props) {
         managerId: parsedManagerId,
       });
 
-      setUser(updatedUser);
+      setUser({ ...updatedUser, token: user.token });
     } catch (err: any) {
       const message =
         err.response?.data?.message ||

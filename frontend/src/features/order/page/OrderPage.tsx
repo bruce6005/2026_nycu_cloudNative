@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import OrderList from "../components/OrderList";
 import OrderForm from "../components/OrderForm";
-import { CONFIG } from "../../../config/config";
+import { authFetch } from "../../utils/apiClient";
 
 function OrderPage() {
   const [orders, setOrders] = useState([]);
@@ -10,7 +10,7 @@ function OrderPage() {
 
   const loadOrders = async () => {
     try {
-      const res = await fetch(`${CONFIG.API_BASE}/orders`);
+      const res = await authFetch("/orders");
       const data = await res.json();
       setOrders(data);
     } catch {
@@ -25,11 +25,8 @@ function OrderPage() {
     }
 
     try {
-      const res = await fetch(`${CONFIG.API_BASE}/orders/generate`, {
+      const res = await authFetch("/orders/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify({ name: input })
       });
 

@@ -1,4 +1,4 @@
-import { CONFIG } from "../../../config/config";
+import { authFetch } from "../../utils/apiClient";
 import type { WIPBatchDTO } from "../../wip_management/model/WipManagementData";
 import type {
   CreateWIPBatchRequest,
@@ -22,7 +22,7 @@ async function parseErrorMessage(res: Response): Promise<string> {
 
 
 export async function fetchPendingSamples(): Promise<PendingSampleDTO[]> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/wip_builder/pending`);
+  const res = await authFetch("/api/wip_builder/pending");
   const data = await res.json();
 
   console.log("pending samples response:", data);
@@ -30,18 +30,15 @@ export async function fetchPendingSamples(): Promise<PendingSampleDTO[]> {
   return data;
 }
 export async function fetchEquipments(): Promise<EquipmentWithRecipesDTO[]> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/wip_builder/equipments`);
+  const res = await authFetch("/api/wip_builder/equipments");
   return res.json();
 }
 
 export async function createWIPBatch(
   payload: CreateWIPBatchRequest
 ): Promise<WIPBatchDTO> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/wip_builder`, {
+  const res = await authFetch("/api/wip_builder", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(payload),
   });
 

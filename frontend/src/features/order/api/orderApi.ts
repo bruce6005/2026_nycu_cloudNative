@@ -1,6 +1,6 @@
-import { CONFIG } from "../../../config/config";
+import { authFetch } from "../../utils/apiClient";
 
 export const getOrders = async () => {
-  const res = await fetch(`${CONFIG.API_BASE}/orders`);
+  const res = await authFetch("/orders");
   return res.json();
 };

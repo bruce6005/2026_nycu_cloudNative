@@ -1,4 +1,4 @@
-import { CONFIG } from "../../../config/config";
+import { authFetch } from "../../utils/apiClient";
 import type {
   EquipmentUsageDTO,
   ManagerDashboardDTO,
@@ -25,7 +25,7 @@ async function parseErrorMessage(res: Response): Promise<string> {
 }
 
 export async function fetchRequestStats(): Promise<RequestStatsDTO> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/manager_dashboard/request-stats`);
+  const res = await authFetch("/api/manager_dashboard/request-stats");
   console.log("request-stats:", res);
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res));
@@ -35,7 +35,7 @@ export async function fetchRequestStats(): Promise<RequestStatsDTO> {
 }
 
 export async function fetchEquipmentUsage(): Promise<EquipmentUsageDTO[]> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/manager_dashboard/equipment-usage`);
+  const res = await authFetch("/api/manager_dashboard/equipment-usage");
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res));
   }
@@ -44,7 +44,7 @@ export async function fetchEquipmentUsage(): Promise<EquipmentUsageDTO[]> {
 }
 
 export async function fetchTestRecordLogs(): Promise<TestRecordLogDTO[]> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/manager_dashboard/test-records`);
+  const res = await authFetch("/api/manager_dashboard/test-records");
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res));
   }
@@ -53,7 +53,7 @@ export async function fetchTestRecordLogs(): Promise<TestRecordLogDTO[]> {
 }
 
 export async function recoverEquipment(equipmentId: number): Promise<void> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/equipments/${equipmentId}/recover`, {
+  const res = await authFetch(`/api/equipments/${equipmentId}/recover`, {
     method: "PUT",
   });
 
