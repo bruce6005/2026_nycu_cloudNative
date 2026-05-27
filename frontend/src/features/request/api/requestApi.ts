@@ -1,4 +1,4 @@
-import { CONFIG } from "../../../config/config";
+import { authFetch } from "../../utils/apiClient";
 
 export type RequestSampleDTO = {
   barcode: string;
@@ -26,7 +26,7 @@ export type RequestListItemDTO = Pick<
 >;
 
 export const getRequest = async () => {
-  const res = await fetch(CONFIG.API_BASE + "/api/request");
+  const res = await authFetch("/api/request");
   if (!res.ok) throw new Error("Fetch failed");
   return res.json();
 };
@@ -46,9 +46,8 @@ export type RequestDTO = {
 };
 
 export const createRequest = async (data: RequestDTO) => {
-  const res = await fetch(CONFIG.API_BASE + "/api/request", {
+  const res = await authFetch("/api/request", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
@@ -61,7 +60,7 @@ export const createRequest = async (data: RequestDTO) => {
 };
 
 export async function archiveRequest(id: number): Promise<void> {
-  const res = await fetch(`${CONFIG.API_BASE}/api/request/${id}/archive`, {
+  const res = await authFetch(`/api/request/${id}/archive`, {
     method: "PATCH",
   });
 
@@ -71,7 +70,7 @@ export async function archiveRequest(id: number): Promise<void> {
 }
 
 export const getRequestById = async (id: number) => {
-  const res = await fetch(`${CONFIG.API_BASE}/api/request/${id}`);
+  const res = await authFetch(`/api/request/${id}`);
   if (!res.ok) throw new Error("Fetch failed");
   return res.json();
 };

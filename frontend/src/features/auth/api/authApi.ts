@@ -1,14 +1,17 @@
 import axios from "axios";
 import { CONFIG } from "../../../config/config";
 import type { AuthUser, ManagerOption, UserRole } from "../model/AuthUser";
+import { saveToken } from "../../utils/authToken";
+import "../../utils/apiClient";
 
 
 export async function loginWithGoogle(credential: string): Promise<AuthUser> {
   const res = await axios.post(`${CONFIG.API_BASE}/api/auth/google`, {
     credential,
   });
-  // console.log("Login response:", res.data);
-  return res.data.user;
+  const token = res.data.token;
+  saveToken(token);
+  return { ...res.data.user, token };
 }
 
 export async function setupUserProfile(params: {

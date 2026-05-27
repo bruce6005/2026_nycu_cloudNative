@@ -7,6 +7,7 @@ export type AuthUser = {
   avatarUrl?: string | null;
   role?: UserRole | null;
   managerId?: number | null;
+  token?: string;
 };
 
 export type ManagerOption = {

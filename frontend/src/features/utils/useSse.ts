@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { CONFIG } from '../../config/config';
+import { buildAuthUrl } from './apiClient';
 
 /**
  * 自訂 SSE 監聽 Hook
@@ -9,7 +9,7 @@ import { CONFIG } from '../../config/config';
 export const useSse = (eventName: string, callback: () => void) => {
   useEffect(() => {
     // 建立連線
-    const eventSource = new EventSource(`${CONFIG.API_BASE}/api/sse/subscribe`);
+    const eventSource = new EventSource(buildAuthUrl('/api/sse/subscribe'));
 
     // 監聽特定事件
     eventSource.addEventListener(eventName, (event) => {

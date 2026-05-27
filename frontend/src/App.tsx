@@ -14,6 +14,8 @@ import RecipeManagementPage from "./features/recipe/page/RecipeManagementPage";
 import ManagerDashboardPage from "./features/managerLog/page/ManagerDashboardPage";
 import type { AuthUser } from "./features/auth/model/AuthUser";
 import { getNavItems, type Page } from "./features/utils/getNavItems";
+import { clearToken, saveToken } from "./features/utils/authToken";
+import "./features/utils/apiClient";
 
 const pageMap: Record<Page, React.ComponentType<any>> = {
   approval: ApprovalPage,
@@ -42,8 +44,12 @@ function App() {
   useEffect(() => {
     if (user) {
       localStorage.setItem("auth_user", JSON.stringify(user));
+      if (user.token) {
+        saveToken(user.token);
+      }
     } else {
       localStorage.removeItem("auth_user");
+      clearToken();
     }
   }, [user]);
 
@@ -75,6 +81,7 @@ function App() {
 
   const handleLogout = () => {
     googleLogout();
+    clearToken();
     setUser(null);
   };
 
