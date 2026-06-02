@@ -68,7 +68,11 @@ function loadStoredAuthUser(): AuthUser | null {
   }
 
   try {
-    const parsed: unknown = JSON.parse(saved);
+    let decoded = saved;
+    if (!saved.trim().startsWith("{")) {
+      decoded = decodeURIComponent(escape(atob(saved)));
+    }
+    const parsed: unknown = JSON.parse(decoded);
     const sanitizedUser = sanitizeAuthUser(parsed);
     if (!sanitizedUser) {
       localStorage.removeItem(AUTH_USER_STORAGE_KEY);
@@ -110,7 +114,8 @@ function App() {
         return;
     }
 
-    localStorage.setItem(AUTH_USER_STORAGE_KEY, storedUser);
+    const encodedUser = btoa(unescape(encodeURIComponent(storedUser)));
+    localStorage.setItem(AUTH_USER_STORAGE_KEY, encodedUser);
     saveToken(sanitizedUser.token);
     }, [user]);
 
