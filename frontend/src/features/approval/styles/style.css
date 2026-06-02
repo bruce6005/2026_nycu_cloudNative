@@ -45,15 +45,15 @@
 /* ===== Order Card ===== */
 
 .order-card {
-  padding: 12px;
   border-radius: 8px;
-
-  border: 1px solid #9e9fa2;
-
   margin-bottom: 10px;
-  cursor: pointer;
   transition: 0.15s;
-  background: white;
+  background: transparent;
+  border: none;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  padding: 0;
 }
 
 .order-main-title {

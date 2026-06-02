@@ -16,8 +16,9 @@ function ApprovalList({ orders, onSelect, selected }: Props) {
         <div className="text-muted">No pending orders</div>
       ) : (
         orders.map((o) => (
-          <div
+          <button
             key={o.id}
+            type="button"
             onClick={() => onSelect(o)}
             className={`order-card ${
               selected?.id === o.id ? "selected" : ""
@@ -33,7 +34,7 @@ function ApprovalList({ orders, onSelect, selected }: Props) {
             <div className="order-sub">
               {o.priorityLabel === "URGENT" ? "Urgent Priority" : "Normal"}
             </div>
-          </div>
+          </button>
         ))
       )}
     </div>

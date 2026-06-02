@@ -67,14 +67,26 @@ function PendingRequestList({
               <div
                 key={item.sampleId}
                 className={`dispatch-card ${isSelected ? "selected" : ""}`}
+                // 👇 1. 告訴無障礙工具這是一個按鈕 (如果有 recipeId 的話)
+                role={item.recipeId != null ? "button" : undefined}
+                // 👇 2. 讓鍵盤的 Tab 鍵可以選中它
+                tabIndex={item.recipeId != null ? 0 : undefined}
                 onClick={() => {
                   if (item.recipeId != null) {
+                    onFilterByRecipe(item.recipeId, item.recipeName || "");
+                  }
+                }}
+                // 👇 3. 補上鍵盤監聽事件，支援 Enter 與空白鍵觸發
+                onKeyDown={(e) => {
+                  if ((e.key === "Enter" || e.key === " ") && item.recipeId != null) {
+                    e.preventDefault(); // 避免按下空白鍵時畫面捲動
                     onFilterByRecipe(item.recipeId, item.recipeName || "");
                   }
                 }}
                 style={{ cursor: item.recipeId != null ? "pointer" : "default" }}
                 title={item.recipeId != null ? "Click to filter by this recipe" : undefined}
               >
+                {/* ... 中間的內容完全維持原樣不變 ... */}
                 <div className="dispatch-card-header">
                   <span className="dispatch-card-title">{item.barcode}</span>
 
@@ -84,7 +96,7 @@ function PendingRequestList({
                       type="button"
                       className="button secondary request-action-btn"
                       onClick={(e) => {
-                        e.stopPropagation();
+                        e.stopPropagation(); // 你這裡已經有寫阻擋冒泡了，很好！
                         onToggle(item);
                       }}
                       disabled={!canAdd}
@@ -115,6 +127,7 @@ function PendingRequestList({
               </div>
             );
           })
+
         )}
       </div>
     </div>

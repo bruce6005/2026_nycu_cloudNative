@@ -131,7 +131,7 @@ function Layout({
         </div>
       </div>
 
-      <div className="container">
+<div className="container">
         <div className="sidebar">
           {navItems.map((item) =>
             item.subItems ? (
@@ -148,10 +148,19 @@ function Layout({
                   {item.subItems.map((sub) => (
                     <div
                       key={sub.page}
+                      role="button"
+                      tabIndex={0}
                       className={`menu-item sub-menu-item ${currentPage === sub.page ? "active" : ""}`}
                       onClick={(event) => {
                         event.stopPropagation();
                         onNavigate(sub.page);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onNavigate(sub.page);
+                        }
                       }}
                     >
                       <NavIcon page={sub.page} />
@@ -163,8 +172,16 @@ function Layout({
             ) : (
               <div
                 key={item.page}
+                role="button"
+                tabIndex={0}
                 className={`menu-item ${currentPage === item.page ? "active" : ""}`}
                 onClick={() => onNavigate(item.page)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onNavigate(item.page);
+                  }
+                }}
               >
                 <NavIcon page={item.page} />
                 <span className="nav-label">{item.label}</span>
@@ -172,8 +189,6 @@ function Layout({
             )
           )}
         </div>
-
-        <div className="content">{children}</div>
       </div>
     </>
   );
