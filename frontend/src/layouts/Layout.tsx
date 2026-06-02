@@ -86,7 +86,7 @@ const navIconPaths: Record<IconName, React.ReactNode> = {
   ),
 };
 
-function NavIcon({ page }: { page: Page }) {
+function NavIcon({ page }: Readonly<{ page: Page }>) {
   const paths = navIconPaths[page as IconName];
 
   return (
@@ -99,12 +99,12 @@ function NavIcon({ page }: { page: Page }) {
 }
 
 type Props = {
-  children: React.ReactNode;
-  currentPage: Page;
-  navItems: NavItem[];
-  userName?: string;
-  onNavigate: (page: Page) => void;
-  onLogout: () => void;
+  readonly children: React.ReactNode;
+  readonly currentPage: Page;
+  readonly navItems: readonly NavItem[];
+  readonly userName?: string;
+  readonly onNavigate: (page: Page) => void;
+  readonly onLogout: () => void;
 };
 
 function Layout({
@@ -114,7 +114,7 @@ function Layout({
   userName,
   onNavigate,
   onLogout,
-}: Props) {
+}: Readonly<Props>) {
   const isItemActive = (item: NavItem) =>
     currentPage === item.page || item.subItems?.some((sub) => sub.page === currentPage);
 
@@ -146,8 +146,9 @@ function Layout({
                 </div>
                 <div className="sub-menu">
                   {item.subItems.map((sub) => (
-                    <div
+                    <button
                       key={sub.page}
+                      type="button"
                       className={`menu-item sub-menu-item ${currentPage === sub.page ? "active" : ""}`}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -156,19 +157,20 @@ function Layout({
                     >
                       <NavIcon page={sub.page} />
                       <span className="nav-label">{sub.label}</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
             ) : (
-              <div
+              <button
                 key={item.page}
+                type="button"
                 className={`menu-item ${currentPage === item.page ? "active" : ""}`}
                 onClick={() => onNavigate(item.page)}
               >
                 <NavIcon page={item.page} />
                 <span className="nav-label">{item.label}</span>
-              </div>
+              </button>
             )
           )}
         </div>

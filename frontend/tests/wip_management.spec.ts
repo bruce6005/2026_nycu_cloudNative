@@ -22,6 +22,7 @@ import { test, expect } from '@playwright/test';
 const mockUser = {
   id: 999,
   name: 'Machine Operator Agent',
+  email: 'operator@example.com',
   role: 'LAB_STAFF',
   managerId: 1
 };

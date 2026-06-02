@@ -17,6 +17,8 @@ import com.example.demo.modules.auth.dto.UserSetupRequest;
 import com.example.demo.modules.auth.model.User;
 import com.example.demo.modules.auth.service.UserService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -37,6 +39,28 @@ public class UserController {
             @PathVariable Long id,
             @RequestBody UserSetupRequest request
     ) {
+        return setupUserProfileById(id, request);
+    }
+
+    @PatchMapping("/me/setup")
+    public ResponseEntity<?> setupCurrentUserProfile(
+            HttpServletRequest httpRequest,
+            @RequestBody UserSetupRequest request
+    ) {
+        User authUser = (User) httpRequest.getAttribute("authUser");
+        if (authUser == null) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of(
+                            "code", "UNAUTHORIZED",
+                            "message", "Missing authenticated user"
+                    ));
+        }
+
+        return setupUserProfileById(authUser.getId(), request);
+    }
+
+    private ResponseEntity<?> setupUserProfileById(Long id, UserSetupRequest request) {
         try {
             User updatedUser = userService.setupProfile(id, request);
             return ResponseEntity.ok(Map.of("user", updatedUser));

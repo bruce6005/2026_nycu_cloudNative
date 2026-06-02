@@ -12,7 +12,15 @@ describe('authApi', () => {
 
   describe('loginWithGoogle', () => {
     it('should call axios.post and return user data', async () => {
-      const mockUser = { id: 1, name: 'Test User', email: 'test@example.com' };
+      const mockUser = {
+        id: 1,
+        name: 'Test User',
+        email: 'test@example.com',
+        role: null,
+        managerId: null,
+        avatarUrl: null,
+      };
+
       vi.mocked(axios.post).mockResolvedValueOnce({ data: { user: mockUser } });
 
       const credential = 'fake-credential';
@@ -25,13 +33,21 @@ describe('authApi', () => {
 
   describe('setupUserProfile', () => {
     it('should call axios.patch and return updated user data', async () => {
-      const mockUser = { id: 1, name: 'Test User', email: 'test@example.com', role: 'REQUESTER', managerId: 2 };
+      const mockUser = {
+        id: 1,
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'REQUESTER',
+        managerId: 2,
+        avatarUrl: null,
+      };
+
       vi.mocked(axios.patch).mockResolvedValueOnce({ data: { user: mockUser } });
 
       const params = { userId: 1, role: 'REQUESTER' as const, managerId: 2 };
       const result = await setupUserProfile(params);
 
-      expect(axios.patch).toHaveBeenCalledWith(`${CONFIG.API_BASE}/api/users/1/setup`, {
+      expect(axios.patch).toHaveBeenCalledWith(`${CONFIG.API_BASE}/api/users/me/setup`, {
         role: 'REQUESTER',
         managerId: 2,
       });
@@ -39,13 +55,21 @@ describe('authApi', () => {
     });
 
     it('should use null for managerId if not provided', async () => {
-      const mockUser = { id: 1, name: 'Test User', email: 'test@example.com', role: 'MANAGER' };
+      const mockUser = {
+        id: 1,
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'MANAGER',
+        managerId: null,
+        avatarUrl: null,
+      };
+
       vi.mocked(axios.patch).mockResolvedValueOnce({ data: { user: mockUser } });
 
       const params = { userId: 1, role: 'MANAGER' as const };
       const result = await setupUserProfile(params);
 
-      expect(axios.patch).toHaveBeenCalledWith(`${CONFIG.API_BASE}/api/users/1/setup`, {
+      expect(axios.patch).toHaveBeenCalledWith(`${CONFIG.API_BASE}/api/users/me/setup`, {
         role: 'MANAGER',
         managerId: null,
       });
@@ -58,6 +82,7 @@ describe('authApi', () => {
       const mockManagers = [
         { id: 2, name: 'Manager1', email: 'manager@example.com', role: 'MANAGER' },
       ];
+
       vi.mocked(axios.get).mockResolvedValueOnce({ data: mockManagers });
 
       const result = await fetchManagerOptions();

@@ -15,6 +15,76 @@ import type { AuthUser } from "../../auth/model/AuthUser";
 type Props = {
   user: AuthUser;
 };
+
+function keepPendingSamples(
+  stagedSamples: PendingSampleDTO[],
+  pendingSamples: PendingSampleDTO[]
+) {
+  const pendingSampleIds = new Set(
+    pendingSamples.map((sample) => sample.sampleId)
+  );
+
+  return stagedSamples.filter((sample) =>
+    pendingSampleIds.has(sample.sampleId)
+  );
+}
+
+function equipmentSupportsRecipe(
+  equipment: EquipmentWithRecipesDTO,
+  recipeId: number | null
+) {
+  return equipment.recipes.some((recipe) => recipe.id === recipeId);
+}
+
+function filterEquipmentsByRecipe(
+  equipments: EquipmentWithRecipesDTO[],
+  recipeId: number | null
+) {
+  if (recipeId === null) {
+    return equipments;
+  }
+
+  return equipments.filter((equipment) =>
+    equipmentSupportsRecipe(equipment, recipeId)
+  );
+}
+
+function sampleMatchesFilters(
+  sample: PendingSampleDTO,
+  recipeId: number | null,
+  equipment: EquipmentWithRecipesDTO | null
+) {
+  if (recipeId !== null && sample.recipeId !== recipeId) {
+    return false;
+  }
+
+  return !equipment || equipmentSupportsRecipe(equipment, sample.recipeId);
+}
+
+function filterPendingSamples(
+  pendingSamples: PendingSampleDTO[],
+  recipeId: number | null,
+  equipment: EquipmentWithRecipesDTO | null
+) {
+  return pendingSamples.filter((sample) =>
+    sampleMatchesFilters(sample, recipeId, equipment)
+  );
+}
+
+function resolveSelectedEquipmentId(
+  currentId: number | null,
+  equipmentList: EquipmentWithRecipesDTO[]
+) {
+  if (
+    equipmentList.length > 0 &&
+    !equipmentList.some((item) => item.id === currentId)
+  ) {
+    return equipmentList[0].id;
+  }
+
+  return currentId;
+}
+
 function WIPBuilderPage({ user }: Props) {
   const [pendingSamples, setPendingSamples] = useState<PendingSampleDTO[]>([]);
   const [stagedSamples, setStagedSamples] = useState<PendingSampleDTO[]>([]);
@@ -60,37 +130,20 @@ function WIPBuilderPage({ user }: Props) {
     [equipments, selectedEquipmentId]
   );
 
-  const filteredEquipments = useMemo(() => {
-    if (filterRecipeId === null) {
-      return equipments;
-    }
+  const filteredEquipments = useMemo(
+    () => filterEquipmentsByRecipe(equipments, filterRecipeId),
+    [equipments, filterRecipeId]
+  );
 
-    return equipments.filter((equipment) =>
-      equipment.recipes.some((recipe) => recipe.id === filterRecipeId)
-    );
-  }, [equipments, filterRecipeId]);
+  const filterEquipment = useMemo(
+    () => equipments.find((item) => item.id === filterEquipmentId) ?? null,
+    [equipments, filterEquipmentId]
+  );
 
-  const filteredPendingSamples = useMemo(() => {
-    return pendingSamples.filter((sample) => {
-      if (filterRecipeId !== null && sample.recipeId !== filterRecipeId) {
-        return false;
-      }
-
-      if (filterEquipmentId !== null) {
-        const equipment = equipments.find((item) => item.id === filterEquipmentId);
-
-        if (!equipment) {
-          return false;
-        }
-
-        if (!equipment.recipes.some((recipe) => recipe.id === sample.recipeId)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [pendingSamples, filterRecipeId, filterEquipmentId, equipments]);
+  const filteredPendingSamples = useMemo(
+    () => filterPendingSamples(pendingSamples, filterRecipeId, filterEquipment),
+    [pendingSamples, filterRecipeId, filterEquipment]
+  );
 
   const loadData = useCallback(async () => {
     try {
@@ -104,21 +157,11 @@ function WIPBuilderPage({ user }: Props) {
       setPendingSamples(pending);
       setEquipments(equipmentList);
 
-      setStagedSamples((current) =>
-        current.filter((sample) =>
-          pending.some((item) => item.sampleId === sample.sampleId)
-        )
-      );
+      setStagedSamples((current) => keepPendingSamples(current, pending));
 
-      setSelectedEquipmentId((currentId) => {
-        if (
-          equipmentList.length > 0 &&
-          !equipmentList.some((item) => item.id === currentId)
-        ) {
-          return equipmentList[0].id;
-        }
-        return currentId;
-      });
+      setSelectedEquipmentId((currentId) =>
+        resolveSelectedEquipmentId(currentId, equipmentList)
+      );
     } catch {
       setError("Cannot load dispatch data from backend");
     }

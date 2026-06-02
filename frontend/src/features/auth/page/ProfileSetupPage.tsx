@@ -76,7 +76,6 @@ export default function ProfileSetupPage({ user, setUser }: Props) {
 
     try {
       const updatedUser = await setupUserProfile({
-        userId: user.id,
         role,
         managerId: parsedManagerId,
       });

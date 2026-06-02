@@ -124,6 +124,11 @@ body {
   font-size: 14px;
   font-weight: 500;
   transition: background-color 0.15s ease, color 0.15s ease;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
 }
 
 .menu-item:hover {

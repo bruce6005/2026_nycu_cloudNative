@@ -4,6 +4,17 @@ import type { EquipmentWithRecipesDTO } from "../../wip_builder/model/WIPBuilder
 import { createEquipment, deleteEquipment, fetchEquipmentsWithStatus, fetchEquipmentSchemas, recoverEquipment } from "../api/equipmentApi";
 import "../../approval/styles/style.css";
 
+
+function toValidEquipmentId(value: unknown): number | null {
+    if (typeof value !== "number") {
+        return null;
+    }
+    if (!Number.isInteger(value) || value <= 0) {
+        return null;
+    }
+    return value;
+}
+
 export default function EquipmentPage() {
     const [equipments, setEquipments] = useState<EquipmentWithRecipesDTO[]>([]);
     const [schemas, setSchemas] = useState<EquipmentTypeSchema[]>([]);
@@ -65,24 +76,36 @@ export default function EquipmentPage() {
             alert(error.response?.data?.message || "Failed to create equipment.");
         }
     };
+    const handleDelete = async (id: unknown) => {
+        const equipmentId = toValidEquipmentId(id);
 
-    const handleDelete = async (id: number) => {
+        if (equipmentId === null) {
+            alert("Invalid equipment id.");
+            return;
+        }
+
         if (!window.confirm("Are you sure you want to soft delete this equipment?")) return;
 
         try {
-            await deleteEquipment(id);
+            await deleteEquipment(equipmentId);
             await loadData();
         } catch (error: any) {
             console.error("Failed to delete equipment", error);
             alert(error.response?.data?.message || "Failed to delete equipment.");
         }
     };
+    const handleRecover = async (id: unknown) => {
+        const equipmentId = toValidEquipmentId(id);
 
-    const handleRecover = async (id: number) => {
+        if (equipmentId === null) {
+            alert("Invalid equipment id.");
+            return;
+        }
+
         if (!window.confirm("Are you sure you want to recover this equipment?")) return;
 
         try {
-            await recoverEquipment(id);
+            await recoverEquipment(equipmentId);
             await loadData();
         } catch (error: any) {
             console.error("Failed to recover equipment", error);

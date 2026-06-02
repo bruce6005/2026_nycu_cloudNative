@@ -45,11 +45,13 @@
 /* ===== Order Card ===== */
 
 .order-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
   padding: 12px;
   border-radius: 8px;
-
   border: 1px solid #9e9fa2;
-
   margin-bottom: 10px;
   cursor: pointer;
   transition: 0.15s;

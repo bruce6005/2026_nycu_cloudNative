@@ -13,8 +13,18 @@ export async function createEquipment(data: EquipmentRequest): Promise<Equipment
     return res.data;
 }
 
+function validateEquipmentId(equipmentId: number): number {
+  if (!Number.isInteger(equipmentId) || equipmentId <= 0) {
+    throw new Error("Invalid equipment id");
+  }
+
+  return equipmentId;
+}
+
 export async function deleteEquipment(equipmentId: number): Promise<void> {
-    await axios.delete(`${CONFIG.API_BASE}/api/equipments/${equipmentId}`);
+  const safeEquipmentId = validateEquipmentId(equipmentId);
+
+  await axios.delete(`${CONFIG.API_BASE}/api/equipments/${safeEquipmentId}`);
 }
 
 export async function recoverEquipment(equipmentId: number): Promise<void> {
