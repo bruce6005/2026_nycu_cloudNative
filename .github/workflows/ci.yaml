@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  checks: write
+
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -202,6 +202,9 @@ jobs:
   sonarqube:
     name: SonarQube Analysis
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
     needs:
       - backend-ci
       - frontend-ci
