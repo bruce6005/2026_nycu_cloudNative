@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test'
 const mockUser = {
   id: 999,
   name: 'Test Agent',
+  email: 'agent@example.com',
   role: 'MANAGER',
   managerId: 1
 };
