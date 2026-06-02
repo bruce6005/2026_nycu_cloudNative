@@ -1,0 +1,77 @@
+import { authFetch } from "../../utils/apiClient";
+import type {
+  EquipmentUsageDTO,
+  ManagerDashboardDTO,
+  RequestStatsDTO,
+  TestRecordLogDTO,
+} from "../model/ManagerDashboardData";
+
+async function parseErrorMessage(res: Response): Promise<string> {
+  try {
+    const data = await res.json();
+
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message;
+    }
+
+    if (typeof data?.error === "string" && data.error.trim()) {
+      return data.error;
+    }
+  } catch {
+    return `Request failed (${res.status})`;
+  }
+
+  return `Request failed (${res.status})`;
+}
+
+export async function fetchRequestStats(): Promise<RequestStatsDTO> {
+  const res = await authFetch("/api/manager_dashboard/request-stats");
+  console.log("request-stats:", res);
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res));
+  }
+
+  return res.json();
+}
+
+export async function fetchEquipmentUsage(): Promise<EquipmentUsageDTO[]> {
+  const res = await authFetch("/api/manager_dashboard/equipment-usage");
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res));
+  }
+
+  return res.json();
+}
+
+export async function fetchTestRecordLogs(): Promise<TestRecordLogDTO[]> {
+  const res = await authFetch("/api/manager_dashboard/test-records");
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res));
+  }
+
+  return res.json();
+}
+
+export async function recoverEquipment(equipmentId: number): Promise<void> {
+  const res = await authFetch(`/api/equipments/${equipmentId}/recover`, {
+    method: "PUT",
+  });
+
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res));
+  }
+}
+
+export async function fetchManagerDashboard(): Promise<ManagerDashboardDTO> {
+  const [requestStats, equipmentUsage, logs] = await Promise.all([
+    fetchRequestStats(),
+    fetchEquipmentUsage(),
+    fetchTestRecordLogs(),
+  ]);
+
+  return {
+    requestStats,
+    equipmentUsage,
+    logs,
+  };
+}

@@ -1,0 +1,28 @@
+package com.example.demo.modules.wip_management.dto;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class WIPBatchDTO {
+    private Long id;
+    private Long recipeId;
+    private String recipeName;
+    private Long equipmentId;
+    private String equipmentName;
+    private List<String> sampleBarcodes;
+    private String status;
+    private LocalDateTime createTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+
+    private LocalDateTime estimatedEndTime;
+    private Integer progressPercent;
+    private Long remainingSeconds;
+}

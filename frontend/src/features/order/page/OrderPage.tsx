@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import OrderList from "../components/OrderList";
 import OrderForm from "../components/OrderForm";
-
-const API_BASE = "http://localhost:8080";
+import { authFetch } from "../../utils/apiClient";
 
 function OrderPage() {
   const [orders, setOrders] = useState([]);
@@ -11,7 +10,7 @@ function OrderPage() {
 
   const loadOrders = async () => {
     try {
-      const res = await fetch(`${API_BASE}/orders`);
+      const res = await authFetch("/orders");
       const data = await res.json();
       setOrders(data);
     } catch {
@@ -26,11 +25,8 @@ function OrderPage() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/orders/generate`, {
+      const res = await authFetch("/orders/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify({ name: input })
       });
 
@@ -47,7 +43,10 @@ function OrderPage() {
   }, []);
 
   return (
-    <div className="content">
+    <div className="standard-page">
+      <div className="standard-page-content">
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      
       <div className="card">
         <h2>Create Order</h2>
         <OrderForm input={input} setInput={setInput} createOrder={createOrder} />
@@ -56,6 +55,7 @@ function OrderPage() {
       <div className="card">
         <h2>Recent Orders</h2>
         <OrderList orders={orders} />
+      </div>
       </div>
     </div>
   );
