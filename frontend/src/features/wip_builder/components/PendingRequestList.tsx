@@ -1,14 +1,14 @@
 import type { PendingSampleDTO } from "../model/WIPBuilderData";
 
 type Props = {
-  items: PendingSampleDTO[];
-  stagedSampleIds: number[];
-  currentBatchRecipeId: number | null;
-  filterRecipeId: number | null;
-  filterRecipeName: string | null;
-  onToggle: (item: PendingSampleDTO) => void;
-  onFilterByRecipe: (recipeId: number, recipeName: string) => void;
-  onClearFilter: () => void;
+  readonly items: readonly PendingSampleDTO[];
+  readonly stagedSampleIds: readonly number[];
+  readonly currentBatchRecipeId: number | null;
+  readonly filterRecipeId: number | null;
+  readonly filterRecipeName: string | null;
+  readonly onToggle: (item: PendingSampleDTO) => void;
+  readonly onFilterByRecipe: (recipeId: number, recipeName: string) => void;
+  readonly onClearFilter: () => void;
 };
 
 function PendingRequestList({
@@ -20,7 +20,7 @@ function PendingRequestList({
   onToggle,
   onFilterByRecipe,
   onClearFilter,
-}: Props) {
+}: Readonly<Props>) {
   const getPriorityClass = (priority: string) => {
     const normalized = priority.toUpperCase();
 
@@ -66,9 +66,17 @@ function PendingRequestList({
             return (
               <div
                 key={item.sampleId}
+                role="button"
+                tabIndex={item.recipeId != null ? 0 : -1}
                 className={`dispatch-card ${isSelected ? "selected" : ""}`}
                 onClick={() => {
                   if (item.recipeId != null) {
+                    onFilterByRecipe(item.recipeId, item.recipeName || "");
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (item.recipeId != null && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
                     onFilterByRecipe(item.recipeId, item.recipeName || "");
                   }
                 }}
