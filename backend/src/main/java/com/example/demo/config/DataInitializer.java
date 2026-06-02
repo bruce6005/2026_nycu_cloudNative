@@ -258,7 +258,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // Batch 1: QUEUED - waiting to start
         execute(
-                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, NULL, NULL)",
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time, force_crash) VALUES (?, ?, ?, ?, ?, NULL, NULL, false)",
                 1L, 1L, 1L, "QUEUED", baseTime);
         insertTestRecord(1L, 1L, 1L, 2L, "QUEUED", baseTime, null,
                 "{\"action\":\"SEED_WIP_BATCH\",\"sampleIds\":\"[1, 2, 3, 4]\"}");
@@ -268,7 +268,7 @@ public class DataInitializer implements CommandLineRunner {
         // Batch 2: RUNNING - currently processing
         LocalDateTime runStartTime = baseTime.plusHours(1);
         execute(
-                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time, estimated_end_time) VALUES (?, ?, ?, ?, ?, ?, NULL, ?)",
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time, estimated_end_time, force_crash) VALUES (?, ?, ?, ?, ?, ?, NULL, ?, false)",
                 2L, 2L, 2L, "RUNNING", baseTime.plusMinutes(15), runStartTime, runStartTime.plusSeconds(45));
         insertTestRecord(2L, 2L, 2L, 2L, "RUNNING", runStartTime, null,
                 "{\"action\":\"SEED_WIP_BATCH\",\"sampleIds\":\"[5, 6, 7, 8, 9]\"}");
@@ -292,7 +292,7 @@ public class DataInitializer implements CommandLineRunner {
         // Batch 3: FINISHED - completed successfully
         LocalDateTime finishTime = baseTime.minusHours(2);
         execute(
-                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time, force_crash) VALUES (?, ?, ?, ?, ?, ?, ?, false)",
                 3L, 3L, 3L, "FINISHED", finishTime.minusHours(1), finishTime.minusMinutes(45), finishTime);
         insertTestRecord(3L, 3L, 3L, 2L, "FINISHED", finishTime.minusMinutes(45), finishTime,
                 "{\"action\":\"SEED_WIP_BATCH\",\"sampleIds\":\"[10, 11, 12]\"}");
@@ -319,7 +319,7 @@ public class DataInitializer implements CommandLineRunner {
         // Batch 4: FINISHED - another completed batch with different recipe
         LocalDateTime finishTime2 = baseTime.minusHours(3);
         execute(
-                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time, force_crash) VALUES (?, ?, ?, ?, ?, ?, ?, false)",
                 4L, 4L, 4L, "FINISHED", finishTime2.minusHours(1), finishTime2.minusMinutes(45), finishTime2);
         insertTestRecord(4L, 4L, 4L, 2L, "FINISHED", finishTime2.minusMinutes(45), finishTime2,
                 "{\"action\":\"SEED_WIP_BATCH\",\"sampleIds\":\"[13, 14, 15]\"}");
@@ -334,7 +334,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // Batch 5: QUEUED - another waiting batch
         execute(
-                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time) VALUES (?, ?, ?, ?, ?, NULL, NULL)",
+                "INSERT INTO wip_batch (id, recipe_id, equipment_id, status, create_time, start_time, end_time, force_crash) VALUES (?, ?, ?, ?, ?, NULL, NULL, false)",
                 5L, 5L, 5L, "QUEUED", baseTime.plusHours(2));
         insertTestRecord(5L, 5L, 5L, 2L, "QUEUED", baseTime.plusHours(2), null,
                 "{\"action\":\"SEED_WIP_BATCH\",\"sampleIds\":\"[16, 17, 18]\"}");

@@ -11,4 +11,5 @@ public interface WIPbatchRepository extends JpaRepository<WIPbatch, Long> {
     List<WIPbatch> findByStatusIn(List<String> statuses);
     List<WIPbatch> findByEquipment_Id(Long equipmentId);
     Optional<WIPbatch> findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(Long equipmentId, String status);
+    Optional<WIPbatch> findFirstByEquipment_IdAndStatusInOrderByStartTimeDesc(Long equipmentId, List<String> statuses);
 }

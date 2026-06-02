@@ -198,6 +198,7 @@ public class WIPBuilderService {
         batch.setEquipment(equipment);
         batch.setStatus("QUEUED");
         batch.setCreateTime(LocalDateTime.now());
+        batch.setForceCrash(request.isForceCrash());
 
         WIPbatch savedBatch = wipbatchRepository.save(batch);
 
@@ -213,7 +214,8 @@ public class WIPBuilderService {
         testRecord.setStartTime(LocalDateTime.now());
         testRecord.setEndTime(null);
         testRecord.setResultData(
-                "{\"action\":\"CREATE_WIP_BATCH\",\"sampleIds\":\"" + request.getSampleIds() + "\"}"
+                "{\"action\":\"CREATE_WIP_BATCH\",\"sampleIds\":\"" + request.getSampleIds()
+                        + "\",\"forceCrash\":" + request.isForceCrash() + "}"
         );
 
         testRecordsRepository.save(testRecord);

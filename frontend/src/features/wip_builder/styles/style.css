@@ -289,6 +289,43 @@
   margin-top: 4px;
 }
 
+.demo-crash-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 9px 10px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #7f1d1d;
+  cursor: pointer;
+}
+
+.demo-crash-option input {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: #dc2626;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.demo-crash-title {
+  display: block;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.demo-crash-copy {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.25;
+  color: #991b1b;
+}
+
 .recipe-tag {
   display: inline-block;
   padding: 6px 12px;
@@ -489,6 +526,11 @@
   overflow-y: auto;
   gap: 4px;
   margin-top: 2px;
+}
+
+.create-batch-panel .demo-crash-option {
+  margin-top: 4px;
+  padding: 7px 8px;
 }
 
 .create-batch-panel .recipe-tag {

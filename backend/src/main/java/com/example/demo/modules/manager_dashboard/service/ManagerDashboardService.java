@@ -2,9 +2,9 @@ package com.example.demo.modules.manager_dashboard.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -23,6 +23,7 @@ import com.example.demo.modules.wip_builder.model.WIPbatch;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
+import com.example.demo.modules.wip_management.service.WIPManagementService;
 
 @Service
 public class ManagerDashboardService {
@@ -32,18 +33,21 @@ public class ManagerDashboardService {
     private final EquipmentStatusLogsRepository equipmentStatusLogsRepository;
     private final TestRecordsRepository testRecordsRepository;
     private final WIPbatchRepository wipbatchRepository;
+    private final WIPManagementService wipManagementService;
 
     public ManagerDashboardService(
             RequestRepository requestRepository,
             EquipmentRepository equipmentRepository,
             EquipmentStatusLogsRepository equipmentStatusLogsRepository,
             TestRecordsRepository testRecordsRepository,
-            WIPbatchRepository wipbatchRepository) {
+            WIPbatchRepository wipbatchRepository,
+            WIPManagementService wipManagementService) {
         this.requestRepository = requestRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentStatusLogsRepository = equipmentStatusLogsRepository;
         this.testRecordsRepository = testRecordsRepository;
         this.wipbatchRepository = wipbatchRepository;
+        this.wipManagementService = wipManagementService;
     }
 
     @Transactional(readOnly = true)
@@ -70,9 +74,10 @@ public class ManagerDashboardService {
                 rejected);
     }
     
-    @Transactional(readOnly = true)
-    @Cacheable(value = "managerDashboardEquipmentUsage")
+    @Transactional
     public List<EquipmentUsageDTO> getEquipmentUsage() {
+        wipManagementService.autoResolveExpiredRunningBatches();
+
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime windowStart = now.minusHours(24);
         long totalMinutes = Duration.between(windowStart, now).toMinutes();
@@ -138,7 +143,9 @@ public class ManagerDashboardService {
                 : equipment.getEquipmentTypeSchema().getEquipmentType();
 
         WIPbatch activeBatch = wipbatchRepository
-                .findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING")
+                .findFirstByEquipment_IdAndStatusInOrderByStartTimeDesc(
+                        equipment.getId(),
+                        Arrays.asList("RUNNING", "RUNNING_CRASH"))
                 .orElse(null);
 
         Long activeBatchId = null;
@@ -170,7 +177,7 @@ public class ManagerDashboardService {
         long totalUsageCount = batches.size();
 
         long usageCount = batches.stream()
-                .filter(batch -> matchesStatus(batch.getStatus(), "RUNNING", "FINISHED", "FAILED"))
+                .filter(batch -> matchesStatus(batch.getStatus(), "RUNNING", "RUNNING_CRASH", "FINISHED", "FAILED"))
                 .count();
 
         long successCount = batches.stream()

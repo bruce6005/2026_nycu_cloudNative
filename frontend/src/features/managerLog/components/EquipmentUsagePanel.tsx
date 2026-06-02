@@ -116,7 +116,7 @@ function EquipmentUsagePanel({
                         onClick={() => onFixEquipment(item.equipmentId)}
                         disabled={isFixing}
                       >
-                        {isFixing ? "Fixing..." : "Fix"}
+                        {isFixing ? "Recovering..." : "Recover"}
                       </button>
                     )}
                   </div>
