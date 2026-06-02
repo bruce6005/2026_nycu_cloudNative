@@ -20,7 +20,7 @@ function PendingRequestList({
   onToggle,
   onFilterByRecipe,
   onClearFilter,
-}: Props) {
+}: Readonly<Props>) {
   const getPriorityClass = (priority: string) => {
     const normalized = priority.toUpperCase();
 
@@ -72,8 +72,8 @@ function PendingRequestList({
                     onFilterByRecipe(item.recipeId, item.recipeName || "");
                   }
                 }}
-                style={{ cursor: item.recipeId != null ? "pointer" : "default" }}
-                title={item.recipeId != null ? "Click to filter by this recipe" : undefined}
+                style={{ cursor: item.recipeId === null ? "default" : "pointer" }}
+                title={item.recipeId === null ? undefined : "Click to filter by this recipe"}
               >
                 <div className="dispatch-card-header">
                   <span className="dispatch-card-title">{item.barcode}</span>
