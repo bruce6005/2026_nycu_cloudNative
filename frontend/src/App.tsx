@@ -13,9 +13,13 @@ import EquipmentTypeManagementPage from "./features/equipment/page/EquipmentType
 import RecipeManagementPage from "./features/recipe/page/RecipeManagementPage";
 import ManagerDashboardPage from "./features/managerLog/page/ManagerDashboardPage";
 import type { AuthUser } from "./features/auth/model/AuthUser";
+import { sanitizeAuthUser } from "./features/auth/model/sanitizeAuthUser";
 import { getNavItems, type Page } from "./features/utils/getNavItems";
 import { clearToken, saveToken } from "./features/utils/authToken";
 import "./features/utils/apiClient";
+
+const AUTH_USER_STORAGE_KEY = "auth_user";
+const MAX_STORED_AUTH_USER_LENGTH = 4096;
 
 const pageMap: Record<Page, React.ComponentType<any>> = {
   approval: ApprovalPage,
@@ -31,11 +35,28 @@ const pageMap: Record<Page, React.ComponentType<any>> = {
   ),
 };
 
+function loadStoredAuthUser(): AuthUser | null {
+  const saved = localStorage.getItem(AUTH_USER_STORAGE_KEY);
+  if (!saved || saved.length > MAX_STORED_AUTH_USER_LENGTH) {
+    localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+    return null;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(saved);
+    const sanitizedUser = sanitizeAuthUser(parsed);
+    if (!sanitizedUser) {
+      localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+    }
+    return sanitizedUser;
+  } catch {
+    localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+    return null;
+  }
+}
+
 function App() {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    const saved = localStorage.getItem("auth_user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState<AuthUser | null>(loadStoredAuthUser);
 
   const [page, setPage] = useState<Page>(() => {
     return (localStorage.getItem("current_page") as Page) || "request";
@@ -43,12 +64,15 @@ function App() {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem("auth_user", JSON.stringify(user));
-      if (user.token) {
-        saveToken(user.token);
+      const sanitizedUser = sanitizeAuthUser(user);
+      if (sanitizedUser) {
+        localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(sanitizedUser));
+        if (sanitizedUser.token) {
+          saveToken(sanitizedUser.token);
+        }
       }
     } else {
-      localStorage.removeItem("auth_user");
+      localStorage.removeItem(AUTH_USER_STORAGE_KEY);
       clearToken();
     }
   }, [user]);

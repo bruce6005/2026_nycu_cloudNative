@@ -15,6 +15,20 @@ import type { AuthUser } from "../../auth/model/AuthUser";
 type Props = {
   user: AuthUser;
 };
+
+function keepPendingSamples(
+  stagedSamples: PendingSampleDTO[],
+  pendingSamples: PendingSampleDTO[]
+) {
+  const pendingSampleIds = new Set(
+    pendingSamples.map((sample) => sample.sampleId)
+  );
+
+  return stagedSamples.filter((sample) =>
+    pendingSampleIds.has(sample.sampleId)
+  );
+}
+
 function WIPBuilderPage({ user }: Props) {
   const [pendingSamples, setPendingSamples] = useState<PendingSampleDTO[]>([]);
   const [stagedSamples, setStagedSamples] = useState<PendingSampleDTO[]>([]);
@@ -104,11 +118,7 @@ function WIPBuilderPage({ user }: Props) {
       setPendingSamples(pending);
       setEquipments(equipmentList);
 
-      setStagedSamples((current) =>
-        current.filter((sample) =>
-          pending.some((item) => item.sampleId === sample.sampleId)
-        )
-      );
+      setStagedSamples((current) => keepPendingSamples(current, pending));
 
       setSelectedEquipmentId((currentId) => {
         if (
