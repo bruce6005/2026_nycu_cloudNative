@@ -1,0 +1,252 @@
+/* =====================================
+   Design Tokens: global variables
+===================================== */
+:root {
+  --bg: #f4f5f7;
+  --card: #ffffff;
+  --text: #1f2328;
+  --subtext: #6b7280;
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --success: #16a34a;
+  --success-hover: #15803d;
+  --accent: #0ea5e9;
+  --accent-soft: #e0f2fe;
+  --accent-border: #7dd3fc;
+
+  --border: #e5e7eb;
+  --hover: #eef2f7;
+
+  --radius: 8px;
+  --spacing: 8px;
+}
+
+
+/* =====================================
+   Base: typography and background
+===================================== */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1, h2, h3 {
+  margin: 0 0 12px 0;
+}
+
+
+/* =====================================
+   Layout: flex utilities
+===================================== */
+.flex {
+  display: flex;
+  gap: 16px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* =====================================
+   Card: container styling
+===================================== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+
+/* =====================================
+   List: selectable list items
+===================================== */
+.list-item {
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.list-item:hover {
+  background: var(--hover);
+}
+
+.list-item.active {
+  background: #e6e8eb;
+}
+
+
+/* =====================================
+   Button: action styles
+===================================== */
+.button {
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.button.primary {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.18);
+}
+
+.button.primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.button.danger {
+  background: var(--danger);
+  color: white;
+  box-shadow: 0 6px 14px rgba(220, 38, 38, 0.16);
+}
+
+.button.danger:hover {
+  background: var(--danger-hover);
+  transform: translateY(-1px);
+}
+
+.button.secondary {
+  background: #eef2f7;
+  color: #1f2937;
+  border: 1px solid #d6dbe3;
+}
+
+.button.secondary:hover {
+  background: #e0f2fe;
+  border-color: var(--accent-border);
+  color: #075985;
+}
+
+
+/* =====================================
+   Input: form elements
+===================================== */
+input,
+textarea,
+select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.14);
+}
+
+
+/* =====================================
+   Form: label and grouping
+===================================== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--subtext);
+}
+
+
+/* =====================================
+   Tag: status indicators
+===================================== */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.tag.pending {
+  background: #eef2f7;
+  color: #334155;
+}
+
+.tag.approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.tag.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+
+/* =====================================
+   Table: data display
+===================================== */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+
+/* =====================================
+   Utilities: spacing and text helpers
+===================================== */
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+
+.text-muted {
+  color: var(--subtext);
+}
+
+.text-center {
+  text-align: center;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  overscroll-behavior: none;
+}

@@ -1,0 +1,40 @@
+substitutions:
+  _REGION: asia-east1
+  _REPO: lab-system
+  _SERVICE: lab-system-frontend
+  _VITE_API_BASE: https://lab-system-backend-49149163742.asia-east1.run.app
+  _VITE_GOOGLE_CLIENT_ID: 49149163742-rfbn5pmmbvbqtc6tsdsl67b3fgcd7n67.apps.googleusercontent.com
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/frontend:$SHORT_SHA
+      - --build-arg
+      - VITE_API_BASE=${_VITE_API_BASE}
+      - --build-arg
+      - VITE_GOOGLE_CLIENT_ID=${_VITE_GOOGLE_CLIENT_ID}
+      - ./frontend
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/frontend:$SHORT_SHA
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/frontend:$SHORT_SHA
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/frontend:$SHORT_SHA
+
+options:
+  logging: CLOUD_LOGGING_ONLY
