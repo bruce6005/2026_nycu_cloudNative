@@ -189,6 +189,9 @@ function Layout({
             )
           )}
         </div>
+        <div className="main-content" style={{ flex: 1, padding: "20px" }}>
+          {children}
+        </div>
       </div>
     </>
   );
