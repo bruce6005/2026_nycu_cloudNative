@@ -38,6 +38,29 @@ const pageMap: Record<Page, React.ComponentType<any>> = {
   ),
 };
 
+function buildStoredAuthUser(user: AuthUser): string | null {
+  const sanitizedUser = sanitizeAuthUser(user);
+
+  if (!sanitizedUser) {
+    return null;
+  }
+
+  const storedUser = {
+    id: sanitizedUser.id,
+    email: sanitizedUser.email,
+    name: sanitizedUser.name,
+    avatarUrl: sanitizedUser.avatarUrl ?? null,
+    role: sanitizedUser.role ?? null,
+    managerId: sanitizedUser.managerId ?? null,
+  };
+
+  const serializedUser = JSON.stringify(storedUser);
+
+  return serializedUser.length <= MAX_STORED_AUTH_USER_LENGTH
+    ? serializedUser
+    : null;
+}
+
 function loadStoredAuthUser(): AuthUser | null {
   const saved = localStorage.getItem(AUTH_USER_STORAGE_KEY);
   if (!saved || saved.length > MAX_STORED_AUTH_USER_LENGTH) {
@@ -73,18 +96,24 @@ function App() {
   const [page, setPage] = useState<Page>(loadStoredPage);
 
   useEffect(() => {
-    if (user) {
-      const storedUser = sanitizeAuthUserForStorage(user);
-      const sanitizedUser = sanitizeAuthUser(user);
-      if (storedUser && sanitizedUser) {
-        localStorage.setItem(AUTH_USER_STORAGE_KEY, storedUser);
-        saveToken(sanitizedUser.token);
-      }
-    } else {
-      localStorage.removeItem(AUTH_USER_STORAGE_KEY);
-      clearToken();
+    if (!user) {
+        localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+        clearToken();
+        return;
     }
-  }, [user]);
+
+    const sanitizedUser = sanitizeAuthUser(user);
+    const storedUser = buildStoredAuthUser(user);
+
+    if (!sanitizedUser || !storedUser) {
+        localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+        clearToken();
+        return;
+    }
+
+    localStorage.setItem(AUTH_USER_STORAGE_KEY, storedUser);
+    saveToken(sanitizedUser.token);
+    }, [user]);
 
   useEffect(() => {
     localStorage.setItem("current_page", page);

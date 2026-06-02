@@ -61,7 +61,7 @@ export function sanitizeAuthUserForStorage(value: unknown): string | null {
     return null;
   }
 
-  return JSON.stringify({
+  const responseBody = {
     id: user.id,
     email: user.email,
     name: user.name,
@@ -69,5 +69,7 @@ export function sanitizeAuthUserForStorage(value: unknown): string | null {
     role: user.role ?? null,
     managerId: user.managerId ?? null,
     token: user.token,
-  });
+    };
+
+    return JSON.stringify(responseBody);
 }
