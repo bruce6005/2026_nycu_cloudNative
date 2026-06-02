@@ -211,3 +211,22 @@ jobs:
           if [ "$TYPE_EXIT" != "0" ] || [ "$UNIT_TEST_EXIT" != "0" ] || [ "$TEST_EXIT" != "0" ]; then
             exit 1
           fi
+
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs:
+      - backend-ci
+      - frontend-ci
+    if: always() && needs.backend-ci.result == 'success' && needs.frontend-ci.result == 'success'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
