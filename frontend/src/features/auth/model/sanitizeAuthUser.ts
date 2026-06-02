@@ -54,3 +54,20 @@ export function sanitizeAuthUser(value: unknown): AuthUser | null {
 
   return sanitized;
 }
+
+export function sanitizeAuthUserForStorage(value: unknown): string | null {
+  const user = sanitizeAuthUser(value);
+  if (!user) {
+    return null;
+  }
+
+  return JSON.stringify({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    avatarUrl: user.avatarUrl ?? null,
+    role: user.role ?? null,
+    managerId: user.managerId ?? null,
+    token: user.token,
+  });
+}

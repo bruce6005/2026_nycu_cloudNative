@@ -13,7 +13,10 @@ import EquipmentTypeManagementPage from "./features/equipment/page/EquipmentType
 import RecipeManagementPage from "./features/recipe/page/RecipeManagementPage";
 import ManagerDashboardPage from "./features/managerLog/page/ManagerDashboardPage";
 import type { AuthUser } from "./features/auth/model/AuthUser";
-import { sanitizeAuthUser } from "./features/auth/model/sanitizeAuthUser";
+import {
+  sanitizeAuthUser,
+  sanitizeAuthUserForStorage,
+} from "./features/auth/model/sanitizeAuthUser";
 import { getNavItems, type Page } from "./features/utils/getNavItems";
 import { clearToken, saveToken } from "./features/utils/authToken";
 import "./features/utils/apiClient";
@@ -55,21 +58,27 @@ function loadStoredAuthUser(): AuthUser | null {
   }
 }
 
+function isPage(value: string | null): value is Page {
+  return value !== null && Object.hasOwn(pageMap, value);
+}
+
+function loadStoredPage(): Page {
+  const savedPage = localStorage.getItem("current_page");
+  return isPage(savedPage) ? savedPage : "request";
+}
+
 function App() {
   const [user, setUser] = useState<AuthUser | null>(loadStoredAuthUser);
 
-  const [page, setPage] = useState<Page>(() => {
-    return (localStorage.getItem("current_page") as Page) || "request";
-  });
+  const [page, setPage] = useState<Page>(loadStoredPage);
 
   useEffect(() => {
     if (user) {
+      const storedUser = sanitizeAuthUserForStorage(user);
       const sanitizedUser = sanitizeAuthUser(user);
-      if (sanitizedUser) {
-        localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(sanitizedUser));
-        if (sanitizedUser.token) {
-          saveToken(sanitizedUser.token);
-        }
+      if (storedUser && sanitizedUser) {
+        localStorage.setItem(AUTH_USER_STORAGE_KEY, storedUser);
+        saveToken(sanitizedUser.token);
       }
     } else {
       localStorage.removeItem(AUTH_USER_STORAGE_KEY);

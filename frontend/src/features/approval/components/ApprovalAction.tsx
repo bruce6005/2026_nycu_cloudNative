@@ -4,10 +4,12 @@ import "@/styles/global.css";
 import RejectModal from "./RejectModal";
 import type { ApprovalItem } from "../model/ApprovalData";
 
+type MaybePromise<T> = T | Promise<T>;
+
 type Props = {
   order: ApprovalItem | null;
-  onApprove: (id: number) => void;
-  onReject: (id: number, reason: string) => void;
+  onApprove: (id: number) => MaybePromise<void>;
+  onReject: (id: number, reason: string) => MaybePromise<void>;
 };
 
 function ApprovalAction({ order, onApprove, onReject }: Props) {
@@ -19,9 +21,12 @@ function ApprovalAction({ order, onApprove, onReject }: Props) {
   }
 
   const handleApprove = async () => {
-    setLoading(true);
-    await onApprove(order.id);
-    setLoading(false);
+    try {
+      setLoading(true);
+      await onApprove(order.id);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRejectSubmit = async (reason: string) => {
