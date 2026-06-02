@@ -50,5 +50,7 @@ public class WIPbatch {
     @Column(name = "estimated_end_time")
     private LocalDateTime estimatedEndTime;
 
+    @Column(name = "force_crash", nullable = false, columnDefinition = "boolean default false")
+    private boolean forceCrash;
 
 }

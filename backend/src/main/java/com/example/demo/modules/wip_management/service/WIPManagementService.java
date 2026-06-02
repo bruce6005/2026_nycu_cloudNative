@@ -77,7 +77,7 @@ public class WIPManagementService {
         LocalDateTime now = LocalDateTime.now();
 
         int randomSeconds = ThreadLocalRandom.current().nextInt(30, 60); // Random duration between 30 to 60 seconds
-        boolean willCrash = ThreadLocalRandom.current().nextInt(100) < 25;//25 percent crash
+        boolean willCrash = batch.isForceCrash() || ThreadLocalRandom.current().nextInt(100) < 25;//25 percent crash
 
         batch.setStatus(willCrash ? "RUNNING_CRASH" : "RUNNING");
         batch.setStartTime(now);
@@ -333,7 +333,7 @@ public class WIPManagementService {
                 });
     }
 
-    private void autoResolveExpiredRunningBatches() {
+    public void autoResolveExpiredRunningBatches() {
         LocalDateTime now = LocalDateTime.now();
 
         List<WIPbatch> runningBatches = wipbatchRepository.findByStatusIn(

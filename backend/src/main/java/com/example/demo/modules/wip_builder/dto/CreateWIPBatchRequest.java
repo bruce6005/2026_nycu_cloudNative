@@ -10,4 +10,5 @@ public class CreateWIPBatchRequest {
     private Long equipmentId;
     private Long recipeId;
     private List<Long> sampleIds;
+    private boolean forceCrash;
 }

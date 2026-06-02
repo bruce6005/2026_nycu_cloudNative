@@ -24,6 +24,7 @@ function WIPBuilderPage({ user }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [createdBatch, setCreatedBatch] = useState<WIPBatchDTO | null>(null);
+  const [forceCrash, setForceCrash] = useState(false);
 
   const [filterRecipeId, setFilterRecipeId] = useState<number | null>(null);
   const [filterRecipeName, setFilterRecipeName] = useState<string | null>(null);
@@ -237,10 +238,12 @@ function WIPBuilderPage({ user }: Props) {
         recipeId: currentBatchRecipeId,
         sampleIds: stagedSamples.map((sample) => sample.sampleId),
         operatorId: user.id,
+        forceCrash,
       });
 
       setCreatedBatch(batch);
       setStagedSamples([]);
+      setForceCrash(false);
       await loadData();
     } catch (err) {
       setCreatedBatch(null);
@@ -289,6 +292,8 @@ function WIPBuilderPage({ user }: Props) {
           selectedEquipment={selectedEquipment}
           stagedRecipeName={stagedRecipeName}
           requiredCapacity={requiredCapacity}
+          forceCrash={forceCrash}
+          onForceCrashChange={setForceCrash}
           onRemoveSample={handleRemoveSample}
           onCreate={handleCreate}
           loading={loading}

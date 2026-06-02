@@ -25,6 +25,7 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -196,6 +197,7 @@ class WIPBuilderServiceTest {
         req.setEquipmentId(1L);
         req.setRecipeId(2L);
         req.setSampleIds(List.of(100L, 101L));
+        req.setForceCrash(true);
 
         Equipment eq = buildEquipment(1L, 10, 500L);
         Recipe recipe = buildRecipe(2L, 500L);
@@ -237,7 +239,9 @@ class WIPBuilderServiceTest {
         // verify
         assertNotNull(dto);
         assertEquals(saved.getId(), dto.getId());
-        verify(wipbatchRepository, times(1)).save(any(WIPbatch.class));
+        ArgumentCaptor<WIPbatch> batchCaptor = ArgumentCaptor.forClass(WIPbatch.class);
+        verify(wipbatchRepository, times(1)).save(batchCaptor.capture());
+        assertTrue(batchCaptor.getValue().isForceCrash());
         verify(notificationService, atLeastOnce()).broadcast(eq("REQUEST_UPDATED"), anyString());
         verify(testRecordsRepository, times(1)).save(any(TestRecords.class));
     }

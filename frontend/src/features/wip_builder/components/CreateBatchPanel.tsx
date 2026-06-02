@@ -9,6 +9,8 @@ type Props = {
   selectedEquipment: EquipmentWithRecipesDTO | null;
   stagedRecipeName: string | null;
   requiredCapacity: number;
+  forceCrash: boolean;
+  onForceCrashChange: (forceCrash: boolean) => void;
   onRemoveSample: (sampleId: number) => void;
   onCreate: () => void;
   loading: boolean;
@@ -21,6 +23,8 @@ function CreateBatchPanel({
   selectedEquipment,
   stagedRecipeName,
   requiredCapacity,
+  forceCrash,
+  onForceCrashChange,
   onRemoveSample,
   onCreate,
   loading,
@@ -83,6 +87,20 @@ function CreateBatchPanel({
               : "-"}
           </div>
         </div>
+
+        <label className="demo-crash-option">
+          <input
+            type="checkbox"
+            checked={forceCrash}
+            onChange={(event) => onForceCrashChange(event.target.checked)}
+          />
+          <span>
+            <span className="demo-crash-title">Demo failure mode</span>
+            <span className="demo-crash-copy">
+              Start this batch as RUNNING_CRASH so it fails at completion.
+            </span>
+          </span>
+        </label>
       </div>
 
       <div className="batch-request-list-wrap">

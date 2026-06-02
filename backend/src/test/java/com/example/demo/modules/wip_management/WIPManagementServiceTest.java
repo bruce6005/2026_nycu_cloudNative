@@ -242,6 +242,27 @@ class WIPManagementServiceTest {
     }
 
     @Test
+    @DisplayName("startBatch() - forceCrash 批次應 100% 進入 RUNNING_CRASH")
+    void startBatch_forceCrash_shouldStartAsRunningCrash() {
+        Equipment eq = buildEquipment(1L);
+        Recipe recipe = buildRecipe(1L);
+        WIPbatch batch = buildBatch(10L, "QUEUED", eq, recipe);
+        batch.setForceCrash(true);
+
+        when(wipbatchRepository.findById(10L)).thenReturn(Optional.of(batch));
+        when(wipbatchRepository.save(any(WIPbatch.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(sampleRepository.findByBatch_Id(10L)).thenReturn(Collections.emptyList());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
+                .thenReturn(Optional.empty());
+        when(testRecordsRepository.findFirstByBatch_IdOrderByStartTimeDesc(10L)).thenReturn(Optional.empty());
+
+        WIPBatchDTO result = wipManagementService.startBatch(10L);
+
+        assertEquals("RUNNING_CRASH", result.getStatus());
+        verify(notificationService, times(1)).broadcast(eq("REQUEST_UPDATED"), anyString());
+    }
+
+    @Test
     @DisplayName("startBatch() - 啟動批次時應同步更新 test record 狀態")
     void startBatch_shouldUpdateTestRecord() {
         Equipment eq = buildEquipment(1L);

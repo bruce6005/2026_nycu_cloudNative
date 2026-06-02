@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +31,7 @@ import com.example.demo.modules.wip_builder.model.WIPbatch;
 import com.example.demo.modules.wip_builder.repository.EquipmentStatusLogsRepository;
 import com.example.demo.modules.wip_builder.repository.TestRecordsRepository;
 import com.example.demo.modules.wip_builder.repository.WIPbatchRepository;
+import com.example.demo.modules.wip_management.service.WIPManagementService;
 
 @ExtendWith(MockitoExtension.class)
 class ManagerDashboardServiceTest {
@@ -46,6 +50,9 @@ class ManagerDashboardServiceTest {
 
     @Mock
     private WIPbatchRepository wipbatchRepository;
+
+    @Mock
+    private WIPManagementService wipManagementService;
 
     @InjectMocks
     private ManagerDashboardService managerDashboardService;
@@ -168,7 +175,7 @@ class ManagerDashboardServiceTest {
                 .thenReturn(List.of());
         when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId()))
                 .thenReturn(Optional.of(currentLog));
-        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusInOrderByStartTimeDesc(eq(equipment.getId()), anyList()))
                 .thenReturn(Optional.empty());
         when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
                 .thenReturn(List.of());
@@ -176,6 +183,7 @@ class ManagerDashboardServiceTest {
         List<EquipmentUsageDTO> result = managerDashboardService.getEquipmentUsage();
 
         assertEquals(1, result.size());
+        verify(wipManagementService).autoResolveExpiredRunningBatches();
 
         EquipmentUsageDTO dto = result.get(0);
 
@@ -223,7 +231,7 @@ class ManagerDashboardServiceTest {
                 .thenReturn(List.of(runningLog));
         when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId()))
                 .thenReturn(Optional.of(currentLog));
-        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusInOrderByStartTimeDesc(eq(equipment.getId()), anyList()))
                 .thenReturn(Optional.empty());
         when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
                 .thenReturn(List.of());
@@ -264,7 +272,7 @@ class ManagerDashboardServiceTest {
                 .thenReturn(List.of(busyLog));
         when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId()))
                 .thenReturn(Optional.of(currentLog));
-        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusInOrderByStartTimeDesc(eq(equipment.getId()), anyList()))
                 .thenReturn(Optional.empty());
         when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
                 .thenReturn(List.of());
@@ -294,7 +302,7 @@ class ManagerDashboardServiceTest {
                 .thenReturn(Optional.empty());
         when(equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipment.getId()))
                 .thenReturn(Optional.empty());
-        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusInOrderByStartTimeDesc(eq(equipment.getId()), anyList()))
                 .thenReturn(Optional.empty());
         when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
                 .thenReturn(List.of(finishedBatch, failedBatch, queuedBatch));
@@ -332,7 +340,7 @@ class ManagerDashboardServiceTest {
                 .thenReturn(Optional.empty());
         when(equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipment.getId()))
                 .thenReturn(Optional.empty());
-        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusInOrderByStartTimeDesc(eq(equipment.getId()), anyList()))
                 .thenReturn(Optional.empty());
         when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
                 .thenReturn(List.of(batch1, batch2));
@@ -362,7 +370,7 @@ class ManagerDashboardServiceTest {
                 .thenReturn(Optional.empty());
         when(equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipment.getId()))
                 .thenReturn(Optional.empty());
-        when(wipbatchRepository.findFirstByEquipment_IdAndStatusOrderByStartTimeDesc(equipment.getId(), "RUNNING"))
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusInOrderByStartTimeDesc(eq(equipment.getId()), anyList()))
                 .thenReturn(Optional.of(runningBatch));
         when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
                 .thenReturn(List.of(runningBatch));
@@ -375,6 +383,39 @@ class ManagerDashboardServiceTest {
         assertEquals("RUNNING", dto.getActiveBatchStatus());
         assertEquals(50.0, dto.getActiveProgressPercent());
         assertEquals(1800L, dto.getRemainingSeconds());
+    }
+
+    @Test
+    @DisplayName("getEquipmentUsage() should include active RUNNING_CRASH batch information")
+    void getEquipmentUsage_activeCrashBatchInfo() {
+        Equipment equipment = buildEquipment(1L, "EQ-A", 100L);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        WIPbatch crashBatch = buildBatch(100L, equipment, "RUNNING_CRASH");
+        crashBatch.setStartTime(now.minusMinutes(15));
+        crashBatch.setEstimatedEndTime(now.plusMinutes(15));
+
+        when(equipmentRepository.findAll()).thenReturn(List.of(equipment));
+        when(equipmentStatusLogsRepository.findByEquipmentId(equipment.getId()))
+                .thenReturn(List.of());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdAndEndTimeIsNullOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.empty());
+        when(equipmentStatusLogsRepository.findFirstByEquipmentIdOrderByStartTimeDesc(equipment.getId()))
+                .thenReturn(Optional.empty());
+        when(wipbatchRepository.findFirstByEquipment_IdAndStatusInOrderByStartTimeDesc(eq(equipment.getId()), anyList()))
+                .thenReturn(Optional.of(crashBatch));
+        when(wipbatchRepository.findByEquipment_Id(equipment.getId()))
+                .thenReturn(List.of(crashBatch));
+
+        List<EquipmentUsageDTO> result = managerDashboardService.getEquipmentUsage();
+
+        EquipmentUsageDTO dto = result.get(0);
+
+        assertEquals(100L, dto.getActiveBatchId());
+        assertEquals("RUNNING_CRASH", dto.getActiveBatchStatus());
+        assertEquals(50.0, dto.getActiveProgressPercent());
+        assertEquals(900L, dto.getRemainingSeconds());
     }
 
     @Test

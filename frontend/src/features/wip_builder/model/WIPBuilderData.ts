@@ -32,4 +32,5 @@ export type CreateWIPBatchRequest = {
   recipeId: number;
   sampleIds: number[];
   operatorId: number;
+  forceCrash: boolean;
 };
