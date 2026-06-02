@@ -15,7 +15,6 @@ import ManagerDashboardPage from "./features/managerLog/page/ManagerDashboardPag
 import type { AuthUser } from "./features/auth/model/AuthUser";
 import {
   sanitizeAuthUser,
-  sanitizeAuthUserForStorage,
 } from "./features/auth/model/sanitizeAuthUser";
 import { getNavItems, type Page } from "./features/utils/getNavItems";
 import { clearToken, saveToken } from "./features/utils/authToken";
