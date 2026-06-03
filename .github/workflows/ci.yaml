@@ -1,0 +1,222 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+permissions:
+  contents: read
+
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-ci:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Start MySQL Database
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: lab_system
+        run: docker compose up -d db
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run Backend Tests
+        working-directory: ./backend
+        env:
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          APP_JWT_SECRET: ${{ secrets.APP_JWT_SECRET }}
+        run: |
+          ./mvnw test 2>&1 | tee ../backend-test.txt
+          echo "TEST_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Backend Test Summary
+        if: always()
+        run: |
+          if [ "$TEST_EXIT" = "0" ]; then
+            TEST_STATUS="Passed"
+          else
+            TEST_STATUS="Failed"
+          fi
+
+          TEST_LINE=$(grep "Tests run: " backend-test.txt | grep -v "Time elapsed" | tail -n 1 || true)
+          if [ -n "$TEST_LINE" ]; then
+            RUN=$(echo "$TEST_LINE" | sed -E 's/.*Tests run: ([0-9]+).*/\1/')
+            FAILURES=$(echo "$TEST_LINE" | sed -E 's/.*Failures: ([0-9]+).*/\1/')
+            ERRORS=$(echo "$TEST_LINE" | sed -E 's/.*Errors: ([0-9]+).*/\1/')
+            SKIPPED=$(echo "$TEST_LINE" | sed -E 's/.*Skipped: ([0-9]+).*/\1/')
+            PASSED=$((RUN - FAILURES - ERRORS - SKIPPED))
+            FAILED=$((FAILURES + ERRORS))
+            TEST_DETAILS="Tests: **$RUN** | Passed: **$PASSED** | Failed: **$FAILED** | Skipped: **$SKIPPED**"
+          else
+            TEST_DETAILS="No Maven test summary line was found."
+          fi
+
+          echo "# Backend CI Result" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Maven tests | $TEST_STATUS | $TEST_DETAILS |" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$TEST_EXIT" != "0" ]; then
+            echo "## Backend Test Failed Output" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 50 backend-test.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+  frontend-ci:
+    name: Frontend CI (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['22', '24']
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Setup Java for Backend E2E Dependency
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Start MySQL and Build/Run Backend Server
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: lab_system
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          APP_JWT_SECRET: ${{ secrets.APP_JWT_SECRET }}
+        run: |
+          docker compose up -d db
+          cd backend
+          ./mvnw spring-boot:run &
+
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/ > /dev/null || curl -s http://localhost:8080/api/ > /dev/null || curl -s http://localhost:8080/v3/api-docs > /dev/null; then
+              echo "Backend is likely up."
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install chromium
+
+      - name: TypeScript Typecheck
+        working-directory: ./frontend
+        run: |
+          npm run build 2>&1 | tee ../type.txt
+          echo "TYPE_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Run Unit Tests
+        working-directory: ./frontend
+        run: |
+          npx vitest run 2>&1 | tee ../unit-test.txt
+          echo "UNIT_TEST_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Run Playwright E2E Tests
+        working-directory: ./frontend
+        run: |
+          npm test 2>&1 | tee ../e2e-test.txt
+          echo "TEST_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Frontend Test Summary
+        if: always()
+        run: |
+          if [ "$TYPE_EXIT" = "0" ]; then TYPE_STATUS="Passed"; else TYPE_STATUS="Failed"; fi
+          if [ "$UNIT_TEST_EXIT" = "0" ]; then UNIT_TEST_STATUS="Passed"; else UNIT_TEST_STATUS="Failed"; fi
+          if [ "$TEST_EXIT" = "0" ]; then TEST_STATUS="Passed"; else TEST_STATUS="Failed"; fi
+
+          PLAYWRIGHT_LINE=$(grep -E "passed \([0-9\.]+[a-zA-Z]+\)" e2e-test.txt | tail -n 1 || true)
+          if [ -n "$PLAYWRIGHT_LINE" ]; then
+            PLAYWRIGHT_DETAILS=$(echo "$PLAYWRIGHT_LINE" | xargs)
+          else
+            PLAYWRIGHT_DETAILS="No Playwright summary line was found."
+          fi
+
+          echo "# Frontend CI Result (Node.js ${{ matrix.node-version }})" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| TypeScript build | $TYPE_STATUS | npm run build |" >> $GITHUB_STEP_SUMMARY
+          echo "| Vitest | $UNIT_TEST_STATUS | npx vitest run |" >> $GITHUB_STEP_SUMMARY
+          echo "| Playwright | $TEST_STATUS | $PLAYWRIGHT_DETAILS |" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$TYPE_EXIT" != "0" ]; then
+            echo "## Build Error" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 30 type.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "$UNIT_TEST_EXIT" != "0" ]; then
+            echo "## Vitest Error" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 30 unit-test.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "$TEST_EXIT" != "0" ]; then
+            echo "## Playwright Error" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 30 e2e-test.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$TYPE_EXIT" != "0" ] || [ "$UNIT_TEST_EXIT" != "0" ] || [ "$TEST_EXIT" != "0" ]; then
+            exit 1
+          fi
+
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    needs:
+      - backend-ci
+      - frontend-ci
+    if: always() && needs.backend-ci.result == 'success' && needs.frontend-ci.result == 'success'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

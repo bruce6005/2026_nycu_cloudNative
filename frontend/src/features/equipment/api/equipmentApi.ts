@@ -1,0 +1,56 @@
+import axios from "axios";
+import { CONFIG } from "../../../config/config";
+import type { Equipment, EquipmentRequest, EquipmentTypeSchema } from "../model/Equipment";
+import type { EquipmentWithRecipesDTO } from "../../wip_builder/model/WIPBuilderData";
+
+export async function fetchEquipments(): Promise<Equipment[]> {
+    const res = await axios.get(`${CONFIG.API_BASE}/api/equipments`);
+    return res.data;
+}
+
+export async function createEquipment(data: EquipmentRequest): Promise<Equipment> {
+    const res = await axios.post(`${CONFIG.API_BASE}/api/equipments`, data);
+    return res.data;
+}
+
+function validateEquipmentId(equipmentId: number): number {
+  if (!Number.isInteger(equipmentId) || equipmentId <= 0) {
+    throw new Error("Invalid equipment id");
+  }
+
+  return equipmentId;
+}
+
+export async function deleteEquipment(equipmentId: number): Promise<void> {
+  const safeEquipmentId = validateEquipmentId(equipmentId);
+
+  await axios.delete(`${CONFIG.API_BASE}/api/equipments/${safeEquipmentId}`);
+}
+
+export async function recoverEquipment(equipmentId: number): Promise<void> {
+    await axios.put(`${CONFIG.API_BASE}/api/equipments/${equipmentId}/recover`);
+}
+
+export async function fetchEquipmentsWithStatus(): Promise<EquipmentWithRecipesDTO[]> {
+    const res = await axios.get(`${CONFIG.API_BASE}/api/wip_builder/equipments`);
+    return res.data;
+}
+
+export async function fetchEquipmentSchemas(): Promise<EquipmentTypeSchema[]> {
+    const res = await axios.get(`${CONFIG.API_BASE}/api/equipment-schemas`);
+    return res.data;
+}
+
+export async function createEquipmentSchema(data: Omit<EquipmentTypeSchema, "id">): Promise<EquipmentTypeSchema> {
+    const res = await axios.post(`${CONFIG.API_BASE}/api/equipment-schemas`, data);
+    return res.data;
+}
+
+export async function fetchEquipmentSchemaByType(type: string): Promise<EquipmentTypeSchema> {
+    const res = await axios.get(`${CONFIG.API_BASE}/api/equipment-schemas/${type}`);
+    return res.data;
+}
+
+export async function deleteEquipmentSchema(schemaId: number): Promise<void> {
+    await axios.delete(`${CONFIG.API_BASE}/api/equipment-schemas/${schemaId}`);
+}
